@@ -149,6 +149,7 @@ tasks:
       - task: build:frontend
       - task: build:embed
       - task: build:backend
+      - task: build:clean:static
       - echo "✅ 构建完成! 输出目录 {{.BUILD_OUTPUT}}/"
 
   build:clean:
@@ -157,6 +158,30 @@ tasks:
       - cmd /c "if exist {{.BUILD_OUTPUT}} rmdir /s /q {{.BUILD_OUTPUT}}"
       - cmd /c "if exist backend\\internal\\static\\dist rmdir /s /q backend\\internal\\static\\dist"
       - cmd /c "mkdir {{.BUILD_OUTPUT}}"
+
+  build:clean:static:
+    desc: "清理静态资源目录(保留.gitkeep)"
+    cmds:
+      - task: build:clean:static:{{OS}}
+
+  build:clean:static:windows:
+    internal: true
+    cmds:
+      - cmd /c "for /d %i in (backend\internal\static\dist\*) do rmdir /s /q %i"
+      - cmd /c "for %i in (backend\internal\static\dist\*) do if not %~nxi==.gitkeep del /q %i"
+      - cmd /c "if not exist backend\internal\static\dist\.gitkeep type nul > backend\internal\static\dist\.gitkeep"
+
+  build:clean:static:linux:
+    internal: true
+    cmds:
+      - find backend/internal/static/dist -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} + 2>/dev/null || true
+      - touch backend/internal/static/dist/.gitkeep
+
+  build:clean:static:darwin:
+    internal: true
+    cmds:
+      - find backend/internal/static/dist -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} + 2>/dev/null || true
+      - touch backend/internal/static/dist/.gitkeep
 
   build:frontend:
     desc: "构建前端"
