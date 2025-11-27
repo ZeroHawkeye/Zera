@@ -1,13 +1,70 @@
 ---
-title: Hello World
-description: Your first document
+title: 快速开始
+description: 了解如何快速开始使用 Zera 框架进行全栈开发
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+欢迎使用 **Zera Framework**！本指南将帮助你快速上手并开始构建你的第一个全栈应用。
 
-## What is Next?
+## 什么是 Zera？
+
+Zera 是一个基于 Protocol Buffers 的现代化全栈开发框架，它提供了：
+
+- **类型安全的 API**：从 proto 定义到前后端代码，全程类型安全
+- **自动代码生成**：基于 Buf 工具链自动生成 Go 和 TypeScript 代码
+- **现代化技术栈**：Go + React + TypeScript + Connect-RPC
+- **开发体验优先**：热重载、自动化任务、完善的工具链
+
+## 技术栈
+
+| 层级 | 技术 | 说明 |
+|------|------|------|
+| 前端 | React + TypeScript | 使用 Vite 构建的现代前端应用 |
+| 后端 | Go | 高性能的 Go 后端服务 |
+| 协议 | Protocol Buffers | 跨语言的接口定义语言 |
+| RPC | Connect-RPC | 支持 gRPC、gRPC-Web 和 Connect 协议 |
+| 工具 | Buf | Protocol Buffers 工具链 |
+
+## 必要依赖
+
+在开始之前，请确保安装以下工具：
+
+1. **[Buf](https://buf.build)** - Protocol Buffers 工具链
+2. **[Taskfile](https://taskfile.dev)** - 任务运行器
+3. **[mprocs](https://github.com/pvolok/mprocs)** - 多进程管理器（可选，用于 TUI 开发模式）
+4. **[Go](https://go.dev)** - Go 语言运行时 (1.21+)
+5. **[Node.js](https://nodejs.org)** - Node.js 运行时 (20+)
+
+## 快速开始
+
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/ZeroHawkeye/Zera.git
+cd zera
+```
+
+### 2. 启动开发环境
+
+```bash
+# 启动完整开发环境（推荐）
+task dev
+```
+
+这将自动：
+- 生成前后端 proto 代码
+- 启动后端 Go 服务
+- 启动前端 Vite 开发服务器
+
+### 3. 访问应用
+
+- **前端**：http://localhost:5173
+- **后端**：http://localhost:8080
+
+## 下一步
 
 <Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
+  <Card title="项目结构" href="/docs/structure" />
+  <Card title="开发命令" href="/docs/commands" />
+  <Card title="API 开发" href="/docs/api" />
+  <Card title="部署指南" href="/docs/deployment" />
 </Cards>

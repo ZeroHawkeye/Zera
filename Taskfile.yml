@@ -6,6 +6,12 @@ vars:
   BINARY_NAME: zera
 
 tasks:
+  # ==================== 文档相关 ====================
+  docs:
+    desc: "预览项目文档 (docsify)"
+    dir: docs
+    cmds:
+      - bun run dev
   # ==================== Proto 工作流 ====================
   proto:
     desc: "完整的 proto 工作流: lint -> format -> generate -> check"

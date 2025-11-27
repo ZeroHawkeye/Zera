@@ -1,0 +1,14 @@
+{
+  "title": "文档",
+  "pages": [
+    "---快速入门---",
+    "index",
+    "structure",
+    "commands",
+    "---开发指南---",
+    "api",
+    "deployment",
+    "---参考---",
+    "test"
+  ]
+}

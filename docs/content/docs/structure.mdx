@@ -1,0 +1,103 @@
+---
+title: 项目结构
+description: 了解 Zera 框架的项目目录结构
+---
+
+Zera 采用 monorepo 架构，将前端、后端和 proto 定义统一管理。
+
+## 目录结构
+
+```
+zera/
+├── proto/              # Protocol Buffers 定义
+│   ├── buf.yaml        # Buf 配置文件
+│   ├── base/           # 基础 proto 定义
+│   └── greet/          # 业务 proto 定义
+│       └── v1/
+│
+├── backend/            # Go 后端服务
+│   ├── buf.gen.yaml    # 后端代码生成配置
+│   ├── config.toml     # 服务配置文件
+│   ├── go.mod          # Go 模块定义
+│   ├── cmd/            # 入口程序
+│   │   └── server/
+│   │       └── main.go
+│   ├── gen/            # 生成的 Go 代码
+│   └── internal/       # 内部包
+│       ├── config/     # 配置管理
+│       ├── handler/    # RPC 处理器
+│       ├── middleware/ # 中间件
+│       ├── model/      # 数据模型
+│       ├── repository/ # 数据访问层
+│       ├── server/     # 服务器设置
+│       └── service/    # 业务逻辑
+│
+├── frontend/           # React 前端应用
+│   ├── buf.gen.yaml    # 前端代码生成配置
+│   ├── package.json    # npm 依赖
+│   ├── vite.config.ts  # Vite 配置
+│   ├── src/
+│   │   ├── App.tsx     # 根组件
+│   │   ├── main.tsx    # 入口文件
+│   │   ├── config/     # 配置文件
+│   │   └── gen/        # 生成的 TypeScript 代码
+│   └── public/         # 静态资源
+│
+├── docs/               # 文档站点 (Fumadocs)
+│   ├── app/            # Next.js App Router
+│   └── content/        # MDX 文档内容
+│
+├── build/              # 构建产物
+├── Docker/             # Docker 配置
+│   └── docker-compose.yml
+│
+├── Taskfile.yml        # 任务配置
+├── vercel.json         # Vercel 部署配置
+└── README.md           # 项目说明
+```
+
+## 核心目录说明
+
+### proto/
+
+存放所有 Protocol Buffers 定义文件。按照功能模块组织，支持版本化（如 `v1`）。
+
+```proto
+// greet/v1/greet.proto
+syntax = "proto3";
+
+package greet.v1;
+
+service GreetService {
+  rpc Greet(GreetRequest) returns (GreetResponse);
+}
+```
+
+### backend/
+
+Go 后端服务，遵循 Clean Architecture 设计：
+
+- **cmd/**: 程序入口，负责启动服务
+- **internal/handler/**: RPC 处理器，处理请求和响应
+- **internal/service/**: 业务逻辑层
+- **internal/repository/**: 数据访问层
+- **internal/model/**: 领域模型定义
+- **gen/**: 由 Buf 自动生成的 Go 代码
+
+### frontend/
+
+React 前端应用，使用 Vite 构建：
+
+- **src/gen/**: 由 Buf 自动生成的 TypeScript 代码
+- **src/config/**: 应用配置，包括 Connect 客户端配置
+
+## 代码生成流程
+
+```mermaid
+graph LR
+    A[proto/*.proto] --> B[buf generate]
+    B --> C[backend/gen/*.go]
+    B --> D[frontend/src/gen/*.ts]
+```
+
+当你修改 proto 文件后，运行 `task proto` 即可自动生成对应的 Go 和 TypeScript 代码。

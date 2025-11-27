@@ -1,0 +1,177 @@
+---
+title: 部署指南
+description: 了解如何部署 Zera 应用
+---
+
+Zera 支持多种部署方式，包括 Docker、Vercel 和传统服务器部署。
+
+## Docker 部署
+
+### 使用 Docker Compose
+
+项目提供了开箱即用的 Docker Compose 配置：
+
+```bash
+cd Docker
+docker-compose up -d
+```
+
+### Docker Compose 配置
+
+```yaml
+# Docker/docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=production
+    
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+```
+
+## 前端部署
+
+### Vercel 部署
+
+前端可以直接部署到 Vercel：
+
+1. 连接 GitHub 仓库
+2. 设置构建配置：
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+
+项目已包含 `vercel.json` 配置文件。
+
+### 静态文件部署
+
+```bash
+cd frontend
+npm run build
+```
+
+构建产物在 `frontend/dist` 目录，可以部署到任何静态文件服务器。
+
+## 后端部署
+
+### 构建二进制
+
+```bash
+cd backend
+go build -o server ./cmd/server
+```
+
+### 环境变量
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `PORT` | 服务端口 | `8080` |
+| `ENV` | 运行环境 | `development` |
+
+### 配置文件
+
+后端使用 `config.toml` 进行配置：
+
+```toml
+# backend/config.toml
+[server]
+port = 8080
+host = "0.0.0.0"
+
+[cors]
+allowed_origins = ["*"]
+```
+
+## 生产环境清单
+
+部署前请确认以下事项：
+
+<Steps>
+  <Step>
+    ### 环境变量配置
+    确保所有必要的环境变量已正确设置
+  </Step>
+  
+  <Step>
+    ### CORS 配置
+    生产环境应限制允许的源，而非使用通配符
+  </Step>
+  
+  <Step>
+    ### HTTPS
+    确保使用 HTTPS 保护所有流量
+  </Step>
+  
+  <Step>
+    ### 日志和监控
+    配置适当的日志收集和监控告警
+  </Step>
+</Steps>
+
+## 文档部署
+
+文档站点基于 Next.js，可以部署到 Vercel：
+
+```bash
+cd docs
+npm run build
+```
+
+或使用 Vercel CLI：
+
+```bash
+vercel --prod
+```
+
+## CI/CD
+
+推荐使用 GitHub Actions 进行自动化部署：
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: cd frontend && npm ci && npm run build
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          working-directory: ./frontend
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - run: cd backend && go build -o server ./cmd/server
+      # 添加你的后端部署步骤
+```

@@ -1,0 +1,131 @@
+---
+title: 开发命令
+description: Zera 框架提供的 Task 命令说明
+---
+
+Zera 使用 [Taskfile](https://taskfile.dev) 作为任务运行器，提供了丰富的开发命令。
+
+## 开发模式
+
+| 命令 | 说明 |
+|------|------|
+| `task dev` | 启动完整开发环境，自动生成 proto 代码并启动前后端服务 (mprocs TUI) |
+| `task dev:frontend` | 仅启动前端开发服务 |
+| `task dev:backend` | 仅启动后端服务 |
+
+### task dev
+
+这是最常用的开发命令，它会：
+
+1. 自动运行 proto 代码生成
+2. 使用 [mprocs](https://github.com/pvolok/mprocs) 同时启动前后端服务
+3. 提供统一的 TUI 界面管理所有进程
+
+```bash
+task dev
+```
+
+## Proto 工作流
+
+| 命令 | 说明 |
+|------|------|
+| `task proto` | 完整 proto 工作流：lint → format → generate → check |
+| `task proto:lint` | 检查 proto 文件规范 |
+| `task proto:format` | 格式化 proto 文件 |
+| `task proto:breaking` | 检查 proto 破坏性变更（对比 main 分支） |
+
+### task proto
+
+运行完整的 proto 工作流，确保代码质量：
+
+```bash
+task proto
+```
+
+这个命令会依次执行：
+1. **lint**: 检查 proto 文件是否符合规范
+2. **format**: 自动格式化 proto 文件
+3. **generate**: 生成前后端代码
+4. **check**: 验证生成的代码可以正确编译
+
+## 代码生成
+
+| 命令 | 说明 |
+|------|------|
+| `task proto:gen` | 生成所有 proto 代码（前后端并行） |
+| `task proto:gen:backend` | 仅生成后端 Go 代码 |
+| `task proto:gen:frontend` | 仅生成前端 TypeScript 代码 |
+
+### 单独生成
+
+当你只需要更新某一端的代码时：
+
+```bash
+# 仅生成后端代码
+task proto:gen:backend
+
+# 仅生成前端代码
+task proto:gen:frontend
+```
+
+## 代码检查
+
+| 命令 | 说明 |
+|------|------|
+| `task proto:check` | 检查生成代码的正确性（前后端并行） |
+| `task proto:check:backend` | 检查后端 Go 代码编译 |
+| `task proto:check:frontend` | 检查前端 TypeScript 类型 |
+
+## Watch 模式
+
+| 命令 | 说明 |
+|------|------|
+| `task proto:watch` | 监听 proto 变化，自动生成并检查 |
+| `task proto:watch:fast` | 监听 proto 变化，仅生成不检查（更快） |
+
+### 开发时使用 Watch 模式
+
+在开发过程中，你可以使用 watch 模式自动重新生成代码：
+
+```bash
+# 完整 watch（包含类型检查）
+task proto:watch
+
+# 快速 watch（跳过类型检查，更快）
+task proto:watch:fast
+```
+
+<Callout type="info">
+  推荐在开发时使用 `task proto:watch:fast`，它能提供更快的反馈循环。
+</Callout>
+
+## 常用开发流程
+
+### 1. 日常开发
+
+```bash
+# 启动开发环境
+task dev
+```
+
+### 2. 修改 API
+
+```bash
+# 1. 修改 proto 文件
+# 2. 运行完整 proto 工作流
+task proto
+
+# 3. 实现后端处理器
+# 4. 更新前端调用
+```
+
+### 3. 添加新服务
+
+```bash
+# 1. 创建新的 proto 文件
+# 2. 生成代码
+task proto:gen
+
+# 3. 实现业务逻辑
+# 4. 注册服务
+```

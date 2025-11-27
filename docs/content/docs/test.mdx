@@ -1,17 +1,112 @@
 ---
-title: Components
-description: Components
+title: 组件示例
+description: Fumadocs UI 组件使用示例
 ---
 
-## Code Block
+本页面展示了文档中可用的各种 UI 组件。
 
-```js
-console.log('Hello World');
+## 代码块
+
+支持语法高亮的代码块：
+
+```typescript title="example.ts"
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+async function getUser(id: string): Promise<User> {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}
 ```
 
-## Cards
+## 卡片
+
+使用卡片组件展示相关链接：
 
 <Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
+  <Card title="快速开始" href="/docs" />
+  <Card title="项目结构" href="/docs/structure" />
+  <Card title="开发命令" href="/docs/commands" />
+  <Card title="API 开发" href="/docs/api" />
 </Cards>
+
+## 提示框
+
+<Callout type="info">
+  这是一个信息提示框，用于展示重要信息。
+</Callout>
+
+<Callout type="warn">
+  这是一个警告提示框，用于提醒注意事项。
+</Callout>
+
+<Callout type="error">
+  这是一个错误提示框，用于展示错误或危险操作。
+</Callout>
+
+## 步骤
+
+<Steps>
+  <Step>
+    ### 安装依赖
+    运行 `npm install` 或 `pnpm install` 安装项目依赖
+  </Step>
+  
+  <Step>
+    ### 配置环境
+    复制 `.env.example` 到 `.env` 并填写配置
+  </Step>
+  
+  <Step>
+    ### 启动开发
+    运行 `task dev` 启动开发服务器
+  </Step>
+</Steps>
+
+## 标签页
+
+<Tabs items={['npm', 'pnpm', 'yarn']}>
+  <Tab value="npm">
+    ```bash
+    npm install
+    npm run dev
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm install
+    pnpm dev
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn
+    yarn dev
+    ```
+  </Tab>
+</Tabs>
+
+## 表格
+
+| 命令 | 说明 |
+|------|------|
+| `task dev` | 启动开发环境 |
+| `task proto` | 运行 proto 工作流 |
+| `task proto:gen` | 生成 proto 代码 |
+
+## 文件树
+
+<Files>
+  <Folder name="src" defaultOpen>
+    <Folder name="components">
+      <File name="Button.tsx" />
+      <File name="Card.tsx" />
+    </Folder>
+    <File name="App.tsx" />
+    <File name="main.tsx" />
+  </Folder>
+  <File name="package.json" />
+</Files>
