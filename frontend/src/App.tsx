@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { GreetService } from './gen/greet/v1/greet_pb'
+import { config } from './config'
 
 const transport = createConnectTransport({
-  baseUrl: 'http://localhost:8080',
-  useBinaryFormat: true,
+  baseUrl: config.apiBaseUrl,
+  useBinaryFormat: config.useBinaryFormat,
 })
 
 const client = createClient(GreetService, transport)

@@ -1,0 +1,15 @@
+# Zera 后端配置文件
+# 环境变量优先级高于配置文件
+# 环境变量格式: SERVER_HOST, SERVER_PORT 等
+
+[server]
+host = "0.0.0.0"
+port = 9800
+
+# [database]
+# host = "localhost"
+# port = 5432
+# user = "postgres"
+# password = ""
+# dbname = "zera"
+# sslmode = "disable"
