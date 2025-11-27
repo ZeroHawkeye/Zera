@@ -1,0 +1,21 @@
+# For details on buf.gen.yaml configuration, visit https://buf.build/docs/configuration/v2/buf-gen-yaml
+version: v2
+clean: true  # 生成前清理输出目录，确保没有残留文件
+plugins:
+  - local: protoc-gen-go
+    out: gen
+    opt: paths=source_relative
+  - local: protoc-gen-connect-go
+    out: gen
+    opt: paths=source_relative
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: zera/gen
+  disable:
+    # 使用 BSR 远程包，不本地生成 buf/validate
+    - file_option: go_package_prefix
+      module: buf.build/bufbuild/protovalidate
+inputs:
+  - directory: ../proto

@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package base;
+
+import "buf/validate/validate.proto";
+
+// 登录请求
+message LoginRequest {
+  // 用户名
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 50,
+  }];
+  // 密码
+  string password = 2 [(buf.validate.field).string = {
+    min_len: 6,
+    max_len: 128,
+  }];
+}
+
+// 登录响应
+message LoginResponse {
+  // 访问令牌
+  string access_token = 1;
+  // 刷新令牌
+  string refresh_token = 2;
+  // 令牌过期时间（秒）
+  int64 expires_in = 3;
+  // 用户信息
+  UserInfo user = 4;
+}
+
+// 用户信息
+message UserInfo {
+  // 用户ID
+  string id = 1;
+  // 用户名
+  string username = 2;
+  // 昵称
+  string nickname = 3;
+  // 头像URL
+  string avatar = 4;
+  // 邮箱
+  string email = 5;
+  // 手机号
+  string phone = 6;
+  // 角色列表
+  repeated string roles = 7;
+}
+
+// 注册请求
+message RegisterRequest {
+  // 用户名
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 50,
+  }];
+  // 密码
+  string password = 2 [(buf.validate.field).string = {
+    min_len: 6,
+    max_len: 128,
+  }];
+  // 确认密码
+  string confirm_password = 3 [(buf.validate.field).string = {
+    min_len: 6,
+    max_len: 128,
+  }];
+  // 邮箱（可选）
+  string email = 4;
+  // 手机号（可选）
+  string phone = 5;
+}
+
+// 注册响应
+message RegisterResponse {
+  // 用户ID
+  string user_id = 1;
+  // 提示信息
+  string message = 2;
+}
+
+// 登出请求
+message LogoutRequest {
+  // 访问令牌
+  string access_token = 1;
+}
+
+// 登出响应
+message LogoutResponse {
+  // 是否成功
+  bool success = 1;
+}
+
+// 刷新令牌请求
+message RefreshTokenRequest {
+  // 刷新令牌
+  string refresh_token = 1 [(buf.validate.field).string = {
+    min_len: 1,
+  }];
+}
+
+// 刷新令牌响应
+message RefreshTokenResponse {
+  // 新的访问令牌
+  string access_token = 1;
+  // 新的刷新令牌
+  string refresh_token = 2;
+  // 令牌过期时间（秒）
+  int64 expires_in = 3;
+}
+
+// 获取当前用户信息请求
+message GetCurrentUserRequest {}
+
+// 获取当前用户信息响应
+message GetCurrentUserResponse {
+  UserInfo user = 1;
+}
+
+// 认证服务
+service AuthService {
+  // 用户登录
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+  // 用户注册
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+  // 用户登出
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {}
+  // 刷新令牌
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {}
+  // 获取当前用户信息
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse) {}
+}

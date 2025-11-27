@@ -1,0 +1,223 @@
+version: "3"
+
+vars:
+  PROTO_DIR: proto
+  BUILD_OUTPUT: build
+  BINARY_NAME: zera
+
+tasks:
+  # ==================== Proto 工作流 ====================
+  proto:
+    desc: "完整的 proto 工作流: lint -> format -> generate -> check"
+    cmds:
+      - task: proto:lint
+      - task: proto:format
+      - task: proto:gen
+      - task: proto:check
+
+  proto:lint:
+    desc: "检查 proto 文件规范"
+    dir: "{{.PROTO_DIR}}"
+    cmds:
+      - buf lint
+    sources:
+      - "**/*.proto"
+
+  proto:format:
+    desc: "格式化 proto 文件"
+    dir: "{{.PROTO_DIR}}"
+    cmds:
+      - buf format -w
+    sources:
+      - "**/*.proto"
+
+  proto:breaking:
+    desc: "检查 proto 破坏性变更（对比 git）"
+    dir: "{{.PROTO_DIR}}"
+    cmds:
+      - buf breaking --against ".git#branch=main"
+
+  # ==================== 代码生成 ====================
+  proto:gen:
+    desc: "生成所有 proto 代码"
+    deps:
+      - proto:gen:backend
+      - proto:gen:frontend
+
+  proto:gen:backend:
+    desc: "生成后端 Go 代码"
+    dir: backend
+    cmds:
+      - buf generate
+    sources:
+      - ../proto/**/*.proto
+      - buf.gen.yaml
+    generates:
+      - gen/**/*.go
+
+  proto:gen:frontend:
+    desc: "生成前端 TypeScript 代码"
+    dir: frontend
+    cmds:
+      - buf generate
+    sources:
+      - ../proto/**/*.proto
+      - buf.gen.yaml
+    generates:
+      - src/gen/**/*.ts
+
+  # ==================== 生成后检查 ====================
+
+  proto:check:
+    desc: "检查生成代码的正确性"
+    deps:
+      - proto:check:backend
+      - proto:check:frontend
+
+  proto:check:backend:
+    desc: "检查后端 Go 代码编译"
+    dir: backend
+    cmds:
+      - go build ./...
+
+  proto:check:frontend:
+    desc: "检查前端 TypeScript 类型"
+    dir: frontend
+    cmds:
+      - bun run tsc --noEmit
+
+  # ==================== Watch 模式 ====================
+
+  proto:watch:
+    desc: "监听 proto 变化并自动生成"
+    watch: true
+    interval: 2000ms
+    sources:
+      - proto/**/*.proto
+    cmds:
+      # 调用已定义的生成任务（会正确设置目录）
+      - task: proto:gen:backend
+      - task: proto:gen:frontend
+      # 只有生成成功才检查
+      - task: proto:check
+      - echo "✅ Proto 重新生成完成"
+    ignore_error: true
+
+  # 仅生成不检查的 watch（更快）
+  proto:watch:fast:
+    desc: "监听 proto 变化并快速生成（跳过检查）"
+    watch: true
+    interval: 1000ms
+    sources:
+      - proto/**/*.proto
+    cmds:
+      - powershell -c "Start-Sleep -Milliseconds 200"
+      - task: proto:gen:backend
+      - task: proto:gen:frontend
+      - echo "✅ Proto 重新生成完成"
+    ignore_error: true
+
+  # ==================== 开发模式 ====================
+
+  dev:
+    desc: "启动完整开发环境 (mprocs TUI)"
+    cmds:
+      - task: proto:gen
+      - task: proto:check
+      - echo "✅ Proto 生成并检查完成，启动开发服务..."
+      - mprocs --names "frontend,backend" "cd frontend && bun run dev" "cd backend && go run ./cmd/server"
+
+  dev:frontend:
+    desc: "启动前端开发服务"
+    dir: frontend
+    cmds:
+      - bun run dev
+
+  dev:backend:
+    desc: "启动后端服务"
+    dir: backend
+    cmds:
+      - go run ./cmd/server
+
+  # ==================== 构建 ====================
+
+  build:
+    desc: "完整构建: 前端打包 -> 嵌入静态资源 -> 后端编译"
+    cmds:
+      - task: build:clean
+      - task: proto:gen
+      - task: build:frontend
+      - task: build:embed
+      - task: build:backend
+      - echo "✅ 构建完成! 输出目录 {{.BUILD_OUTPUT}}/"
+
+  build:clean:
+    desc: "清理构建产物"
+    cmds:
+      - cmd /c "if exist {{.BUILD_OUTPUT}} rmdir /s /q {{.BUILD_OUTPUT}}"
+      - cmd /c "if exist backend\\internal\\static\\dist rmdir /s /q backend\\internal\\static\\dist"
+      - cmd /c "mkdir {{.BUILD_OUTPUT}}"
+
+  build:frontend:
+    desc: "构建前端"
+    dir: frontend
+    cmds:
+      - bun run build
+    sources:
+      - src/**/*
+      - index.html
+      - vite.config.ts
+      - tsconfig*.json
+    generates:
+      - dist/**/*
+
+  build:embed:
+    desc: "将前端产物复制到后端嵌入目录"
+    cmds:
+      - cmd /c "if exist backend\\internal\\static\\dist rmdir /s /q backend\\internal\\static\\dist"
+      - cmd /c "xcopy /E /I /Y frontend\\dist backend\\internal\\static\\dist"
+    sources:
+      - frontend/dist/**/*
+    generates:
+      - backend/internal/static/dist/**/*
+
+  build:backend:
+    desc: "构建后端（包含嵌入的静态资源）"
+    dir: backend
+    cmds:
+      - go build -ldflags="-s -w" -o ../{{.BUILD_OUTPUT}}/{{.BINARY_NAME}}.exe ./cmd/server
+    sources:
+      - "**/*.go"
+      - internal/static/dist/**/*
+    generates:
+      - ../{{.BUILD_OUTPUT}}/{{.BINARY_NAME}}.exe
+
+  build:backend:linux:
+    desc: "交叉编译后端 Linux 版本"
+    dir: backend
+    env:
+      GOOS: linux
+      GOARCH: amd64
+    cmds:
+      - go build -ldflags="-s -w" -o ../{{.BUILD_OUTPUT}}/{{.BINARY_NAME}}-linux-amd64 ./cmd/server
+
+  build:backend:darwin:
+    desc: "交叉编译后端 macOS 版本"
+    dir: backend
+    env:
+      GOOS: darwin
+      GOARCH: amd64
+    cmds:
+      - go build -ldflags="-s -w" -o ../{{.BUILD_OUTPUT}}/{{.BINARY_NAME}}-darwin-amd64 ./cmd/server
+
+  build:all:
+    desc: "构建所有平台版本"
+    cmds:
+      - task: build:clean
+      - task: proto:gen
+      - task: build:frontend
+      - task: build:embed
+      - task: build:backend
+      - task: build:backend:linux
+      - task: build:backend:darwin
+      - echo "✅ 多平台构建完成!"

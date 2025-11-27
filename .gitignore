@@ -1,0 +1,7 @@
+*.log
+.task/
+backend/gen/
+frontend/src/gen/
+backend/internal/static/dist/*
+!backend/internal/static/dist/.gitkeep
+build/
