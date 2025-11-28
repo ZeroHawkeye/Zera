@@ -1,0 +1,441 @@
+openapi: 3.1.0
+info:
+  title: base
+servers:
+  - url: http://localhost:8080
+    description: 本地开发服务器
+paths:
+  /base.AuthService/Login:
+    post:
+      tags:
+        - base.AuthService
+      summary: Login
+      description: 用户登录
+      operationId: base.AuthService.Login
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.LoginRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.LoginResponse'
+  /base.AuthService/Register:
+    post:
+      tags:
+        - base.AuthService
+      summary: Register
+      description: 用户注册
+      operationId: base.AuthService.Register
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.RegisterRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.RegisterResponse'
+  /base.AuthService/Logout:
+    post:
+      tags:
+        - base.AuthService
+      summary: Logout
+      description: 用户登出
+      operationId: base.AuthService.Logout
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.LogoutRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.LogoutResponse'
+  /base.AuthService/RefreshToken:
+    post:
+      tags:
+        - base.AuthService
+      summary: RefreshToken
+      description: 刷新令牌
+      operationId: base.AuthService.RefreshToken
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.RefreshTokenRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.RefreshTokenResponse'
+  /base.AuthService/GetCurrentUser:
+    post:
+      tags:
+        - base.AuthService
+      summary: GetCurrentUser
+      description: 获取当前用户信息
+      operationId: base.AuthService.GetCurrentUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetCurrentUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetCurrentUserResponse'
+components:
+  schemas:
+    base.GetCurrentUserRequest:
+      type: object
+      title: GetCurrentUserRequest
+      additionalProperties: false
+      description: 获取当前用户信息请求
+    base.GetCurrentUserResponse:
+      type: object
+      properties:
+        user:
+          title: user
+          $ref: '#/components/schemas/base.UserInfo'
+      title: GetCurrentUserResponse
+      additionalProperties: false
+      description: 获取当前用户信息响应
+    base.LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          title: username
+          maxLength: 50
+          minLength: 1
+          description: 用户名
+        password:
+          type: string
+          title: password
+          maxLength: 128
+          minLength: 6
+          description: 密码
+      title: LoginRequest
+      additionalProperties: false
+      description: 登录请求
+    base.LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          title: access_token
+          description: 访问令牌
+        refreshToken:
+          type: string
+          title: refresh_token
+          description: 刷新令牌
+        expiresIn:
+          type:
+            - integer
+            - string
+          title: expires_in
+          format: int64
+          description: 令牌过期时间（秒）
+        user:
+          title: user
+          description: 用户信息
+          $ref: '#/components/schemas/base.UserInfo'
+      title: LoginResponse
+      additionalProperties: false
+      description: 登录响应
+    base.LogoutRequest:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          title: access_token
+          description: 访问令牌
+      title: LogoutRequest
+      additionalProperties: false
+      description: 登出请求
+    base.LogoutResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+      title: LogoutResponse
+      additionalProperties: false
+      description: 登出响应
+    base.RefreshTokenRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          title: refresh_token
+          minLength: 1
+          description: 刷新令牌
+      title: RefreshTokenRequest
+      additionalProperties: false
+      description: 刷新令牌请求
+    base.RefreshTokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          title: access_token
+          description: 新的访问令牌
+        refreshToken:
+          type: string
+          title: refresh_token
+          description: 新的刷新令牌
+        expiresIn:
+          type:
+            - integer
+            - string
+          title: expires_in
+          format: int64
+          description: 令牌过期时间（秒）
+      title: RefreshTokenResponse
+      additionalProperties: false
+      description: 刷新令牌响应
+    base.RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          title: username
+          maxLength: 50
+          minLength: 1
+          description: 用户名
+        password:
+          type: string
+          title: password
+          maxLength: 128
+          minLength: 6
+          description: 密码
+        confirmPassword:
+          type: string
+          title: confirm_password
+          maxLength: 128
+          minLength: 6
+          description: 确认密码
+        email:
+          type: string
+          title: email
+          description: 邮箱（可选）
+        phone:
+          type: string
+          title: phone
+          description: 手机号（可选）
+      title: RegisterRequest
+      additionalProperties: false
+      description: 注册请求
+    base.RegisterResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          title: user_id
+          description: 用户ID
+        message:
+          type: string
+          title: message
+          description: 提示信息
+      title: RegisterResponse
+      additionalProperties: false
+      description: 注册响应
+    base.UserInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: 用户ID
+        username:
+          type: string
+          title: username
+          description: 用户名
+        nickname:
+          type: string
+          title: nickname
+          description: 昵称
+        avatar:
+          type: string
+          title: avatar
+          description: 头像URL
+        email:
+          type: string
+          title: email
+          description: 邮箱
+        phone:
+          type: string
+          title: phone
+          description: 手机号
+        roles:
+          type: array
+          items:
+            type: string
+          title: roles
+          description: 角色列表
+      title: UserInfo
+      additionalProperties: false
+      description: 用户信息
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        detail:
+          $ref: '#/components/schemas/google.protobuf.Any'
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    google.protobuf.Any:
+      type: object
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+          format: binary
+        debug:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+security: []
+tags:
+  - name: base.AuthService
+    description: 认证服务
