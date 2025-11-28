@@ -6,10 +6,20 @@
 host = "0.0.0.0"
 port = 9800
 
-# [database]
-# host = "localhost"
-# port = 5432
-# user = "postgres"
-# password = ""
-# dbname = "zera"
-# sslmode = "disable"
+[database]
+host = "localhost"
+port = 5432
+user = "zera"
+password = "012359Clown@"
+dbname = "zera"
+sslmode = "disable"
+
+[app]
+# 开发模式: 启用自动迁移等开发特性
+dev_mode = true
+
+[admin]
+# 初始管理员配置（首次启动时创建）
+username = "admin"
+email = "admin@zera.local"
+password = "admin123"

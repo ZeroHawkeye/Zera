@@ -6,3 +6,14 @@ backend/internal/static/dist/*
 !backend/internal/static/dist/.gitkeep
 build/
 Docker/data/
+# Ent generated files (keep schema/ and generate.go)
+backend/ent/*.go
+!backend/ent/generate.go
+backend/ent/enttest/
+backend/ent/hook/
+backend/ent/migrate/
+backend/ent/predicate/
+backend/ent/runtime/
+backend/ent/user/
+backend/ent/role/
+backend/ent/permission/

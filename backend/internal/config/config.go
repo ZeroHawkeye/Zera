@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -10,8 +11,10 @@ import (
 
 // Config 应用配置
 type Config struct {
-	Server ServerConfig `toml:"server"`
-	// Database DatabaseConfig `toml:"database"` // 预留数据库配置
+	Server   ServerConfig   `toml:"server"`
+	Database DatabaseConfig `toml:"database"`
+	App      AppConfig      `toml:"app"`
+	Admin    AdminConfig    `toml:"admin"`
 }
 
 // ServerConfig 服务器配置
@@ -20,12 +23,58 @@ type ServerConfig struct {
 	Port int    `toml:"port"`
 }
 
+// DatabaseConfig 数据库配置
+type DatabaseConfig struct {
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	User     string `toml:"user"`
+	Password string `toml:"password"`
+	DBName   string `toml:"dbname"`
+	SSLMode  string `toml:"sslmode"`
+}
+
+// AppConfig 应用配置
+type AppConfig struct {
+	DevMode bool `toml:"dev_mode"`
+}
+
+// AdminConfig 初始管理员配置
+type AdminConfig struct {
+	Username string `toml:"username"`
+	Email    string `toml:"email"`
+	Password string `toml:"password"`
+}
+
+// DSN 返回 PostgreSQL 连接字符串
+func (d *DatabaseConfig) DSN() string {
+	return fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		d.Host, d.Port, d.User, d.Password, d.DBName, d.SSLMode,
+	)
+}
+
 // 默认配置
 func defaultConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
 			Host: "0.0.0.0",
 			Port: 8080,
+		},
+		Database: DatabaseConfig{
+			Host:     "localhost",
+			Port:     5432,
+			User:     "postgres",
+			Password: "",
+			DBName:   "zera",
+			SSLMode:  "disable",
+		},
+		App: AppConfig{
+			DevMode: false,
+		},
+		Admin: AdminConfig{
+			Username: "admin",
+			Email:    "admin@zera.local",
+			Password: "admin123",
 		},
 	}
 }
@@ -106,6 +155,42 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if port := getEnvInt("SERVER_PORT"); port != 0 {
 		cfg.Server.Port = port
+	}
+
+	// Database 配置
+	if host := os.Getenv("DB_HOST"); host != "" {
+		cfg.Database.Host = host
+	}
+	if port := getEnvInt("DB_PORT"); port != 0 {
+		cfg.Database.Port = port
+	}
+	if user := os.Getenv("DB_USER"); user != "" {
+		cfg.Database.User = user
+	}
+	if password := os.Getenv("DB_PASSWORD"); password != "" {
+		cfg.Database.Password = password
+	}
+	if dbname := os.Getenv("DB_NAME"); dbname != "" {
+		cfg.Database.DBName = dbname
+	}
+	if sslmode := os.Getenv("DB_SSLMODE"); sslmode != "" {
+		cfg.Database.SSLMode = sslmode
+	}
+
+	// App 配置
+	if devMode := os.Getenv("DEV_MODE"); devMode != "" {
+		cfg.App.DevMode = devMode == "true" || devMode == "1"
+	}
+
+	// Admin 配置
+	if username := os.Getenv("ADMIN_USERNAME"); username != "" {
+		cfg.Admin.Username = username
+	}
+	if email := os.Getenv("ADMIN_EMAIL"); email != "" {
+		cfg.Admin.Email = email
+	}
+	if password := os.Getenv("ADMIN_PASSWORD"); password != "" {
+		cfg.Admin.Password = password
 	}
 }
 

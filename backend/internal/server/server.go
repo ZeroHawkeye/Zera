@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"zera/gen/greet/v1/greetv1connect"
 	"zera/internal/config"
+	"zera/internal/database"
 	"zera/internal/handler"
 	"zera/internal/middleware"
 	"zera/internal/service"
@@ -19,13 +21,39 @@ import (
 type Server struct {
 	config *config.Config
 	engine *gin.Engine
+	db     *database.Database
 }
 
 // New 创建服务器实例
 func New(cfg *config.Config) (*Server, error) {
+	// 初始化数据库连接
+	db, err := database.New(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// 开发模式下自动迁移
+	if err := db.AutoMigrate(context.Background()); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to run auto migration: %w", err)
+	}
+
+	// 初始化系统角色
+	if err := db.InitSystemRoles(context.Background()); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to init system roles: %w", err)
+	}
+
+	// 初始化管理员用户
+	if err := db.InitAdminUser(context.Background()); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to init admin user: %w", err)
+	}
+
 	// 创建验证器
 	validator, err := protovalidate.New()
 	if err != nil {
+		db.Close()
 		return nil, fmt.Errorf("failed to create validator: %w", err)
 	}
 
@@ -56,6 +84,7 @@ func New(cfg *config.Config) (*Server, error) {
 	return &Server{
 		config: cfg,
 		engine: engine,
+		db:     db,
 	}, nil
 }
 
@@ -64,4 +93,12 @@ func (s *Server) Run() error {
 	addr := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
 	log.Printf("Server starting on %s", addr)
 	return s.engine.Run(addr)
+}
+
+// Close 关闭服务器资源
+func (s *Server) Close() error {
+	if s.db != nil {
+		return s.db.Close()
+	}
+	return nil
 }
