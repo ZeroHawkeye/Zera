@@ -1,0 +1,30 @@
+---
+title: API リファレンス
+description: Zera バックエンド API インターフェースドキュメント
+---
+
+このドキュメントは OpenAPI 仕様から自動生成されており、すべてのバックエンド API インターフェースの詳細な説明を含んでいます。
+
+Zera バックエンドは [Connect-RPC](https://connectrpc.com/) を使用して API サービスを提供しており、すべてのインターフェースは gRPC、gRPC-Web、Connect プロトコルを同時にサポートしています。
+
+- **認証サービス (AuthService)** - ユーザーのログイン、登録、ログアウトおよびトークンの更新
+- **挨拶サービス (GreetService)** - 基本的な使い方を示すためのサンプルサービス
+
+すべてのリクエストには以下のヘッダー情報が必要です：
+
+| ヘッダー | 説明 | 必須かどうか |
+|--------|------|----------|
+| `Connect-Protocol-Version` | Connect プロトコルのバージョン。固定値は `1` | はい |
+| `Connect-Timeout-Ms` | リクエストタイムアウト時間（ミリ秒） | いいえ |
+| `Authorization` | 認証トークン（形式：`Bearer <token>`） | 保護されたインターフェースでは必須 |
+
+すべてのインターフェースは標準の Connect エラー形式を使用します：
+
+```json
+{
+  "code": "not_found",
+  "message": "资源不存在"
+}
+```
+
+エラーコードには、`canceled`、`unknown`、`invalid_argument`、`deadline_exceeded`、`not_found`、`already_exists`、`permission_denied`、`resource_exhausted`、`failed_precondition`、`aborted`、`out_of_range`、`unimplemented`、`internal`、`unavailable`、`data_loss`、`unauthenticated` が含まれます。

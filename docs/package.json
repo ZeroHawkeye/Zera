@@ -12,8 +12,8 @@
     "openapi:copy": "tsx scripts/copy-openapi.mts",
     "openapi:gen": "tsx scripts/generate-openapi.mts",
     "openapi": "bun run openapi:copy && bun run openapi:gen",
-    "translate": "tsx scripts/translate.mts",
-    "translate:dry-run": "tsx scripts/translate.mts --dry-run"
+    "translate": "bun scripts/translate.mts",
+    "translate:dry-run": "bun scripts/translate.mts --dry-run"
   },
   "dependencies": {
     "@orama/tokenizers": "^3.1.16",
@@ -36,6 +36,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "cross-env": "^10.1.0",
     "eslint": "^9.39.1",
     "eslint-config-next": "16.0.1",
     "postcss": "^8.5.6",

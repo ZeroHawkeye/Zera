@@ -1,37 +1,29 @@
 ---
 title: API Reference
-description: Zera Backend API Interface Documentation
+description: Zera Backend API Documentation
 ---
 
-This document is automatically generated from the OpenAPI specification and contains detailed descriptions of all backend API interfaces.
+This document is automatically generated from the OpenAPI specification and contains detailed descriptions of all backend API endpoints.
 
-## Overview
-
-The Zera backend provides API services using [Connect-RPC](https://connectrpc.com/). All interfaces support gRPC, gRPC-Web, and Connect protocols simultaneously.
-
-### Available Services
+Zera backend provides API services using [Connect-RPC](https://connectrpc.com/), with all interfaces supporting gRPC, gRPC-Web, and Connect protocols.
 
 - **AuthService** - User login, registration, logout, and token refresh
-- **GreetService** - Example service for demonstrating basic usage
-
-### Common Request Headers
+- **GreetService** - Example service demonstrating basic usage
 
 All requests must include the following headers:
 
 | Header | Description | Required |
 |--------|-------------|----------|
-| `Connect-Protocol-Version` | Connect protocol version, fixed to `1` | Yes |
-| `Connect-Timeout-Ms` | Request timeout (in milliseconds) | No |
+| `Connect-Protocol-Version` | Connect protocol version, fixed value `1` | Yes |
+| `Connect-Timeout-Ms` | Request timeout in milliseconds | No |
 | `Authorization` | Authentication token (format: `Bearer <token>`) | Required for protected endpoints |
-
-### Error Responses
 
 All interfaces use the standard Connect error format:
 
 ```json
 {
   "code": "not_found",
-  "message": "Resource not found"
+  "message": "资源不存在"
 }
 ```
 

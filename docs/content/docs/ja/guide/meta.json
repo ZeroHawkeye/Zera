@@ -1,0 +1,17 @@
+{
+  "title": "ドキュメント",
+  "description": "Zera Admin 開発ドキュメント",
+  "root": true,
+  "icon": "BookOpen",
+  "pages": [
+    "---クイックスタート---",
+    "index",
+    "structure",
+    "commands",
+    "---開発ガイド---",
+    "api",
+    "deployment",
+    "---その他---",
+    "test"
+  ]
+}

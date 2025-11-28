@@ -1,0 +1,13 @@
+{
+  "title": "API Documentation",
+  "description": "API interface reference documentation",
+  "root": true,
+  "icon": "Code",
+  "pages": [
+    "index",
+    "---Authentication Service---",
+    "base.authservice",
+    "---Example Service---",
+    "greet.v1.greetservice"
+  ]
+}

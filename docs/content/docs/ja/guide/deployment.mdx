@@ -1,0 +1,153 @@
+---
+title: デプロイガイド
+description: Zera アプリケーションのデプロイ方法について学ぶ
+---
+
+Zera は、Docker、Vercel、および従来のサーバーデプロイなど、複数のデプロイ方法をサポートしています。
+
+プロジェクトには、すぐに使える Docker Compose 設定が用意されています：
+
+```bash
+cd Docker
+docker-compose up -d
+```
+
+cd Docker
+
+```yaml
+# Docker/docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=production
+    
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+```
+
+フロントエンドは直接Vercelにデプロイできます：
+
+1. GitHubリポジトリを接続する
+2. ビルド設定を設定する：
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+
+プロジェクトには`vercel.json`設定ファイルが含まれています。
+
+```bash
+cd frontend
+npm run build
+```
+
+ビルド成果物は `frontend/dist` ディレクトリにあり、任意の静的ファイルサーバーにデプロイできます。
+
+```bash
+cd backend
+go build -o server ./cmd/server
+```
+
+| 変数 | 説明 | デフォルト値 |
+|------|------|--------|
+| `PORT` | サービスポート | `8080` |
+| `ENV` | 実行環境 | `development` |
+
+バックエンドは `config.toml` を使って設定します：
+
+```toml
+# backend/config.toml
+[server]
+port = 8080
+host = "0.0.0.0"
+
+[cors]
+allowed_origins = ["*"]
+```
+
+デプロイ前に以下の項目を確認してください：
+
+<Steps>
+  <Step>
+    ### 環境変数の設定
+    必要なすべての環境変数が正しく設定されていることを確認します
+  </Step>
+  
+  <Step>
+    ### CORS の設定
+    本番環境ではワイルドカードではなく、許可するオリジンを制限する必要があります
+  </Step>
+  
+  <Step>
+    ### HTTPS
+    すべての通信が HTTPS で保護されていることを確認します
+  </Step>
+  
+  <Step>
+    ### ログと監視
+    適切なログ収集および監視アラートを設定します
+  </Step>
+</Steps>
+
+ドキュメントサイトは Next.js を基盤としており、Vercel にデプロイできます：
+
+```bash
+cd docs
+npm run build
+```
+
+または Vercel CLI を使用します：
+
+```bash
+vercel --prod
+```
+
+GitHub Actions を使用して自動デプロイを行うことを推奨します：
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: cd frontend && npm ci && npm run build
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          working-directory: ./frontend
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - run: cd backend && go build -o server ./cmd/server
+      # 添加你的后端部署步骤
+```

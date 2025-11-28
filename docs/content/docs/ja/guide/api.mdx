@@ -1,0 +1,282 @@
+---
+title: API開発
+description: Zeraフレームワークを使用してAPIを開発する方法を学ぶ
+---
+
+ZeraはProtocol Buffersを使用してAPIを定義し、Connect-RPCを通じてサービスを提供します。
+
+`proto/` ディレクトリにプロトファイルを作成します：
+
+```proto
+// proto/user/v1/user.proto
+syntax = "proto3";
+
+package user.v1;
+
+import "buf/validate/validate.proto";
+
+// 用户服务
+service UserService {
+  // 获取用户信息
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  
+  // 创建用户
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}
+
+message GetUserRequest {
+  string id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message CreateUserRequest {
+  string name = 1 [(buf.validate.field).string.min_len = 1];
+  string email = 2 [(buf.validate.field).string.email = true];
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  int64 created_at = 4;
+}
+```
+
+---
+title: 
+description: 
+---
+
+```bash
+task proto:gen
+```
+
+これは `backend/gen/` と `frontend/src/gen/` ディレクトリにそれぞれ対応するコードを生成します。
+
+`backend/internal/handler/` ディレクトリにハンドラーを作成します：
+
+```go
+// backend/internal/handler/user.go
+package handler
+
+import (
+	"context"
+	
+	"connectrpc.com/connect"
+	userv1 "your-project/gen/user/v1"
+)
+
+type UserHandler struct {
+	// 依赖注入
+}
+
+func NewUserHandler() *UserHandler {
+	return &UserHandler{}
+}
+
+func (h *UserHandler) GetUser(
+	ctx context.Context,
+	req *connect.Request[userv1.GetUserRequest],
+) (*connect.Response[userv1.GetUserResponse], error) {
+	// 实现业务逻辑
+	user := &userv1.User{
+		Id:    req.Msg.Id,
+		Name:  "示例用户",
+		Email: "user@example.com",
+	}
+	
+	return connect.NewResponse(&userv1.GetUserResponse{
+		User: user,
+	}), nil
+}
+
+func (h *UserHandler) CreateUser(
+	ctx context.Context,
+	req *connect.Request[userv1.CreateUserRequest],
+) (*connect.Response[userv1.CreateUserResponse], error) {
+	// 实现创建逻辑
+	user := &userv1.User{
+		Id:    "generated-id",
+		Name:  req.Msg.Name,
+		Email: req.Msg.Email,
+	}
+	
+	return connect.NewResponse(&userv1.CreateUserResponse{
+		User: user,
+	}), nil
+}
+```
+
+サーバー起動時にハンドラーを登録します：
+
+```go
+// backend/internal/server/server.go
+import (
+	"your-project/gen/user/v1/userv1connect"
+	"your-project/internal/handler"
+)
+
+func SetupRoutes(mux *http.ServeMux) {
+	userHandler := handler.NewUserHandler()
+	path, h := userv1connect.NewUserServiceHandler(userHandler)
+	mux.Handle(path, h)
+}
+```
+
+---
+title: 
+description: 
+---
+
+## 
+
+```bash
+
+```
+
+### 
+
+```typescript
+
+```
+
+<Callout type="info">
+
+</Callout>
+
+```typescript
+// frontend/src/config/index.ts
+import { createClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
+import { UserService } from "../gen/user/v1/user_pb";
+
+const transport = createConnectTransport({
+  baseUrl: "http://localhost:8080",
+});
+
+export const userClient = createClient(UserService, transport);
+```
+
+---
+title: 快速开始
+description: 学习如何使用框架
+---
+
+## 安装
+
+使用以下命令安装依赖：
+
+```bash
+npm install example
+```
+
+### 設定ファイル
+
+在 `config.ts` 中添加配置：
+
+```typescript
+export const config = {
+  name: "example"
+};
+```
+
+<Callout type="info">
+  这是一个提示信息。
+</Callout>
+
+```tsx
+// frontend/src/components/UserProfile.tsx
+import { useEffect, useState } from "react";
+import { userClient } from "../config";
+import type { User } from "../gen/user/v1/user_pb";
+
+export function UserProfile({ userId }: { userId: string }) {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      const response = await userClient.getUser({ id: userId });
+      setUser(response.user);
+    }
+    fetchUser();
+  }, [userId]);
+
+  if (!user) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+```
+
+Zera は [buf/validate](https://github.com/bufbuild/protovalidate) を使用してリクエストの検証を行います：
+
+```proto
+import "buf/validate/validate.proto";
+
+message CreateUserRequest {
+  // 名称必须非空
+  string name = 1 [(buf.validate.field).string.min_len = 1];
+  
+  // 邮箱必须是有效格式
+  string email = 2 [(buf.validate.field).string.email = true];
+  
+  // 年龄必须在 0-150 之间
+  int32 age = 3 [(buf.validate.field).int32 = {gte: 0, lte: 150}];
+}
+```
+
+Connect-RPCは標準的なエラー処理メカニズムを提供しています：
+
+```go
+import "connectrpc.com/connect"
+
+func (h *UserHandler) GetUser(
+	ctx context.Context,
+	req *connect.Request[userv1.GetUserRequest],
+) (*connect.Response[userv1.GetUserResponse], error) {
+	user, err := h.service.FindUser(ctx, req.Msg.Id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, connect.NewError(
+				connect.CodeNotFound,
+				fmt.Errorf("用户不存在: %s", req.Msg.Id),
+			)
+		}
+		return nil, connect.NewError(
+			connect.CodeInternal,
+			err,
+		)
+	}
+	
+	return connect.NewResponse(&userv1.GetUserResponse{
+		User: user,
+	}), nil
+}
+```
+
+前端処理エラー：
+
+```typescript
+import { ConnectError, Code } from "@connectrpc/connect";
+
+try {
+  const response = await userClient.getUser({ id: userId });
+} catch (err) {
+  if (err instanceof ConnectError) {
+    if (err.code === Code.NotFound) {
+      console.log("用户不存在");
+    }
+  }
+}
+```

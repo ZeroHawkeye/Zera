@@ -1,0 +1,70 @@
+---
+title: クイックスタート
+description: Zera フレームワークを使用してフルスタック開発をすぐに始める方法を学ぶ
+---
+
+ようこそ **Zera Framework** へ！このガイドでは、最初のフルスタックアプリケーションの構築をすぐに開始できるようサポートします。
+
+## Zera とは？
+
+Zera は Protocol Buffers をベースにしたモダンなフルスタック開発フレームワークで、以下の機能を提供します：
+
+- **型安全な API**：proto 定義からフロントエンド・バックエンドコードまで、一貫して型安全
+- **自動コード生成**：Buf ツールチェーンに基づき、Go および TypeScript コードを自動生成
+- **モダンな技術スタック**：Go + React + TypeScript + Connect-RPC
+- **開発体験を最優先**：ホットリロード、自動化タスク、充実したツールチェーン
+
+## 技術スタック
+
+| レイヤー | 技術 | 説明 |
+|------|------|------|
+| フロントエンド | React + TypeScript | Vite で構築されたモダンなフロントエンドアプリケーション |
+| バックエンド | Go | 高パフォーマンスな Go バックエンドサービス |
+| プロトコル | Protocol Buffers | 言語を越えたインターフェース定義言語 |
+| RPC | Connect-RPC | gRPC、gRPC-Web、Connect プロトコルをサポート |
+| ツール | Buf | Protocol Buffers のツールチェーン |
+
+## 必須依存関係
+
+開始前に、以下のツールがインストールされていることを確認してください：
+
+1. **[Buf](https://buf.build)** - Protocol Buffers ツールチェーン
+2. **[Taskfile](https://taskfile.dev)** - タスクランナー
+3. **[mprocs](https://github.com/pvolok/mprocs)** - 複数プロセス管理ツール（オプション、TUI 開発モード用）
+4. **[Go](https://go.dev)** - Go 言語ランタイム (1.21+)
+5. **[Node.js](https://nodejs.org)** - Node.js ランタイム (20+)
+
+## クイックスタート
+
+### 1. プロジェクトのクローン
+
+```bash
+git clone https://github.com/ZeroHawkeye/Zera.git
+cd zera
+```
+
+### 2. 開発環境の起動
+
+```bash
+# 完全な開発環境を起動（推奨）
+task dev
+```
+
+これにより以下の処理が自動的に実行されます：
+- フロントエンド・バックエンドの proto コードを生成
+- Go バックエンドサービスを起動
+- フロントエンド Vite 開発サーバーを起動
+
+### 3. アプリケーションへのアクセス
+
+- **フロントエンド**：http://localhost:5173
+- **バックエンド**：http://localhost:8080
+
+## 次のステップ
+
+<Cards>
+  <Card title="プロジェクト構成" href="/docs/structure" />
+  <Card title="開発コマンド" href="/docs/commands" />
+  <Card title="API 開発" href="/docs/api" />
+  <Card title="デプロイガイド" href="/docs/deployment" />
+</Cards>

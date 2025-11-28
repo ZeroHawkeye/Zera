@@ -1,0 +1,159 @@
+---
+title: Development Commands
+description: Task commands provided by the Zera framework
+---
+
+Zera uses [Taskfile](https://taskfile.dev) as the task runner and provides a rich set of development commands.
+
+| Command | Description |
+|--------|-------------|
+| `task dev` | Start the complete development environment, automatically generate proto code, and launch both frontend and backend services (via mprocs TUI) |
+| `task dev:frontend` | Start only the frontend development service |
+| `task dev:backend` | Start only the backend service |
+
+This is the most commonly used development command, which will:
+
+1. Automatically run proto code generation
+2. Use [mprocs](https://github.com/pvolok/mprocs) to start both frontend and backend services simultaneously
+3. Provide a unified TUI interface to manage all processes
+
+```bash
+task dev
+```
+
+| Command | Description |
+|--------|-------------|
+| `task proto` | Complete proto workflow: lint → format → generate → check |
+| `task proto:lint` | Check proto file conventions |
+| `task proto:format` | Format proto files |
+| `task proto:breaking` | Check for breaking changes in proto (compared to main branch) |
+
+Run the complete proto workflow to ensure code quality:
+
+```bash
+task proto
+```
+
+This command will execute the following steps in sequence:
+1. **lint**: Check if the proto files comply with the specifications
+2. **format**: Automatically format the proto files
+3. **generate**: Generate frontend and backend code
+4. **check**: Verify that the generated code can be compiled correctly
+
+| Command | Description |
+|--------|-------------|
+| `task proto:gen` | Generate all proto code (frontend and backend in parallel) |
+| `task proto:gen:backend` | Generate backend Go code only |
+| `task proto:gen:frontend` | Generate frontend TypeScript code only |
+
+When you only need to update code on one side:
+
+```bash
+# 仅生成后端代码
+task proto:gen:backend
+
+# 仅生成前端代码
+task proto:gen:frontend
+```
+
+| Command | Description |
+|--------|-------------|
+| `task proto:check` | Check the correctness of generated code (frontend and backend in parallel) |
+| `task proto:check:backend` | Check backend Go code compilation |
+| `task proto:check:frontend` | Check frontend TypeScript types |
+
+| Command | Description |
+|--------|-------------|
+| `task proto:watch` | Watch proto file changes and automatically generate and check |
+| `task proto:watch:fast` | Watch proto file changes and generate without checking (faster) |
+
+During development, you can use watch mode to automatically regenerate code:
+
+```bash
+# 完整 watch（包含类型检查）
+task proto:watch
+
+# 快速 watch（跳过类型检查，更快）
+task proto:watch:fast
+```
+
+<Callout type="info">
+  It is recommended to use `task proto:watch:fast` during development, as it provides a faster feedback loop.
+</Callout>
+
+```bash
+# 启动开发环境
+task dev
+```
+
+task dev
+
+```bash
+# 1. 修改 proto 文件
+# 2. 运行完整 proto 工作流
+task proto
+
+# 3. 实现后端处理器
+# 4. 更新前端调用
+```
+
+---
+title: Task Proto
+description: Generate code from protobuf files
+---
+
+## Overview
+
+The `task proto` command generates code from protobuf definition files. This task automates the process of creating type-safe interfaces and service clients from `.proto` files.
+
+<Callout type="info">
+  This feature requires protobuf compiler (protoc) to be installed on your system.
+</Callout>
+
+## Configuration
+
+Configure protobuf generation in your `task.config.ts`:
+
+```typescript
+export const config = {
+  proto: {
+    // Source directory containing .proto files
+    srcDir: "proto",
+    // Output directory for generated code
+    outDir: "src/generated",
+    // Protobuf plugins to use
+    plugins: ["ts", "grpc-web"],
+    // Additional protoc options
+    options: {
+      experimentalFeatures: true
+    }
+  }
+};
+```
+
+## Usage
+
+Run the code generation task:
+
+```bash
+npm run task proto
+```
+
+Or with specific file:
+
+```bash
+npm run task proto -- --file user.proto
+```
+
+<Callout type="warning">
+  Generated code should not be manually edited as it will be overwritten on next generation.
+</Callout>
+
+```bash
+# 1. 创建新的 proto 文件
+# 2. 生成代码
+task proto:gen
+
+# 3. 实现业务逻辑
+# 4. 注册服务
+```

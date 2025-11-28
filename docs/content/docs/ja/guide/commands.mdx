@@ -1,0 +1,146 @@
+---
+title: 開発コマンド
+description: Zera フレームワークが提供する Task コマンドの説明
+---
+
+Zera はタスクランナーとして [Taskfile](https://taskfile.dev) を使用しており、豊富な開発コマンドを提供しています。
+
+| コマンド | 説明 |
+|--------|------|
+| `task dev` | 完全な開発環境を起動し、protoコードを自動生成してフロントエンド・バックエンドサービスを起動 (mprocs TUI) |
+| `task dev:frontend` | フロントエンド開発サービスのみを起動 |
+| `task dev:backend` | バックエンドサービスのみを起動 |
+
+これは最もよく使われる開発コマンドで、以下の処理を実行します：
+
+1. 自動的に proto コード生成を実行
+2. [mprocs](https://github.com/pvolok/mprocs) を使用して、フロントエンドとバックエンドのサービスを同時に起動
+3. すべてのプロセスを管理する統一された TUI インターフェースを提供
+
+```bash
+task dev
+```
+
+| コマンド | 説明 |
+|------|------|
+| `task proto` | 完全な proto ワークフロー：lint → format → generate → check |
+| `task proto:lint` | proto ファイルの規約をチェック |
+| `task proto:format` | proto ファイルのフォーマット |
+| `task proto:breaking` | proto の破壊的変更をチェック（main ブランチとの比較） |
+
+完全な proto ワークフローを実行して、コード品質を確保します：
+
+```bash
+task proto
+```
+
+このコマンドは以下の順序で実行されます：
+1. **lint**: proto ファイルが規約に準拠しているかをチェック
+2. **format**: proto ファイルを自動フォーマット
+3. **generate**: 前後端のコードを生成
+4. **check**: 生成されたコードが正しくコンパイル可能であることを検証
+
+| コマンド | 説明 |
+|------|------|
+| `task proto:gen` | すべての proto コードを生成（前後端を並列実行） |
+| `task proto:gen:backend` | 後端の Go コードのみを生成 |
+| `task proto:gen:frontend` | 前端の TypeScript コードのみを生成 |
+
+片方のコードだけを更新する必要がある場合：
+
+```bash
+# 仅生成后端代码
+task proto:gen:backend
+
+# 仅生成前端代码
+task proto:gen:frontend
+```
+
+| 命令 | 説明 |
+|------|------|
+| `task proto:check` | 生成されたコードの正しさをチェック（フロントエンド・バックエンド並列実行） |
+| `task proto:check:backend` | バックエンドの Go コードのコンパイルをチェック |
+| `task proto:check:frontend` | フロントエンドの TypeScript 型をチェック |
+
+| 命令 | 説明 |
+|------|------|
+| `task proto:watch` | proto の変更を監視し、自動生成およびチェックを実行 |
+| `task proto:watch:fast` | proto の変更を監視し、生成のみを行う（チェックなし、より高速） |
+
+開発中に、watch モードを使用してコードを自動的に再生成できます：
+
+```bash
+# 完整 watch（包含类型检查）
+task proto:watch
+
+# 快速 watch（跳过类型检查，更快）
+task proto:watch:fast
+```
+
+<Callout type="info">
+  開発時には `task proto:watch:fast` の使用を推奨します。これにより、より迅速なフィードバックループが得られます。
+</Callout>
+
+```bash
+# 启动开发环境
+task dev
+```
+
+---
+title: task dev
+description: 開発用タスクの実行
+---
+
+## 概要
+
+`task dev` コマンドは、開発サーバーを起動し、リアルタイムでの変更検知とリロードを提供します。
+
+### 使用方法
+
+```bash
+task dev
+```
+
+<Callout type="info">
+  このコマンドは開発中のみ使用してください。本番環境では使用しないでください。
+</Callout>
+
+```bash
+# 1. 修改 proto 文件
+# 2. 运行完整 proto 工作流
+task proto
+
+# 3. 实现后端处理器
+# 4. 更新前端调用
+```
+
+---
+title: task proto
+description: Protobuf ファイルをコンパイルして Go コードを生成する
+---
+
+`task proto` は、Protobuf ファイルをコンパイルし、Go コードを生成します。このタスクは `buf` を使用して Protobuf ファイルを検証およびビルドし、`protoc-gen-go` と `protoc-gen-go-grpc` プラグインを使用して Go のスタブを生成します。
+
+## 要件
+
+- [Buf](https://docs.buf.build/installation)
+- [Go](https://go.dev/dl/)
+
+## 使用法
+
+```bash
+task proto
+```
+
+<Callout type="info">
+  Buf がインストールされていない場合は、`task install:buf` を実行してインストールしてください。
+</Callout>
+
+```bash
+# 1. 创建新的 proto 文件
+# 2. 生成代码
+task proto:gen
+
+# 3. 实现业务逻辑
+# 4. 注册服务
+```

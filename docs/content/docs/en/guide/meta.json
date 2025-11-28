@@ -1,10 +1,10 @@
 {
-  "title": "Guide",
-  "description": "Zera Admin Development Documentation",
+  "title": "Documentation",
+  "description": "Zera Admin Developer Documentation",
   "root": true,
   "icon": "BookOpen",
   "pages": [
-    "---Getting Started---",
+    "---Quick Start---",
     "index",
     "structure",
     "commands",

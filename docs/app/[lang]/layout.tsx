@@ -16,8 +16,8 @@ const { provider } = defineI18nUI(i18n, {
     zh: {
       displayName: '简体中文',
       search: '搜索文档',
-      searchNoResult: '没有找到结果',
-      toc: '目录',
+      searchNoResult: '没有找到結果',
+      toc: '目録',
       tocNoHeadings: '没有标题',
       lastUpdate: '最后更新于',
       chooseTheme: '选择主题',
@@ -27,6 +27,18 @@ const { provider } = defineI18nUI(i18n, {
     },
     en: {
       displayName: 'English',
+    },
+    ja: {
+      displayName: '日本語',
+      search: 'ドキュメントを検索',
+      searchNoResult: '結果が見つかりません',
+      toc: '目次',
+      tocNoHeadings: '見出しがありません',
+      lastUpdate: '最終更新日',
+      chooseTheme: 'テーマを選択',
+      nextPage: '次のページ',
+      previousPage: '前のページ',
+      editOnGithub: 'GitHub で編集',
     },
   },
 });

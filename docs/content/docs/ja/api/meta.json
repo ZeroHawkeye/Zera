@@ -1,0 +1,13 @@
+{
+  "title": "API ドキュメント",
+  "description": "APIインターフェースリファレンスドキュメント",
+  "root": true,
+  "icon": "Code",
+  "pages": [
+    "index",
+    "---認証サービス---",
+    "base.authservice",
+    "---例サービス---",
+    "greet.v1.greetservice"
+  ]
+}

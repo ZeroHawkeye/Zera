@@ -3,34 +3,34 @@ title: Quick Start
 description: Learn how to quickly get started with the Zera framework for full-stack development
 ---
 
-Welcome to **Zera Framework**! This guide will help you get started and build your first full-stack application.
+Welcome to **Zera Framework**! This guide will help you get up and running quickly and start building your first full-stack application.
 
 ## What is Zera?
 
 Zera is a modern full-stack development framework based on Protocol Buffers, providing:
 
-- **Type-safe APIs**: Full type safety from proto definitions to frontend and backend code
-- **Automatic code generation**: Auto-generate Go and TypeScript code based on Buf toolchain
+- **Type-safe APIs**: End-to-end type safety from proto definitions to frontend and backend code
+- **Automatic code generation**: Automatically generate Go and TypeScript code using the Buf toolchain
 - **Modern tech stack**: Go + React + TypeScript + Connect-RPC
-- **Developer experience first**: Hot reload, automated tasks, and comprehensive toolchain
+- **Developer experience first**: Hot reloading, automated tasks, and a comprehensive toolchain
 
 ## Tech Stack
 
 | Layer | Technology | Description |
-|-------|------------|-------------|
+|------|------------|-------------|
 | Frontend | React + TypeScript | Modern frontend application built with Vite |
 | Backend | Go | High-performance Go backend service |
 | Protocol | Protocol Buffers | Cross-language interface definition language |
 | RPC | Connect-RPC | Supports gRPC, gRPC-Web, and Connect protocols |
-| Tools | Buf | Protocol Buffers toolchain |
+| Tooling | Buf | Protocol Buffers toolchain |
 
 ## Prerequisites
 
-Before getting started, please ensure you have the following tools installed:
+Before getting started, ensure you have the following tools installed:
 
 1. **[Buf](https://buf.build)** - Protocol Buffers toolchain
 2. **[Taskfile](https://taskfile.dev)** - Task runner
-3. **[mprocs](https://github.com/pvolok/mprocs)** - Multi-process manager (optional, for TUI dev mode)
+3. **[mprocs](https://github.com/pvolok/mprocs)** - Multi-process manager (optional, for TUI development mode)
 4. **[Go](https://go.dev)** - Go runtime (1.21+)
 5. **[Node.js](https://nodejs.org)** - Node.js runtime (20+)
 
@@ -43,17 +43,17 @@ git clone https://github.com/ZeroHawkeye/Zera.git
 cd zera
 ```
 
-### 2. Start development environment
+### 2. Start the development environment
 
 ```bash
-# Start full development environment (recommended)
+# Start the full development environment (recommended)
 task dev
 ```
 
 This will automatically:
 - Generate frontend and backend proto code
-- Start the Go backend service
-- Start the Vite frontend dev server
+- Start the backend Go service
+- Launch the frontend Vite development server
 
 ### 3. Access the application
 

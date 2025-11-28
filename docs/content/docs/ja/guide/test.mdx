@@ -1,0 +1,112 @@
+---
+title: コンポーネントの例
+description: Fumadocs UI コンポーネントの使用例
+---
+
+このページでは、ドキュメントで利用可能なさまざまなUIコンポーネントを紹介します。
+
+## コードブロック
+
+構文ハイライト付きのコードブロック：
+
+```typescript title="example.ts"
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+async function getUser(id: string): Promise<User> {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}
+```
+
+## カード
+
+カードコンポーネントを使用して関連リンクを表示：
+
+<Cards>
+  <Card title="クイックスタート" href="/docs" />
+  <Card title="プロジェクト構造" href="/docs/structure" />
+  <Card title="開発コマンド" href="/docs/commands" />
+  <Card title="API開発" href="/docs/api" />
+</Cards>
+
+## ポップアップメッセージ
+
+<Callout type="info">
+  これは情報メッセージです。重要な情報を表示するために使用されます。
+</Callout>
+
+<Callout type="warn">
+  これは警告メッセージです。注意事項を伝えるために使用されます。
+</Callout>
+
+<Callout type="error">
+  これはエラーメッセージです。エラーまたは危険な操作を表示するために使用されます。
+</Callout>
+
+## ステップ
+
+<Steps>
+  <Step>
+    ### 依存関係のインストール
+    `npm install` または `pnpm install` を実行してプロジェクトの依存関係をインストール
+  </Step>
+  
+  <Step>
+    ### 環境設定
+    `.env.example` を `.env` にコピーし、設定を記入
+  </Step>
+  
+  <Step>
+    ### 開発の開始
+    `task dev` を実行して開発サーバーを起動
+  </Step>
+</Steps>
+
+## タブ
+
+<Tabs items={['npm', 'pnpm', 'yarn']}>
+  <Tab value="npm">
+    ```bash
+    npm install
+    npm run dev
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm install
+    pnpm dev
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn
+    yarn dev
+    ```
+  </Tab>
+</Tabs>
+
+## テーブル
+
+| コマンド | 説明 |
+|------|------|
+| `task dev` | 開発環境を起動 |
+| `task proto` | protoワークフローを実行 |
+| `task proto:gen` | protoコードを生成 |
+
+## ファイルツリー
+
+<Files>
+  <Folder name="src" defaultOpen>
+    <Folder name="components">
+      <File name="Button.tsx" />
+      <File name="Card.tsx" />
+    </Folder>
+    <File name="App.tsx" />
+    <File name="main.tsx" />
+  </Folder>
+  <File name="package.json" />
+</Files>

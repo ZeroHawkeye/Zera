@@ -1,0 +1,153 @@
+---
+title: Deployment Guide
+description: Learn how to deploy Zera applications
+---
+
+Zera supports multiple deployment methods, including Docker, Vercel, and traditional server deployment.
+
+The project provides a ready-to-use Docker Compose configuration:
+
+```bash
+cd Docker
+docker-compose up -d
+```
+
+version: '3.8'
+
+```yaml
+# Docker/docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=production
+    
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+```
+
+The frontend can be directly deployed to Vercel:
+
+1. Connect your GitHub repository
+2. Set the build configuration:
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+
+The project already includes the `vercel.json` configuration file.
+
+```bash
+cd frontend
+npm run build
+```
+
+The build output is located in the `frontend/dist` directory and can be deployed to any static file server.
+
+```bash
+cd backend
+go build -o server ./cmd/server
+```
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `PORT` | Server port | `8080` |
+| `ENV` | Runtime environment | `development` |
+
+The backend uses `config.toml` for configuration:
+
+```toml
+# backend/config.toml
+[server]
+port = 8080
+host = "0.0.0.0"
+
+[cors]
+allowed_origins = ["*"]
+```
+
+Before deployment, please confirm the following:
+
+<Steps>
+  <Step>
+    ### Environment Variable Configuration
+    Ensure all necessary environment variables are properly set
+  </Step>
+  
+  <Step>
+    ### CORS Configuration
+    In production, restrict allowed origins instead of using wildcards
+  </Step>
+  
+  <Step>
+    ### HTTPS
+    Ensure all traffic is protected with HTTPS
+  </Step>
+  
+  <Step>
+    ### Logging and Monitoring
+    Configure appropriate log collection and monitoring alerts
+  </Step>
+</Steps>
+
+The documentation site is built with Next.js and can be deployed to Vercel:
+
+```bash
+cd docs
+npm run build
+```
+
+or use the Vercel CLI:
+
+```bash
+vercel --prod
+```
+
+We recommend using GitHub Actions for automated deployment:
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: cd frontend && npm ci && npm run build
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          working-directory: ./frontend
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      - run: cd backend && go build -o server ./cmd/server
+      # 添加你的后端部署步骤
+```

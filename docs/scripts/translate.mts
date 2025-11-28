@@ -1,228 +1,192 @@
+#!/usr/bin/env node
 /**
- * AI 自动翻译脚本
+ * AI 自动翻译脚本 v2.0
  * 
- * 该脚本用于自动翻译文档内容，支持多种 AI 提供商。
+ * 功能特性:
+ * - ✅ 智能分段翻译（按语义边界分割，避免超出 token 限制）
+ * - ✅ 上下文感知（理解文档结构和前后关系）
+ * - ✅ 增量翻译（只翻译变更的内容，使用缓存）
+ * - ✅ 并行处理（多文件和多段落并发翻译）
+ * - ✅ 术语一致性（维护术语表，确保翻译统一）
+ * - ✅ 多语言支持（一次翻译到多个目标语言）
  * 
  * 使用方法:
- * 1. 设置环境变量 (可选):
- *    - OPENAI_API_KEY: OpenAI API 密钥
- *    - OPENAI_BASE_URL: OpenAI API 基础 URL (可选，用于自定义端点)
- *    - ANTHROPIC_API_KEY: Anthropic API 密钥
- *    - AI_PROVIDER: 选择 AI 提供商 (openai 或 anthropic，默认 openai)
+ * 1. 在 config.mts 中配置语言:
+ *    - defaultLocale: 源语言（默认 zh）
+ *    - targetLocales: 目标语言列表（如 ['en', 'ja']）
  * 
  * 2. 运行脚本:
- *    bun run scripts/translate.mts --source zh --target en
- *    bun run scripts/translate.mts --source zh --target en --file guide/index.mdx
- *    bun run scripts/translate.mts --source zh --target en --dry-run
+ *    bun run translate                                    # 翻译到所有配置的目标语言
+ *    bun run translate --target en                        # 只翻译到英语
+ *    bun run translate --target en,ja                     # 翻译到英语和日语
+ *    bun run translate --file guide/index.mdx            # 翻译单个文件
+ *    bun run translate --dry-run                         # 预览将要翻译的文件
+ *    bun run translate --force                           # 强制重新翻译
+ *    bun run translate --clear-cache                     # 清除缓存
  * 
  * 参数说明:
- *   --source, -s: 源语言代码 (默认: zh)
- *   --target, -t: 目标语言代码 (默认: en)
- *   --file, -f: 指定要翻译的文件路径 (可选，不指定则翻译所有文件)
- *   --dry-run: 仅显示将要翻译的文件，不实际执行
- *   --force: 强制重新翻译已存在的文件
+ *   --source, -s:     源语言代码 (默认: 配置文件中的 defaultLocale)
+ *   --target, -t:     目标语言代码，多个用逗号分隔 (默认: 配置文件中的 targetLocales)
+ *   --all:            翻译到所有配置的目标语言
+ *   --file, -f:       指定要翻译的文件路径 (可选)
+ *   --dry-run:        仅显示将要翻译的文件，不实际执行
+ *   --force:          强制重新翻译已存在的文件
+ *   --clear-cache:    清除翻译缓存
+ *   --concurrency, -c: 并发数 (默认: 3)
  */
 
-import { readdir, readFile, writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join, dirname, relative } from 'path';
 import { parseArgs } from 'util';
+import { join } from 'path';
+import { existsSync } from 'fs';
+import { getConfig, languageConfig } from './translate/config.mts';
+import { TranslationEngine } from './translate/engine.mts';
+import { getAllMdxFiles, filterSourceFiles, getTargetFilePath, getDisplayPath } from './translate/utils.mts';
+import { languageNames } from './translate/types.mts';
+import type { TranslationStats } from './translate/types.mts';
 
-// ============= 配置 =============
-
-interface TranslateConfig {
-  provider: 'openai' | 'anthropic';
-  openai: {
-    apiKey: string;
-    baseUrl: string;
-    model: string;
+/**
+ * 翻译到单个目标语言
+ */
+async function translateToLanguage(
+  engine: TranslationEngine,
+  filesToTranslate: string[],
+  sourceLang: string,
+  targetLang: string,
+  docsDir: string,
+  options: { dryRun: boolean; force: boolean }
+): Promise<TranslationStats> {
+  const stats: TranslationStats = {
+    totalFiles: filesToTranslate.length,
+    translated: 0,
+    skipped: 0,
+    failed: 0,
+    cached: 0,
+    totalChunks: 0,
+    successfulChunks: 0,
+    failedChunks: 0,
+    startTime: Date.now(),
   };
-  anthropic: {
-    apiKey: string;
-    model: string;
-  };
-}
 
-const config: TranslateConfig = {
-  provider: (process.env.AI_PROVIDER as 'openai' | 'anthropic') || 'openai',
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY || 'sk-5a7bd2e52ab541fbafbb7b39780e88fb',
-    baseUrl: process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    model: process.env.OPENAI_MODEL || 'qwen3-max-preview',
-  },
-  anthropic: {
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-    model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022',
-  },
-};
-
-// 语言名称映射
-const languageNames: Record<string, string> = {
-  zh: 'Chinese (Simplified)',
-  en: 'English',
-  ja: 'Japanese',
-  ko: 'Korean',
-  es: 'Spanish',
-  fr: 'French',
-  de: 'German',
-  pt: 'Portuguese',
-  ru: 'Russian',
-};
-
-// ============= AI 翻译函数 =============
-
-async function translateWithOpenAI(content: string, sourceLang: string, targetLang: string): Promise<string> {
-  const sourceName = languageNames[sourceLang] || sourceLang;
   const targetName = languageNames[targetLang] || targetLang;
+  console.log(`\n📝 Translating to ${targetName} (${targetLang})...`);
+  console.log('─'.repeat(50));
 
-  const response = await fetch(`${config.openai.baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.openai.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: config.openai.model,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a professional technical documentation translator. 
-Translate the following MDX documentation from ${sourceName} to ${targetName}.
-
-IMPORTANT RULES:
-1. Preserve ALL MDX syntax, frontmatter, imports, and component tags exactly as they are
-2. Only translate the human-readable text content
-3. Keep code blocks, code snippets, and technical terms in their original form
-4. Maintain the exact formatting, indentation, and structure
-5. Do not add or remove any content
-6. Preserve all links, but translate link text if it's in the source language
-7. Keep frontmatter keys (like title, description) but translate their values
-8. Return ONLY the translated content, no explanations
-
-Output the translated MDX content directly.`,
-        },
-        {
-          role: 'user',
-          content: content,
-        },
-      ],
-      temperature: 0.3,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenAI API error: ${response.status} - ${error}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
-
-async function translateWithAnthropic(content: string, sourceLang: string, targetLang: string): Promise<string> {
-  const sourceName = languageNames[sourceLang] || sourceLang;
-  const targetName = languageNames[targetLang] || targetLang;
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': config.anthropic.apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: config.anthropic.model,
-      max_tokens: 8192,
-      system: `You are a professional technical documentation translator. 
-Translate the following MDX documentation from ${sourceName} to ${targetName}.
-
-IMPORTANT RULES:
-1. Preserve ALL MDX syntax, frontmatter, imports, and component tags exactly as they are
-2. Only translate the human-readable text content
-3. Keep code blocks, code snippets, and technical terms in their original form
-4. Maintain the exact formatting, indentation, and structure
-5. Do not add or remove any content
-6. Preserve all links, but translate link text if it's in the source language
-7. Keep frontmatter keys (like title, description) but translate their values
-8. Return ONLY the translated content, no explanations
-
-Output the translated MDX content directly.`,
-      messages: [
-        {
-          role: 'user',
-          content: content,
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Anthropic API error: ${response.status} - ${error}`);
-  }
-
-  const data = await response.json();
-  return data.content[0].text;
-}
-
-async function translate(content: string, sourceLang: string, targetLang: string): Promise<string> {
-  if (config.provider === 'anthropic') {
-    return translateWithAnthropic(content, sourceLang, targetLang);
-  }
-  return translateWithOpenAI(content, sourceLang, targetLang);
-}
-
-// ============= 文件操作函数 =============
-
-async function getAllMdxFiles(dir: string): Promise<string[]> {
-  const files: string[] = [];
-  
-  async function walk(currentDir: string) {
-    const entries = await readdir(currentDir, { withFileTypes: true });
-    
-    for (const entry of entries) {
-      const fullPath = join(currentDir, entry.name);
+  // Dry run 模式
+  if (options.dryRun) {
+    for (const sourceFile of filesToTranslate) {
+      const targetFile = getTargetFilePath(sourceFile, targetLang, sourceLang, docsDir);
+      const displaySource = getDisplayPath(sourceFile, docsDir);
+      const displayTarget = getDisplayPath(targetFile, docsDir);
       
-      if (entry.isDirectory()) {
-        await walk(fullPath);
-      } else if (entry.name.endsWith('.mdx') || entry.name.endsWith('.json')) {
-        files.push(fullPath);
+      const exists = existsSync(targetFile);
+      const status = exists ? (options.force ? '🔄 Update' : '⏭️  Skip') : '✨ New';
+      
+      console.log(`${status}: ${displaySource} → ${displayTarget}`);
+    }
+    return stats;
+  }
+
+  // 实际翻译
+  for (let i = 0; i < filesToTranslate.length; i++) {
+    const sourceFile = filesToTranslate[i];
+    const targetFile = getTargetFilePath(sourceFile, targetLang, sourceLang, docsDir);
+    const displaySource = getDisplayPath(sourceFile, docsDir);
+    const displayTarget = getDisplayPath(targetFile, docsDir);
+
+    console.log(`[${i + 1}/${filesToTranslate.length}] ${displaySource}`);
+
+    // 检查目标文件是否存在
+    if (existsSync(targetFile) && !options.force) {
+      console.log(`  ⏭️  Skipped (file exists)`);
+      stats.skipped++;
+      continue;
+    }
+
+    try {
+      const result = await engine.translateFile(
+        sourceFile,
+        targetFile,
+        sourceLang,
+        targetLang,
+        options.force
+      );
+
+      if (result.skipped) {
+        console.log(`  ⏭️  Skipped: ${result.reason}`);
+        stats.skipped++;
+        if (result.reason?.includes('cached')) {
+          stats.cached++;
+        }
+      } else if (result.success && result.translated) {
+        console.log(`  ✅ → ${displayTarget}`);
+        if (result.chunks) {
+          stats.totalChunks += result.chunks.total;
+          stats.successfulChunks += result.chunks.successful;
+          stats.failedChunks += result.chunks.failed;
+        }
+        stats.translated++;
+      } else {
+        console.error(`  ❌ Failed: ${result.error || 'Unknown error'}`);
+        stats.failed++;
       }
+    } catch (error) {
+      console.error(`  ❌ Error: ${error}`);
+      stats.failed++;
     }
   }
-  
-  await walk(dir);
-  return files;
-}
 
-async function ensureDir(filePath: string) {
-  const dir = dirname(filePath);
-  if (!existsSync(dir)) {
-    await mkdir(dir, { recursive: true });
-  }
+  stats.endTime = Date.now();
+  return stats;
 }
-
-// ============= 主函数 =============
 
 async function main() {
+  const startTime = Date.now();
+
+  // 解析命令行参数
   const { values } = parseArgs({
     args: process.argv.slice(2),
     options: {
-      source: { type: 'string', short: 's', default: 'zh' },
-      target: { type: 'string', short: 't', default: 'en' },
+      source: { type: 'string', short: 's' },
+      target: { type: 'string', short: 't' },
+      all: { type: 'boolean', default: false },
       file: { type: 'string', short: 'f' },
       'dry-run': { type: 'boolean', default: false },
       force: { type: 'boolean', default: false },
+      'clear-cache': { type: 'boolean', default: false },
+      concurrency: { type: 'string', short: 'c', default: '3' },
     },
   });
 
-  const sourceLang = values.source!;
-  const targetLang = values.target!;
-  const specificFile = values.file;
-  const dryRun = values['dry-run'];
-  const force = values.force;
+  // 配置
+  const config = getConfig({
+    parallel: {
+      maxConcurrency: parseInt(values.concurrency!, 10),
+      delayBetweenRequests: 300,
+    },
+  });
 
-  // 验证配置
+  // 确定源语言和目标语言
+  const sourceLang = values.source || config.languages.defaultLocale;
+  
+  // 确定目标语言列表
+  let targetLangs: string[];
+  if (values.target) {
+    // 命令行指定的目标语言（支持逗号分隔）
+    targetLangs = values.target.split(',').map(l => l.trim()).filter(Boolean);
+  } else if (values.all) {
+    // --all 参数：使用配置中的所有目标语言
+    targetLangs = config.languages.targetLocales;
+  } else {
+    // 默认：使用配置中的所有目标语言
+    targetLangs = config.languages.targetLocales;
+  }
+
+  const specificFile = values.file;
+  const dryRun = values['dry-run']!;
+  const force = values.force!;
+  const clearCache = values['clear-cache'];
+
+  // 验证 API 密钥
   if (config.provider === 'openai' && !config.openai.apiKey) {
     console.error('❌ Error: OPENAI_API_KEY environment variable is not set');
     console.log('\nPlease set your API key:');
@@ -238,120 +202,123 @@ async function main() {
   }
 
   const docsDir = join(process.cwd(), 'content', 'docs');
+  const cacheDir = join(process.cwd(), config.cache.dir);
 
-  console.log('🌐 AI Document Translation Tool');
-  console.log('================================');
-  console.log(`Provider: ${config.provider}`);
-  console.log(`Source: ${sourceLang} (${languageNames[sourceLang] || sourceLang})`);
-  console.log(`Target: ${targetLang} (${languageNames[targetLang] || targetLang})`);
-  console.log(`Dry run: ${dryRun}`);
-  console.log(`Force: ${force}`);
-  console.log('');
+  // 打印配置信息
+  console.log('🌐 AI Document Translation Tool v2.0');
+  console.log('=====================================');
+  console.log(`Provider:    ${config.provider} (${config.provider === 'openai' ? config.openai.model : config.anthropic.model})`);
+  console.log(`Source:      ${sourceLang} (${languageNames[sourceLang] || sourceLang})`);
+  console.log(`Targets:     ${targetLangs.map(l => `${l} (${languageNames[l] || l})`).join(', ')}`);
+  console.log(`Concurrency: ${config.parallel.maxConcurrency}`);
+  console.log(`Cache:       ${config.cache.enabled ? 'enabled' : 'disabled'}`);
+  console.log(`Dry run:     ${dryRun}`);
+  console.log(`Force:       ${force}`);
 
-  // 获取所有源文件（不带语言后缀的文件，或带源语言后缀的文件）
-  const allFiles = await getAllMdxFiles(docsDir);
-  
-  // 过滤出需要翻译的源文件
-  const sourceFiles = allFiles.filter(f => {
-    const fileName = f.replace(/\\/g, '/').split('/').pop() || '';
-    // 排除已经是目标语言的文件
-    if (fileName.includes(`.${targetLang}.`)) return false;
-    // 如果源语言是默认语言，选择不带语言后缀的文件
-    if (sourceLang === 'zh') {
-      // 不带语言后缀，或者明确是 zh 后缀
-      return !fileName.match(/\.[a-z]{2}\.(mdx|json)$/);
-    }
-    // 否则选择带源语言后缀的文件
-    return fileName.includes(`.${sourceLang}.`);
-  });
+  // 初始化翻译引擎
+  const engine = new TranslationEngine(config, cacheDir, docsDir);
+  await engine.initialize();
 
-  let filesToTranslate = sourceFiles;
-  
-  if (specificFile) {
-    const fullPath = join(docsDir, specificFile);
-    filesToTranslate = sourceFiles.filter(f => f === fullPath);
-  }
-
-  if (filesToTranslate.length === 0) {
-    console.log('No files to translate.');
+  // 处理清除缓存
+  if (clearCache) {
+    console.log('\n🗑️  Clearing translation cache...');
+    engine.clearCache();
+    await engine.shutdown();
+    console.log('✅ Cache cleared');
     return;
   }
 
-  console.log(`Found ${filesToTranslate.length} file(s) to process:\n`);
+  // 验证目标语言
+  if (targetLangs.length === 0) {
+    console.error('\n❌ Error: No target languages specified');
+    console.log('Configure targetLocales in config.mts or use --target <lang>');
+    process.exit(1);
+  }
 
-  // 翻译文件
-  let translated = 0;
-  let skipped = 0;
-  let errors = 0;
+  // 获取所有源文件
+  const allFiles = await getAllMdxFiles(docsDir);
+  
+  // 对每个目标语言过滤源文件（目录模式下，源文件在 sourceLang 目录下）
+  const sourceFiles = filterSourceFiles(allFiles, sourceLang, targetLangs[0], docsDir);
 
-  for (const sourceFile of filesToTranslate) {
-    // 生成目标文件路径
-    const fileName = sourceFile.replace(/\\/g, '/').split('/').pop() || '';
-    const dir = dirname(sourceFile);
+  // 过滤特定文件
+  let filesToTranslate = sourceFiles;
+  if (specificFile) {
+    // 目录模式：文件路径相对于源语言目录，如 guide/index.mdx
+    const fullPath = join(docsDir, sourceLang, specificFile);
+    filesToTranslate = sourceFiles.filter(f => f === fullPath);
     
-    let targetFileName: string;
-    if (fileName.endsWith('.mdx')) {
-      targetFileName = fileName.replace('.mdx', `.${targetLang}.mdx`);
-    } else if (fileName.endsWith('.json')) {
-      targetFileName = fileName.replace('.json', `.${targetLang}.json`);
-    } else {
-      continue;
-    }
-    
-    const targetPath = join(dir, targetFileName);
-    const displaySource = relative(docsDir, sourceFile);
-    const displayTarget = relative(docsDir, targetPath);
-
-    // 检查目标文件是否已存在
-    if (existsSync(targetPath) && !force) {
-      console.log(`⏭️  Skip (exists): ${displaySource}`);
-      skipped++;
-      continue;
-    }
-
-    if (dryRun) {
-      console.log(`📝 Would translate: ${displaySource} → ${displayTarget}`);
-      continue;
-    }
-
-    try {
-      console.log(`🔄 Translating: ${displaySource}`);
-      
-      const content = await readFile(sourceFile, 'utf-8');
-      
-      // 对于 meta.json，需要特殊处理
-      let translatedContent: string;
-      if (sourceFile.endsWith('.json')) {
-        // meta.json 可能有需要翻译的 title 等字段
-        const meta = JSON.parse(content);
-        if (meta.title || meta.description) {
-          translatedContent = await translate(content, sourceLang, targetLang);
-        } else {
-          translatedContent = content;
-        }
-      } else {
-        translatedContent = await translate(content, sourceLang, targetLang);
-      }
-
-      await ensureDir(targetPath);
-      await writeFile(targetPath, translatedContent, 'utf-8');
-      
-      console.log(`✅ Saved: ${displayTarget}`);
-      translated++;
-
-      // 添加延迟以避免 API 限制
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } catch (error) {
-      console.error(`❌ Error translating ${displaySource}:`, error);
-      errors++;
+    if (filesToTranslate.length === 0) {
+      console.error(`\n❌ File not found: ${sourceLang}/${specificFile}`);
+      process.exit(1);
     }
   }
 
-  console.log('\n================================');
-  console.log('📊 Summary:');
-  console.log(`   Translated: ${translated}`);
-  console.log(`   Skipped: ${skipped}`);
-  console.log(`   Errors: ${errors}`);
+  if (filesToTranslate.length === 0) {
+    console.log('\nNo files to translate.');
+    await engine.shutdown();
+    return;
+  }
+
+  console.log(`\n📁 Found ${filesToTranslate.length} source file(s)`);
+  console.log(`📊 Will translate to ${targetLangs.length} language(s): ${targetLangs.join(', ')}`);
+
+  // 汇总统计
+  const allStats: Map<string, TranslationStats> = new Map();
+
+  // 翻译到每个目标语言
+  for (const targetLang of targetLangs) {
+    const stats = await translateToLanguage(
+      engine,
+      filesToTranslate,
+      sourceLang,
+      targetLang,
+      docsDir,
+      { dryRun, force }
+    );
+    allStats.set(targetLang, stats);
+  }
+
+  // 保存状态
+  await engine.shutdown();
+
+  // 最终统计
+  const endTime = Date.now();
+  const duration = ((endTime - startTime) / 1000).toFixed(2);
+
+  console.log('\n=====================================');
+  console.log('📊 Translation Summary');
+  console.log('=====================================');
+
+  let totalTranslated = 0;
+  let totalSkipped = 0;
+  let totalFailed = 0;
+
+  for (const [lang, stats] of allStats) {
+    const langName = languageNames[lang] || lang;
+    console.log(`\n${langName} (${lang}):`);
+    console.log(`  ✅ Translated: ${stats.translated}`);
+    console.log(`  ⏭️  Skipped:    ${stats.skipped}`);
+    console.log(`  ❌ Failed:     ${stats.failed}`);
+    
+    totalTranslated += stats.translated;
+    totalSkipped += stats.skipped;
+    totalFailed += stats.failed;
+  }
+
+  if (targetLangs.length > 1) {
+    console.log('\n' + '─'.repeat(30));
+    console.log(`Total: ${totalTranslated} translated, ${totalSkipped} skipped, ${totalFailed} failed`);
+  }
+
+  console.log(`\n⏱️  Time: ${duration}s`);
+  console.log('');
+
+  // 退出码
+  process.exit(totalFailed > 0 ? 1 : 0);
 }
 
-main().catch(console.error);
+main().catch(error => {
+  console.error('💥 Fatal error:', error);
+  process.exit(1);
+});

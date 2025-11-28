@@ -1,0 +1,258 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-28T06:28:09.572Z",
+  "terms": [
+    {
+      "source": "认证",
+      "translations": {
+        "en": "authentication"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "授权",
+      "translations": {
+        "en": "authorization"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "令牌",
+      "translations": {
+        "en": "token"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "接口",
+      "translations": {
+        "en": "API"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "端点",
+      "translations": {
+        "en": "endpoint"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "请求",
+      "translations": {
+        "en": "request"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "响应",
+      "translations": {
+        "en": "response"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "服务",
+      "translations": {
+        "en": "service"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "客户端",
+      "translations": {
+        "en": "client"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "服务端",
+      "translations": {
+        "en": "server"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "中间件",
+      "translations": {
+        "en": "middleware"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "路由",
+      "translations": {
+        "en": "routing"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "部署",
+      "translations": {
+        "en": "deployment"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "配置",
+      "translations": {
+        "en": "configuration"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "依赖",
+      "translations": {
+        "en": "dependency"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "模块",
+      "translations": {
+        "en": "module"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "组件",
+      "translations": {
+        "en": "component"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "钩子",
+      "translations": {
+        "en": "hook"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "状态",
+      "translations": {
+        "en": "state"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "属性",
+      "translations": {
+        "en": "property"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "参数",
+      "translations": {
+        "en": "parameter"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "返回值",
+      "translations": {
+        "en": "return value"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "类型",
+      "translations": {
+        "en": "type"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "枚举",
+      "translations": {
+        "en": "enum"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "结构体",
+      "translations": {
+        "en": "struct"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "协议",
+      "translations": {
+        "en": "protocol"
+      },
+      "category": "tech"
+    },
+    {
+      "source": "快速开始",
+      "translations": {
+        "en": "Quick Start"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "入门指南",
+      "translations": {
+        "en": "Getting Started"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "安装",
+      "translations": {
+        "en": "Installation"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "使用方法",
+      "translations": {
+        "en": "Usage"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "示例",
+      "translations": {
+        "en": "Example"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "注意",
+      "translations": {
+        "en": "Note"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "警告",
+      "translations": {
+        "en": "Warning"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "提示",
+      "translations": {
+        "en": "Tip"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "另请参阅",
+      "translations": {
+        "en": "See Also"
+      },
+      "category": "doc"
+    },
+    {
+      "source": "相关链接",
+      "translations": {
+        "en": "Related Links"
+      },
+      "category": "doc"
+    }
+  ]
+}
