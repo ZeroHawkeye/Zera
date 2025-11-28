@@ -23,3 +23,11 @@ dev_mode = true
 username = "admin"
 email = "admin@zera.local"
 password = "admin123"
+
+[jwt]
+# JWT 配置
+secret = "your-super-secret-key-please-change-in-production"
+# 访问令牌过期时间（秒）
+access_token_expire = 3600
+# 刷新令牌过期时间（秒）
+refresh_token_expire = 604800

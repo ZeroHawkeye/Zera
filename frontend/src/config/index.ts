@@ -14,7 +14,7 @@ interface AppConfig {
 
 const devConfig: AppConfig = {
   apiBaseUrl: 'http://localhost:9800',
-  useBinaryFormat: true,
+  useBinaryFormat: false,
   debug: true,
 }
 

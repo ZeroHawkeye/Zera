@@ -15,6 +15,7 @@ type Config struct {
 	Database DatabaseConfig `toml:"database"`
 	App      AppConfig      `toml:"app"`
 	Admin    AdminConfig    `toml:"admin"`
+	JWT      JWTConfig      `toml:"jwt"`
 }
 
 // ServerConfig 服务器配置
@@ -43,6 +44,13 @@ type AdminConfig struct {
 	Username string `toml:"username"`
 	Email    string `toml:"email"`
 	Password string `toml:"password"`
+}
+
+// JWTConfig JWT 配置
+type JWTConfig struct {
+	Secret             string `toml:"secret"`
+	AccessTokenExpire  int64  `toml:"access_token_expire"`
+	RefreshTokenExpire int64  `toml:"refresh_token_expire"`
 }
 
 // DSN 返回 PostgreSQL 连接字符串
@@ -75,6 +83,11 @@ func defaultConfig() *Config {
 			Username: "admin",
 			Email:    "admin@zera.local",
 			Password: "admin123",
+		},
+		JWT: JWTConfig{
+			Secret:             "your-super-secret-key-please-change-in-production",
+			AccessTokenExpire:  3600,   // 1 小时
+			RefreshTokenExpire: 604800, // 7 天
 		},
 	}
 }
@@ -192,12 +205,33 @@ func applyEnvOverrides(cfg *Config) {
 	if password := os.Getenv("ADMIN_PASSWORD"); password != "" {
 		cfg.Admin.Password = password
 	}
+
+	// JWT 配置
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		cfg.JWT.Secret = secret
+	}
+	if expire := getEnvInt64("JWT_ACCESS_TOKEN_EXPIRE"); expire != 0 {
+		cfg.JWT.AccessTokenExpire = expire
+	}
+	if expire := getEnvInt64("JWT_REFRESH_TOKEN_EXPIRE"); expire != 0 {
+		cfg.JWT.RefreshTokenExpire = expire
+	}
 }
 
 // getEnvInt 获取整型环境变量，如果不存在或解析失败返回 0
 func getEnvInt(key string) int {
 	if value := os.Getenv(key); value != "" {
 		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return 0
+}
+
+// getEnvInt64 获取 int64 类型环境变量，如果不存在或解析失败返回 0
+func getEnvInt64(key string) int64 {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.ParseInt(value, 10, 64); err == nil {
 			return intValue
 		}
 	}

@@ -8,13 +8,13 @@ import "buf/validate/validate.proto";
 message LoginRequest {
   // 用户名
   string username = 1 [(buf.validate.field).string = {
-    min_len: 1,
-    max_len: 50,
+    min_len: 1
+    max_len: 50
   }];
   // 密码
   string password = 2 [(buf.validate.field).string = {
-    min_len: 6,
-    max_len: 128,
+    min_len: 6
+    max_len: 128
   }];
 }
 
@@ -48,37 +48,6 @@ message UserInfo {
   repeated string roles = 7;
 }
 
-// 注册请求
-message RegisterRequest {
-  // 用户名
-  string username = 1 [(buf.validate.field).string = {
-    min_len: 1,
-    max_len: 50,
-  }];
-  // 密码
-  string password = 2 [(buf.validate.field).string = {
-    min_len: 6,
-    max_len: 128,
-  }];
-  // 确认密码
-  string confirm_password = 3 [(buf.validate.field).string = {
-    min_len: 6,
-    max_len: 128,
-  }];
-  // 邮箱（可选）
-  string email = 4;
-  // 手机号（可选）
-  string phone = 5;
-}
-
-// 注册响应
-message RegisterResponse {
-  // 用户ID
-  string user_id = 1;
-  // 提示信息
-  string message = 2;
-}
-
 // 登出请求
 message LogoutRequest {
   // 访问令牌
@@ -94,9 +63,7 @@ message LogoutResponse {
 // 刷新令牌请求
 message RefreshTokenRequest {
   // 刷新令牌
-  string refresh_token = 1 [(buf.validate.field).string = {
-    min_len: 1,
-  }];
+  string refresh_token = 1 [(buf.validate.field).string = {min_len: 1}];
 }
 
 // 刷新令牌响应
@@ -121,8 +88,6 @@ message GetCurrentUserResponse {
 service AuthService {
   // 用户登录
   rpc Login(LoginRequest) returns (LoginResponse) {}
-  // 用户注册
-  rpc Register(RegisterRequest) returns (RegisterResponse) {}
   // 用户登出
   rpc Logout(LogoutRequest) returns (LogoutResponse) {}
   // 刷新令牌

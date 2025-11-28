@@ -1,6 +1,8 @@
 import { createLazyRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { User, Lock, ArrowRight, AlertCircle } from 'lucide-react'
+import { ConnectError } from '@connectrpc/connect'
+import { authApi } from '@/api/auth'
 
 export const Route = createLazyRoute('/login')({
   component: LoginPage,
@@ -25,11 +27,15 @@ function LoginPage() {
 
     setLoading(true)
     try {
-      // TODO: 实现实际的登录逻辑
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await authApi.login({
+        username: username.trim(),
+        password: password,
+        rememberMe,
+      })
       navigate({ to: '/' })
-    } catch {
-      setError('登录失败，请检查用户名和密码')
+    } catch (err) {
+      const connectErr = ConnectError.from(err)
+      setError(connectErr.message || '登录失败，请检查用户名和密码')
     } finally {
       setLoading(false)
     }

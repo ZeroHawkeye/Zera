@@ -150,42 +150,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/base.RefreshTokenResponse'
-  /base.AuthService/Register:
-    post:
-      tags:
-        - base.AuthService
-      summary: 用户注册
-      description: 用户注册
-      operationId: base.AuthService.Register
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.RegisterRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.RegisterResponse'
 components:
   schemas:
     base.GetCurrentUserRequest:
@@ -297,52 +261,6 @@ components:
       title: RefreshTokenResponse
       additionalProperties: false
       description: 刷新令牌响应
-    base.RegisterRequest:
-      type: object
-      properties:
-        username:
-          type: string
-          title: username
-          maxLength: 50
-          minLength: 1
-          description: 用户名
-        password:
-          type: string
-          title: password
-          maxLength: 128
-          minLength: 6
-          description: 密码
-        confirmPassword:
-          type: string
-          title: confirm_password
-          maxLength: 128
-          minLength: 6
-          description: 确认密码
-        email:
-          type: string
-          title: email
-          description: 邮箱（可选）
-        phone:
-          type: string
-          title: phone
-          description: 手机号（可选）
-      title: RegisterRequest
-      additionalProperties: false
-      description: 注册请求
-    base.RegisterResponse:
-      type: object
-      properties:
-        userId:
-          type: string
-          title: user_id
-          description: 用户ID
-        message:
-          type: string
-          title: message
-          description: 提示信息
-      title: RegisterResponse
-      additionalProperties: false
-      description: 注册响应
     base.UserInfo:
       type: object
       properties:

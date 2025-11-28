@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"zera/gen/greet/v1/greetv1connect"
+	"zera/gen/base/baseconnect"
+	"zera/internal/auth"
 	"zera/internal/config"
 	"zera/internal/database"
 	"zera/internal/handler"
@@ -14,6 +15,7 @@ import (
 	"zera/internal/static"
 
 	"buf.build/go/protovalidate"
+	"connectrpc.com/connect"
 	"github.com/gin-gonic/gin"
 )
 
@@ -57,11 +59,17 @@ func New(cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to create validator: %w", err)
 	}
 
+	// 初始化 JWT 管理器
+	jwtManager := auth.NewJWTManager(&cfg.JWT)
+
 	// 初始化服务层
-	greetService := service.NewGreetService()
+	authService := service.NewAuthService(db.Client, jwtManager)
 
 	// 初始化处理器
-	greetHandler := handler.NewGreetHandler(validator, greetService)
+	authHandler := handler.NewAuthHandler(validator, authService, jwtManager)
+
+	// 创建认证拦截器
+	authInterceptor := middleware.NewAuthInterceptor(jwtManager)
 
 	// 创建 Gin 引擎
 	engine := gin.Default()
@@ -69,8 +77,11 @@ func New(cfg *config.Config) (*Server, error) {
 	// 注册中间件
 	engine.Use(middleware.CORS())
 
-	// 注册路由
-	path, h := greetv1connect.NewGreetServiceHandler(greetHandler)
+	// 注册认证服务路由
+	path, h := baseconnect.NewAuthServiceHandler(
+		authHandler,
+		connect.WithInterceptors(authInterceptor),
+	)
 	engine.Any(path+"*action", gin.WrapH(h))
 
 	// 注册 SPA 静态资源（生产环境）
