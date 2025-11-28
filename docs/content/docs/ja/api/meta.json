@@ -7,7 +7,9 @@
     "index",
     "---認証サービス---",
     "base.authservice",
-    "---例サービス---",
-    "greet.v1.greetservice"
+    "---ロールサービス---",
+    "base.roleservice",
+    "---ユーザーサービス---",
+    "base.userservice"
   ]
 }
