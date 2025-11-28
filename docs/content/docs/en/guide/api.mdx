@@ -51,15 +51,13 @@ message User {
 
 // proto/user/v1/user.proto
 
-task proto:gen
-
 ```bash
 task proto:gen
 ```
 
-This will generate corresponding code under the `backend/gen/` and `frontend/src/gen/` directories.
+This will generate corresponding code in the `backend/gen/` and `frontend/src/gen/` directories.
 
-Create handlers under the `backend/internal/handler/` directory:
+Create handlers in the `backend/internal/handler/` directory:
 
 ```go
 // backend/internal/handler/user.go
@@ -129,7 +127,32 @@ func SetupRoutes(mux *http.ServeMux) {
 }
 ```
 
-Please provide the MDX content you would like me to translate from Chinese (Simplified) to English.
+---
+title: Quick Start
+description: Learn how to use the framework
+---
+
+## Installation
+
+Install dependencies using the following command:
+
+```bash
+npm install example
+```
+
+### Configuration File
+
+Add configuration in `config.ts`:
+
+```typescript
+export const config = {
+  name: "example"
+};
+```
+
+<Callout type="info">
+  This is a tip message.
+</Callout>
 
 ```typescript
 // frontend/src/config/index.ts

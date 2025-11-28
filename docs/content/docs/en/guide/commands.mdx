@@ -64,8 +64,8 @@ task proto:gen:frontend
 
 | Command | Description |
 |--------|-------------|
-| `task proto:watch` | Watch proto file changes and automatically generate and check |
-| `task proto:watch:fast` | Watch proto file changes and generate without checking (faster) |
+| `task proto:watch` | Watch proto file changes and automatically regenerate and check |
+| `task proto:watch:fast` | Watch proto file changes and regenerate without checking (faster) |
 
 During development, you can use watch mode to automatically regenerate code:
 
@@ -98,55 +98,30 @@ task proto
 ```
 
 ---
-title: Task Proto
-description: Generate code from protobuf files
+title: Quick Start
+description: Learn how to use the framework
 ---
 
-## Overview
+## Installation
 
-The `task proto` command generates code from protobuf definition files. This task automates the process of creating type-safe interfaces and service clients from `.proto` files.
+Install dependencies using the following command:
 
-<Callout type="info">
-  This feature requires protobuf compiler (protoc) to be installed on your system.
-</Callout>
+```bash
+npm install example
+```
 
-## Configuration
+### Configuration File
 
-Configure protobuf generation in your `task.config.ts`:
+Add configuration in `config.ts`:
 
 ```typescript
 export const config = {
-  proto: {
-    // Source directory containing .proto files
-    srcDir: "proto",
-    // Output directory for generated code
-    outDir: "src/generated",
-    // Protobuf plugins to use
-    plugins: ["ts", "grpc-web"],
-    // Additional protoc options
-    options: {
-      experimentalFeatures: true
-    }
-  }
+  name: "example"
 };
 ```
 
-## Usage
-
-Run the code generation task:
-
-```bash
-npm run task proto
-```
-
-Or with specific file:
-
-```bash
-npm run task proto -- --file user.proto
-```
-
-<Callout type="warning">
-  Generated code should not be manually edited as it will be overwritten on next generation.
+<Callout type="info">
+  This is a tip message.
 </Callout>
 
 ```bash

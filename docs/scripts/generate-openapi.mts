@@ -4,6 +4,12 @@
 import { generateFiles } from 'fumadocs-openapi';
 import { createOpenAPI } from 'fumadocs-openapi/server';
 import { glob } from 'glob';
+import path from 'node:path';
+
+// 将 Windows 路径转换为 POSIX 路径
+function toPosixPath(p: string): string {
+  return p.split(path.sep).join(path.posix.sep);
+}
 
 async function generate() {
   // 自动扫描所有 openapi.yaml 文件
@@ -15,10 +21,18 @@ async function generate() {
   }
 
   console.log(`📄 找到 ${files.length} 个 OpenAPI 文件:`);
-  files.forEach((f) => console.log(`  - ${f}`));
+  files.forEach((f) => console.log(`  - ${toPosixPath(f)}`));
 
+  // 使用函数形式的 input，返回 { [posixPath]: absolutePath } 对象
   const openapi = createOpenAPI({
-    input: files,
+    input: () => {
+      const result: Record<string, string> = {};
+      for (const file of files) {
+        const posixPath = toPosixPath(file);
+        result[posixPath] = path.resolve(file);
+      }
+      return result;
+    },
   });
 
   await generateFiles({
