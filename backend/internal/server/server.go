@@ -64,9 +64,11 @@ func New(cfg *config.Config) (*Server, error) {
 
 	// 初始化服务层
 	authService := service.NewAuthService(db.Client, jwtManager)
+	userService := service.NewUserService(db.Client)
 
 	// 初始化处理器
 	authHandler := handler.NewAuthHandler(validator, authService, jwtManager)
+	userHandler := handler.NewUserHandler(validator, userService)
 
 	// 创建认证拦截器
 	authInterceptor := middleware.NewAuthInterceptor(jwtManager)
@@ -77,12 +79,19 @@ func New(cfg *config.Config) (*Server, error) {
 	// 注册中间件
 	engine.Use(middleware.CORS())
 
-	// 注册认证服务路由
-	path, h := baseconnect.NewAuthServiceHandler(
+	// 注册认证服务路由（公开接口）
+	authPath, authH := baseconnect.NewAuthServiceHandler(
 		authHandler,
 		connect.WithInterceptors(authInterceptor),
 	)
-	engine.Any(path+"*action", gin.WrapH(h))
+	engine.Any(authPath+"*action", gin.WrapH(authH))
+
+	// 注册用户管理服务路由（需要认证）
+	userPath, userH := baseconnect.NewUserServiceHandler(
+		userHandler,
+		connect.WithInterceptors(authInterceptor),
+	)
+	engine.Any(userPath+"*action", gin.WrapH(userH))
 
 	// 注册 SPA 静态资源（生产环境）
 	// 开发环境下 dist 目录可能不存在或为空，会优雅降级

@@ -1,45 +1,44 @@
 import { createLazyRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
-import { 
-  Table, 
-  Button, 
-  Space, 
-  Input, 
-  Card, 
-  Tag, 
-  Avatar, 
-  Dropdown, 
+import { useState } from 'react'
+import {
+  Table,
+  Button,
+  Space,
+  Input,
+  Card,
+  Tag,
+  Avatar,
+  Dropdown,
   Modal,
   Empty,
   Skeleton,
   Pagination
 } from 'antd'
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  MoreVertical, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  MoreVertical,
   Mail,
   Calendar
 } from 'lucide-react'
 import type { ColumnsType } from 'antd/es/table'
 import type { MenuProps } from 'antd'
-import { useResponsive } from '@/hooks'
+import { useResponsive, useUsers, UserStatus } from '@/hooks'
 
-export const Route = createLazyRoute('/admin/users/')({  
+export const Route = createLazyRoute('/admin/users/')({
   component: UserList,
 })
 
-interface User {
-  id: string
-  name: string
-  email: string
-  role: string
-  status: 'active' | 'inactive'
-  avatar?: string
-  createdAt: string
-}
+import type { UserDetail } from '@/api/user'
+
+// 兼容后端 UserStatus 枚举
+const STATUS_MAP = {
+  1: 'active', // ACTIVE
+  2: 'inactive', // INACTIVE
+  3: 'inactive', // BANNED
+} as const
 
 /**
  * 用户状态配置
@@ -47,7 +46,7 @@ interface User {
 const STATUS_CONFIG = {
   active: { color: 'green', text: '活跃', dotClass: 'bg-green-500' },
   inactive: { color: 'default', text: '未激活', dotClass: 'bg-gray-400' },
-} as const
+}
 
 /**
  * 角色颜色配置
@@ -67,12 +66,14 @@ function UserCard({
   onEdit, 
   onDelete 
 }: { 
-  user: User
-  onEdit: (user: User) => void
-  onDelete: (user: User) => void 
+  user: UserDetail
+  onEdit: (user: UserDetail) => void
+  onDelete: (user: UserDetail) => void 
 }) {
-  const statusConfig = STATUS_CONFIG[user.status]
-  
+  // 兼容后端 UserStatus 枚举
+  const statusKey = STATUS_MAP[user.status as keyof typeof STATUS_MAP] || 'inactive'
+  const statusConfig = STATUS_CONFIG[statusKey]
+
   const menuItems: MenuProps['items'] = [
     {
       key: 'edit',
@@ -103,7 +104,7 @@ function UserCard({
             src={user.avatar}
             className="bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20"
           >
-            {user.name.charAt(0)}
+            {user.nickname?.charAt(0) || user.username?.charAt(0) || '-'}
           </Avatar>
           {/* 状态指示点 */}
           <div 
@@ -114,12 +115,12 @@ function UserCard({
         {/* 用户信息 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-900 truncate">{user.name}</span>
+            <span className="font-semibold text-gray-900 truncate">{user.nickname || user.username}</span>
             <Tag 
-              color={ROLE_COLORS[user.role] || 'default'} 
+              color={ROLE_COLORS[user.roles?.[0]] || 'default'} 
               className="!mr-0 !text-xs"
             >
-              {user.role}
+              {user.roles?.[0] || '-'}
             </Tag>
           </div>
           <div className="flex items-center gap-1.5 mt-1 text-sm text-gray-500">
@@ -143,7 +144,7 @@ function UserCard({
       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <Calendar className="w-3.5 h-3.5" />
-          <span>{user.createdAt}</span>
+          <span>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}</span>
         </div>
         <Tag 
           color={statusConfig.color} 
@@ -177,7 +178,7 @@ function UserListSkeleton({ isMobile }: { isMobile: boolean }) {
       </div>
     )
   }
-  
+
   return (
     <Card className="overflow-hidden !rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm">
       <Skeleton active paragraph={{ rows: 5 }} />
@@ -192,90 +193,54 @@ function UserListSkeleton({ isMobile }: { isMobile: boolean }) {
 function UserList() {
   const { isMobile } = useResponsive()
   const [searchValue, setSearchValue] = useState('')
-  const [loading] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
-  
-  // TODO: 从 API 获取用户数据
-  const users: User[] = [
-    {
-      id: '1',
-      name: '张三',
-      email: 'zhangsan@example.com',
-      role: '管理员',
-      status: 'active',
-      createdAt: '2024-01-15',
-    },
-    {
-      id: '2',
-      name: '李四',
-      email: 'lisi@example.com',
-      role: '普通用户',
-      status: 'active',
-      createdAt: '2024-02-20',
-    },
-    {
-      id: '3',
-      name: '王五',
-      email: 'wangwu@example.com',
-      role: '编辑',
-      status: 'inactive',
-      createdAt: '2024-03-10',
-    },
-    {
-      id: '4',
-      name: '赵六',
-      email: 'zhaoliu@example.com',
-      role: '普通用户',
-      status: 'active',
-      createdAt: '2024-04-05',
-    },
-  ]
-
-  // 过滤用户
-  const filteredUsers = useMemo(() => {
-    if (!searchValue) return users
-    const search = searchValue.toLowerCase()
-    return users.filter(
-      user => 
-        user.name.toLowerCase().includes(search) || 
-        user.email.toLowerCase().includes(search)
-    )
-  }, [users, searchValue])
+  const {
+    users,
+    total,
+    loading,
+    pagination,
+    updatePagination,
+    search,
+    error,
+  } = useUsers()
 
   // 桌面端表格列配置
-  const columns: ColumnsType<User> = [
+  const columns: ColumnsType<any> = [
     {
       title: '用户',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, record) => (
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Avatar 
-              src={record.avatar}
-              className="bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20"
-            >
-              {name.charAt(0)}
-            </Avatar>
-            <div 
-              className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${STATUS_CONFIG[record.status].dotClass}`}
-            />
+      render: (_: string, record) => {
+        // 兼容后端 UserStatus 枚举
+        const statusKey = STATUS_MAP[record.status as keyof typeof STATUS_MAP] || 'inactive'
+        const statusConfig = STATUS_CONFIG[statusKey]
+        return (
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Avatar 
+                src={record.avatar}
+                className="bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20"
+              >
+                {record.nickname?.charAt(0) || record.username?.charAt(0) || '-'}
+              </Avatar>
+              <div 
+                className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${statusConfig.dotClass}`}
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="font-medium text-gray-900">{record.nickname || record.username}</div>
+              <div className="text-sm text-gray-500">{record.email}</div>
+            </div>
           </div>
-          <div className="min-w-0">
-            <div className="font-medium text-gray-900">{name}</div>
-            <div className="text-sm text-gray-500">{record.email}</div>
-          </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       title: '角色',
       dataIndex: 'role',
       key: 'role',
       width: 120,
-      render: (role: string) => (
-        <Tag color={ROLE_COLORS[role] || 'default'}>{role}</Tag>
+      render: (_: string, record) => (
+        <Tag color={ROLE_COLORS[record.roles?.[0]] || 'default'}>{record.roles?.[0] || '-'}</Tag>
       ),
     },
     {
@@ -283,7 +248,8 @@ function UserList() {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: 'active' | 'inactive') => {
+      render: (_: any, record) => {
+        const status = record.status === UserStatus.ACTIVE ? 'active' : 'inactive'
         const config = STATUS_CONFIG[status]
         return <Tag color={config.color}>{config.text}</Tag>
       },
@@ -293,6 +259,7 @@ function UserList() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 120,
+      render: (createdAt: string) => createdAt ? new Date(createdAt).toLocaleDateString() : '-',
     },
     {
       title: '操作',
@@ -320,16 +287,16 @@ function UserList() {
     },
   ]
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: UserDetail) => {
     // TODO: 实现编辑功能
     console.log('Edit user:', user)
   }
 
-  const handleDelete = (user: User) => {
+  const handleDelete = (user: UserDetail) => {
     // TODO: 实现删除确认弹窗
     Modal.confirm({
       title: '确认删除',
-      content: `确定要删除用户「${user.name}」吗？此操作不可恢复。`,
+      content: `确定要删除用户「${user.nickname || user.username}」吗？此操作不可恢复。`,
       okText: '删除',
       okType: 'danger',
       cancelText: '取消',
@@ -344,12 +311,20 @@ function UserList() {
     console.log('Add user')
   }
 
-  // 加载状态
+  // 加载或错误状态
   if (loading) {
     return (
       <div className="space-y-4 md:space-y-6">
         <PageHeader onAdd={handleAddUser} isMobile={isMobile} />
         <UserListSkeleton isMobile={isMobile} />
+      </div>
+    )
+  }
+  if (error) {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        <PageHeader onAdd={handleAddUser} isMobile={isMobile} />
+        <Card className="p-8 text-center text-red-500 bg-white/80">{error}</Card>
       </div>
     )
   }
@@ -362,18 +337,22 @@ function UserList() {
       {/* 搜索和过滤 */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
-          placeholder="搜索用户名或邮箱..."
+          placeholder="搜索用户名/邮箱/昵称..."
           prefix={<Search className="w-4 h-4 text-gray-400" />}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
+          onPressEnter={() => search(searchValue)}
           allowClear
           className="w-full sm:max-w-xs !rounded-xl"
         />
+        <Button type="default" onClick={() => search(searchValue)}>
+          <Search className="w-4 h-4" /> 查询
+        </Button>
         {/* TODO: 添加筛选器 */}
       </div>
 
       {/* 用户列表 */}
-      {filteredUsers.length === 0 ? (
+      {users.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={searchValue ? '没有找到匹配的用户' : '暂无用户数据'}
@@ -382,21 +361,21 @@ function UserList() {
       ) : isMobile ? (
         /* 移动端：卡片列表 */
         <div className="space-y-3">
-          {filteredUsers.map((user) => (
-            <UserCard 
-              key={user.id} 
-              user={user} 
-              onEdit={handleEdit} 
-              onDelete={handleDelete} 
+          {users.map((user) => (
+            <UserCard
+              key={user.id}
+              user={user}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))}
           {/* 移动端分页 */}
           <div className="flex justify-center pt-4">
             <Pagination
-              current={currentPage}
-              total={filteredUsers.length}
-              pageSize={pageSize}
-              onChange={setCurrentPage}
+              current={pagination.page}
+              total={total}
+              pageSize={pagination.pageSize}
+              onChange={(page, pageSize) => updatePagination(page, pageSize)}
               simple
               showSizeChanger={false}
             />
@@ -407,14 +386,14 @@ function UserList() {
         <Card className="overflow-hidden !rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm">
           <Table
             columns={columns}
-            dataSource={filteredUsers}
+            dataSource={users}
             rowKey="id"
             scroll={{ x: 800 }}
             pagination={{
-              current: currentPage,
-              total: filteredUsers.length,
-              pageSize,
-              onChange: setCurrentPage,
+              current: pagination.page,
+              total,
+              pageSize: pagination.pageSize,
+              onChange: updatePagination,
               showSizeChanger: true,
               showQuickJumper: true,
               showTotal: (total) => `共 ${total} 条`,
@@ -429,12 +408,12 @@ function UserList() {
 /**
  * 页面标题组件
  */
-function PageHeader({ 
-  onAdd, 
-  isMobile 
-}: { 
+function PageHeader({
+  onAdd,
+  isMobile
+}: {
   onAdd: () => void
-  isMobile: boolean 
+  isMobile: boolean
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -446,9 +425,9 @@ function PageHeader({
           管理系统中的所有用户账户
         </p>
       </div>
-      <Button 
-        type="primary" 
-        icon={<Plus className="w-4 h-4" />} 
+      <Button
+        type="primary"
+        icon={<Plus className="w-4 h-4" />}
         onClick={onAdd}
         className={`
           !rounded-xl !h-10 !px-5 !font-medium

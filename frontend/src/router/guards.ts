@@ -2,69 +2,65 @@
  * 路由守卫
  * 
  * 提供路由级别的访问控制和权限验证
+ * 使用 zustand store 管理认证状态
  */
 
 import { redirect } from '@tanstack/react-router'
+import { useAuthStore } from '@/stores'
+
+/**
+ * 获取认证状态（非 hook 方式，用于路由守卫）
+ */
+function getAuthState() {
+  return useAuthStore.getState()
+}
 
 /**
  * 认证状态检查
- * TODO: 实现真实的认证状态检查逻辑
  */
 export function isAuthenticated(): boolean {
-  // TODO: 检查 token 或 session
-  const token = localStorage.getItem('auth_token')
-  return !!token
+  const state = getAuthState()
+  return !!state.accessToken
 }
 
 /**
  * 获取当前用户信息
- * TODO: 实现真实的用户信息获取逻辑
  */
 export function getCurrentUser() {
-  // TODO: 从状态管理或 API 获取用户信息
-  return {
-    id: '1',
-    username: 'admin',
-    roles: ['admin'],
-    permissions: ['*'],
-  }
+  const state = getAuthState()
+  return state.user
 }
 
 /**
  * 检查用户是否有指定权限
  */
 export function hasPermission(permission: string): boolean {
-  const user = getCurrentUser()
-  if (!user) return false
-  
-  // 超级管理员拥有所有权限
-  if (user.permissions.includes('*')) return true
-  
-  return user.permissions.includes(permission)
+  const state = getAuthState()
+  return state.hasPermission(permission)
 }
 
 /**
  * 检查用户是否有指定角色
  */
 export function hasRole(role: string): boolean {
-  const user = getCurrentUser()
-  if (!user) return false
-  
-  return user.roles.includes(role)
+  const state = getAuthState()
+  return state.hasRole(role)
 }
 
 /**
  * 检查用户是否有任意一个指定权限
  */
 export function hasAnyPermission(permissions: string[]): boolean {
-  return permissions.some(hasPermission)
+  const state = getAuthState()
+  return state.hasAnyPermission(permissions)
 }
 
 /**
  * 检查用户是否有所有指定权限
  */
 export function hasAllPermissions(permissions: string[]): boolean {
-  return permissions.every(hasPermission)
+  const state = getAuthState()
+  return state.hasAllPermissions(permissions)
 }
 
 /**
@@ -92,7 +88,6 @@ export function permissionGuard(permission: string) {
   if (!hasPermission(permission)) {
     throw redirect({
       to: '/admin',
-      // TODO: 可以重定向到 403 页面
     })
   }
 }
@@ -107,7 +102,6 @@ export function roleGuard(role: string) {
   if (!hasRole(role)) {
     throw redirect({
       to: '/admin',
-      // TODO: 可以重定向到 403 页面
     })
   }
 }
@@ -121,5 +115,16 @@ export function guestGuard() {
     throw redirect({
       to: '/admin',
     })
+  }
+}
+
+/**
+ * 等待认证初始化完成
+ * 用于在路由加载前确保认证状态已初始化
+ */
+export async function waitForAuthInit(): Promise<void> {
+  const state = getAuthState()
+  if (!state.isInitialized) {
+    await state.initialize()
   }
 }

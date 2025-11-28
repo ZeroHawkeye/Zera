@@ -4,4 +4,5 @@
  */
 
 export * from './auth'
+export * from './user'
 export { transport } from './client'

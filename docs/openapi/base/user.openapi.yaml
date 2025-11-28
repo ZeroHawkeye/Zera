@@ -1,0 +1,742 @@
+openapi: 3.1.0
+info:
+  title: base
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: 本地开发服务器
+paths:
+  /base.UserService/BatchDeleteUsers:
+    post:
+      tags:
+        - base.UserService
+      summary: 批量删除用户
+      description: 批量删除用户
+      operationId: base.UserService.BatchDeleteUsers
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.BatchDeleteUsersRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.BatchDeleteUsersResponse'
+  /base.UserService/BatchUpdateUserStatus:
+    post:
+      tags:
+        - base.UserService
+      summary: 批量更新用户状态
+      description: 批量更新用户状态
+      operationId: base.UserService.BatchUpdateUserStatus
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.BatchUpdateUserStatusRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.BatchUpdateUserStatusResponse'
+  /base.UserService/CreateUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 创建用户
+      description: 创建用户
+      operationId: base.UserService.CreateUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.CreateUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.CreateUserResponse'
+  /base.UserService/DeleteUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 删除用户
+      description: 删除用户
+      operationId: base.UserService.DeleteUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.DeleteUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.DeleteUserResponse'
+  /base.UserService/GetUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 获取用户详情
+      description: 获取用户详情
+      operationId: base.UserService.GetUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetUserResponse'
+  /base.UserService/ListUsers:
+    post:
+      tags:
+        - base.UserService
+      summary: 获取用户列表
+      description: 获取用户列表
+      operationId: base.UserService.ListUsers
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ListUsersRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ListUsersResponse'
+  /base.UserService/ResetUserPassword:
+    post:
+      tags:
+        - base.UserService
+      summary: 重置用户密码
+      description: 重置用户密码
+      operationId: base.UserService.ResetUserPassword
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ResetUserPasswordRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ResetUserPasswordResponse'
+  /base.UserService/UpdateUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 更新用户
+      description: 更新用户
+      operationId: base.UserService.UpdateUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.UpdateUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.UpdateUserResponse'
+components:
+  schemas:
+    base.BatchDeleteUsersRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            minItems: 1
+          title: ids
+          minItems: 1
+          description: 用户ID列表
+      title: BatchDeleteUsersRequest
+      additionalProperties: false
+      description: 批量删除用户请求
+    base.BatchDeleteUsersResponse:
+      type: object
+      properties:
+        deletedCount:
+          type: integer
+          title: deleted_count
+          format: int32
+          description: 成功删除的数量
+        failedIds:
+          type: array
+          items:
+            type: string
+          title: failed_ids
+          description: 失败的用户ID列表
+      title: BatchDeleteUsersResponse
+      additionalProperties: false
+      description: 批量删除用户响应
+    base.BatchUpdateUserStatusRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            minItems: 1
+          title: ids
+          minItems: 1
+          description: 用户ID列表
+        status:
+          title: status
+          description: 新状态
+          $ref: '#/components/schemas/base.UserStatus'
+      title: BatchUpdateUserStatusRequest
+      additionalProperties: false
+      description: 批量更新用户状态请求
+    base.BatchUpdateUserStatusResponse:
+      type: object
+      properties:
+        updatedCount:
+          type: integer
+          title: updated_count
+          format: int32
+          description: 成功更新的数量
+        failedIds:
+          type: array
+          items:
+            type: string
+          title: failed_ids
+          description: 失败的用户ID列表
+      title: BatchUpdateUserStatusResponse
+      additionalProperties: false
+      description: 批量更新用户状态响应
+    base.CreateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          title: username
+          maxLength: 50
+          minLength: 1
+          description: 用户名
+        password:
+          type: string
+          title: password
+          maxLength: 128
+          minLength: 6
+          description: 密码
+        email:
+          type: string
+          title: email
+          format: email
+          description: 邮箱
+        nickname:
+          type: string
+          title: nickname
+          maxLength: 100
+          description: 昵称
+        phone:
+          type: string
+          title: phone
+          description: 手机号
+        avatar:
+          type: string
+          title: avatar
+          description: 头像URL
+        roles:
+          type: array
+          items:
+            type: string
+          title: roles
+          description: 角色列表
+        status:
+          title: status
+          description: 用户状态
+          $ref: '#/components/schemas/base.UserStatus'
+      title: CreateUserRequest
+      additionalProperties: false
+      description: 创建用户请求
+    base.CreateUserResponse:
+      type: object
+      properties:
+        user:
+          title: user
+          description: 创建的用户
+          $ref: '#/components/schemas/base.UserDetail'
+      title: CreateUserResponse
+      additionalProperties: false
+      description: 创建用户响应
+    base.DeleteUserRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 用户ID
+      title: DeleteUserRequest
+      additionalProperties: false
+      description: 删除用户请求
+    base.DeleteUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+      title: DeleteUserResponse
+      additionalProperties: false
+      description: 删除用户响应
+    base.GetUserRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 用户ID
+      title: GetUserRequest
+      additionalProperties: false
+      description: 获取用户详情请求
+    base.GetUserResponse:
+      type: object
+      properties:
+        user:
+          title: user
+          description: 用户详情
+          $ref: '#/components/schemas/base.UserDetail'
+      title: GetUserResponse
+      additionalProperties: false
+      description: 获取用户详情响应
+    base.ListUsersRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+          title: page
+          minimum: 1
+          format: int32
+          description: 页码，从 1 开始
+        pageSize:
+          type: integer
+          title: page_size
+          maximum: 100
+          minimum: 1
+          format: int32
+          description: 每页数量
+        keyword:
+          type: string
+          title: keyword
+          description: 搜索关键词（用户名、邮箱、昵称）
+        status:
+          title: status
+          description: 状态筛选
+          $ref: '#/components/schemas/base.UserStatus'
+        role:
+          type: string
+          title: role
+          description: 角色筛选
+        sortBy:
+          type: string
+          title: sort_by
+          description: 排序字段
+        descending:
+          type: boolean
+          title: descending
+          description: 是否降序
+      title: ListUsersRequest
+      additionalProperties: false
+      description: 用户列表请求
+    base.ListUsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.UserDetail'
+          title: users
+          description: 用户列表
+        total:
+          type:
+            - integer
+            - string
+          title: total
+          format: int64
+          description: 总数
+        page:
+          type: integer
+          title: page
+          format: int32
+          description: 当前页码
+        pageSize:
+          type: integer
+          title: page_size
+          format: int32
+          description: 每页数量
+      title: ListUsersResponse
+      additionalProperties: false
+      description: 用户列表响应
+    base.ResetUserPasswordRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 用户ID
+        newPassword:
+          type: string
+          title: new_password
+          maxLength: 128
+          minLength: 6
+          description: 新密码
+      title: ResetUserPasswordRequest
+      additionalProperties: false
+      description: 重置用户密码请求
+    base.ResetUserPasswordResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+      title: ResetUserPasswordResponse
+      additionalProperties: false
+      description: 重置用户密码响应
+    base.UpdateUserRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 用户ID
+        nickname:
+          type: string
+          title: nickname
+          description: 昵称
+          nullable: true
+        email:
+          type: string
+          title: email
+          description: 邮箱
+          nullable: true
+        phone:
+          type: string
+          title: phone
+          description: 手机号
+          nullable: true
+        avatar:
+          type: string
+          title: avatar
+          description: 头像URL
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
+          title: roles
+          description: 角色列表
+        status:
+          title: status
+          description: 用户状态
+          nullable: true
+          $ref: '#/components/schemas/base.UserStatus'
+      title: UpdateUserRequest
+      additionalProperties: false
+      description: 更新用户请求
+    base.UpdateUserResponse:
+      type: object
+      properties:
+        user:
+          title: user
+          description: 更新后的用户
+          $ref: '#/components/schemas/base.UserDetail'
+      title: UpdateUserResponse
+      additionalProperties: false
+      description: 更新用户响应
+    base.UserDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: 用户ID
+        username:
+          type: string
+          title: username
+          description: 用户名
+        nickname:
+          type: string
+          title: nickname
+          description: 昵称
+        avatar:
+          type: string
+          title: avatar
+          description: 头像URL
+        email:
+          type: string
+          title: email
+          description: 邮箱
+        phone:
+          type: string
+          title: phone
+          description: 手机号
+        status:
+          title: status
+          description: 用户状态
+          $ref: '#/components/schemas/base.UserStatus'
+        roles:
+          type: array
+          items:
+            type: string
+          title: roles
+          description: 角色列表
+        createdAt:
+          type: string
+          title: created_at
+          description: 创建时间
+        updatedAt:
+          type: string
+          title: updated_at
+          description: 更新时间
+        lastLoginAt:
+          type: string
+          title: last_login_at
+          description: 最后登录时间
+      title: UserDetail
+      additionalProperties: false
+      description: 用户详细信息（包含更多字段）
+    base.UserStatus:
+      type: string
+      title: UserStatus
+      enum:
+        - USER_STATUS_UNSPECIFIED
+        - USER_STATUS_ACTIVE
+        - USER_STATUS_INACTIVE
+        - USER_STATUS_BANNED
+      description: 用户状态枚举
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+security: []
+tags:
+  - name: base.UserService
