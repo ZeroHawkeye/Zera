@@ -1,28 +1,83 @@
 import Link from 'next/link';
 import { BookOpen, Zap, Code2, Layers, ArrowRight, Github } from 'lucide-react';
 
-const features = [
-  {
-    icon: Zap,
-    title: '快速开发',
-    description: '基于 Protocol Buffers 自动生成前后端代码，开箱即用',
+// 多语言文本配置
+const translations = {
+  zh: {
+    badge: '全栈开发框架',
+    title: 'Zera Admin',
+    description: '一个基于 Protocol Buffers 的现代化全栈开发框架，让前后端开发更简单、更高效、更类型安全。',
+    getStarted: '开始使用',
+    whyZera: '为什么选择 Zera？',
+    whyZeraDesc: 'Zera 提供了完整的全栈开发解决方案，让你专注于业务逻辑而非基础设施',
+    quickStart: '快速开始',
+    quickStartDesc: '只需几条命令即可启动开发环境',
+    cloneProject: '克隆项目',
+    enterDir: '进入项目目录',
+    startDev: '启动开发环境',
+    viewDocs: '查看完整文档',
+    docs: '文档',
+    features: [
+      {
+        icon: Zap,
+        title: '快速开发',
+        description: '基于 Protocol Buffers 自动生成前后端代码，开箱即用',
+      },
+      {
+        icon: Code2,
+        title: '类型安全',
+        description: 'TypeScript + Go 强类型保证，从 proto 到代码全程类型安全',
+      },
+      {
+        icon: Layers,
+        title: '现代架构',
+        description: 'Connect-RPC 协议，支持 gRPC、gRPC-Web 和 Connect 多种调用方式',
+      },
+      {
+        icon: BookOpen,
+        title: '完善文档',
+        description: '详细的开发指南和 API 文档，助你快速上手',
+      },
+    ],
   },
-  {
-    icon: Code2,
-    title: '类型安全',
-    description: 'TypeScript + Go 强类型保证，从 proto 到代码全程类型安全',
+  en: {
+    badge: 'Full-Stack Framework',
+    title: 'Zera Admin',
+    description: 'A modern full-stack development framework based on Protocol Buffers, making frontend and backend development simpler, more efficient, and type-safe.',
+    getStarted: 'Get Started',
+    whyZera: 'Why Choose Zera?',
+    whyZeraDesc: 'Zera provides a complete full-stack development solution, allowing you to focus on business logic rather than infrastructure',
+    quickStart: 'Quick Start',
+    quickStartDesc: 'Just a few commands to start the development environment',
+    cloneProject: 'Clone the project',
+    enterDir: 'Enter project directory',
+    startDev: 'Start development environment',
+    viewDocs: 'View Full Documentation',
+    docs: 'Docs',
+    features: [
+      {
+        icon: Zap,
+        title: 'Rapid Development',
+        description: 'Auto-generate frontend and backend code based on Protocol Buffers, ready to use out of the box',
+      },
+      {
+        icon: Code2,
+        title: 'Type Safety',
+        description: 'TypeScript + Go strong typing ensures type safety from proto to code',
+      },
+      {
+        icon: Layers,
+        title: 'Modern Architecture',
+        description: 'Connect-RPC protocol, supporting gRPC, gRPC-Web, and Connect calling methods',
+      },
+      {
+        icon: BookOpen,
+        title: 'Complete Documentation',
+        description: 'Detailed development guides and API documentation to help you get started quickly',
+      },
+    ],
   },
-  {
-    icon: Layers,
-    title: '现代架构',
-    description: 'Connect-RPC 协议，支持 gRPC、gRPC-Web 和 Connect 多种调用方式',
-  },
-  {
-    icon: BookOpen,
-    title: '完善文档',
-    description: '详细的开发指南和 API 文档，助你快速上手',
-  },
-];
+};
 
 const techStack = [
   { name: 'Go', color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400' },
@@ -33,7 +88,14 @@ const techStack = [
   { name: 'Vite', color: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' },
 ];
 
-export default function HomePage() {
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
+  const t = translations[lang as keyof typeof translations] || translations.zh;
+
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -45,25 +107,23 @@ export default function HomePage() {
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <Zap className="w-4 h-4" />
-              全栈开发框架
+              {t.badge}
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              Zera Framework
+              {t.title}
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8">
-              一个基于 Protocol Buffers 的现代化全栈开发框架，
-              <br className="hidden md:block" />
-              让前后端开发更简单、更高效、更类型安全。
+              {t.description}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                href="/docs"
+                href={`/${lang}/docs`}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
               >
-                开始使用
+                {t.getStarted}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
@@ -99,14 +159,14 @@ export default function HomePage() {
       {/* Features */}
       <section className="container mx-auto px-4 py-20 md:py-28">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">为什么选择 Zera？</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.whyZera}</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Zera 提供了完整的全栈开发解决方案，让你专注于业务逻辑而非基础设施
+            {t.whyZeraDesc}
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {features.map((feature) => (
+          {t.features.map((feature) => (
             <div
               key={feature.title}
               className="group p-6 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-lg transition-all duration-300"
@@ -125,8 +185,8 @@ export default function HomePage() {
       <section className="border-t border-border bg-muted/30">
         <div className="container mx-auto px-4 py-20 md:py-28">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">快速开始</h2>
-            <p className="text-muted-foreground text-lg">只需几条命令即可启动开发环境</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.quickStart}</h2>
+            <p className="text-muted-foreground text-lg">{t.quickStartDesc}</p>
           </div>
           
           <div className="max-w-2xl mx-auto">
@@ -138,13 +198,13 @@ export default function HomePage() {
                 <span className="ml-2 text-sm text-muted-foreground">Terminal</span>
               </div>
               <div className="p-6 font-mono text-sm">
-                <div className="text-muted-foreground"># 克隆项目</div>
+                <div className="text-muted-foreground"># {t.cloneProject}</div>
                 <div className="text-foreground mb-3">$ git clone https://github.com/ZeroHawkeye/Zera.git</div>
                 
-                <div className="text-muted-foreground"># 进入项目目录</div>
+                <div className="text-muted-foreground"># {t.enterDir}</div>
                 <div className="text-foreground mb-3">$ cd zera</div>
                 
-                <div className="text-muted-foreground"># 启动开发环境</div>
+                <div className="text-muted-foreground"># {t.startDev}</div>
                 <div className="text-foreground">$ task dev</div>
               </div>
             </div>
@@ -152,10 +212,10 @@ export default function HomePage() {
           
           <div className="text-center mt-8">
             <Link
-              href="/docs"
+              href={`/${lang}/docs`}
               className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
             >
-              查看完整文档
+              {t.viewDocs}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -168,8 +228,8 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <p>© 2025 Zera Framework. All rights reserved.</p>
             <div className="flex items-center gap-6">
-              <Link href="/docs" className="hover:text-foreground transition-colors">
-                文档
+              <Link href={`/${lang}/docs`} className="hover:text-foreground transition-colors">
+                {t.docs}
               </Link>
               <a
                 href="https://github.com/ZeroHawkeye/Zera"

@@ -3,6 +3,7 @@
 
 # generated content
 .source
+/openapi
 
 # test & build
 /coverage

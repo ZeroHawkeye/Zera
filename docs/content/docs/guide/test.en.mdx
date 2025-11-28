@@ -1,0 +1,112 @@
+---
+title: Component Examples
+description: Examples of Fumadocs UI components usage
+---
+
+This page demonstrates various UI components available in the documentation.
+
+## Code Blocks
+
+Code blocks with syntax highlighting:
+
+```typescript title="example.ts"
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+async function getUser(id: string): Promise<User> {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}
+```
+
+## Cards
+
+Use card components to display related links:
+
+<Cards>
+  <Card title="Quick Start" href="/docs" />
+  <Card title="Project Structure" href="/docs/structure" />
+  <Card title="Development Commands" href="/docs/commands" />
+  <Card title="API Development" href="/docs/api" />
+</Cards>
+
+## Callouts
+
+<Callout type="info">
+  This is an info callout, used to display important information.
+</Callout>
+
+<Callout type="warn">
+  This is a warning callout, used to remind users of precautions.
+</Callout>
+
+<Callout type="error">
+  This is an error callout, used to display errors or dangerous operations.
+</Callout>
+
+## Steps
+
+<Steps>
+  <Step>
+    ### Install Dependencies
+    Run `npm install` or `pnpm install` to install project dependencies
+  </Step>
+  
+  <Step>
+    ### Configure Environment
+    Copy `.env.example` to `.env` and fill in the configuration
+  </Step>
+  
+  <Step>
+    ### Start Development
+    Run `task dev` to start the development server
+  </Step>
+</Steps>
+
+## Tabs
+
+<Tabs items={['npm', 'pnpm', 'yarn']}>
+  <Tab value="npm">
+    ```bash
+    npm install
+    npm run dev
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm install
+    pnpm dev
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn
+    yarn dev
+    ```
+  </Tab>
+</Tabs>
+
+## Tables
+
+| Command | Description |
+|---------|-------------|
+| `task dev` | Start development environment |
+| `task proto` | Run proto workflow |
+| `task proto:gen` | Generate proto code |
+
+## File Tree
+
+<Files>
+  <Folder name="src" defaultOpen>
+    <Folder name="components">
+      <File name="Button.tsx" />
+      <File name="Card.tsx" />
+    </Folder>
+    <File name="App.tsx" />
+    <File name="main.tsx" />
+  </Folder>
+  <File name="package.json" />
+</Files>

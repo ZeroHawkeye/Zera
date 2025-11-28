@@ -1,0 +1,11 @@
+{
+  "title": "API Reference",
+  "description": "Zera API Documentation",
+  "root": true,
+  "icon": "Braces",
+  "pages": [
+    "index",
+    "greet.v1.greetservice",
+    "base.authservice"
+  ]
+}

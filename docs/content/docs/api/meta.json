@@ -1,0 +1,13 @@
+{
+  "title": "API 文档",
+  "description": "API 接口参考文档",
+  "root": true,
+  "icon": "Code",
+  "pages": [
+    "index",
+    "---认证服务---",
+    "base.authservice",
+    "---示例服务---",
+    "greet.v1.greetservice"
+  ]
+}

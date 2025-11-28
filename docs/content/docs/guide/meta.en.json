@@ -1,0 +1,17 @@
+{
+  "title": "Guide",
+  "description": "Zera Admin Development Documentation",
+  "root": true,
+  "icon": "BookOpen",
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "structure",
+    "commands",
+    "---Development Guide---",
+    "api",
+    "deployment",
+    "---Other---",
+    "test"
+  ]
+}

@@ -8,10 +8,28 @@ vars:
 tasks:
   # ==================== 文档相关 ====================
   docs:
-    desc: "预览项目文档 (docsify)"
+    desc: "预览项目文档 (fumadocs)"
     dir: docs
     cmds:
       - bun run dev
+
+  docs:build:
+    desc: "构建项目文档"
+    dir: docs
+    cmds:
+      - bun run build
+
+  docs:openapi:
+    desc: "从后端 OpenAPI 规范生成 API 文档（跨平台）"
+    dir: docs
+    cmds:
+      - bun run openapi
+    sources:
+      - ../backend/gen/**/*.openapi.yaml
+    generates:
+      - openapi/**/*.yaml
+      - content/docs/openapi/*.mdx
+
   # ==================== Proto 工作流 ====================
   proto:
     desc: "完整的 proto 工作流: lint -> format -> generate -> check"
@@ -49,6 +67,8 @@ tasks:
     deps:
       - proto:gen:backend
       - proto:gen:frontend
+    cmds:
+      - task: docs:openapi
 
   proto:gen:backend:
     desc: "生成后端 Go 代码"
@@ -104,6 +124,7 @@ tasks:
       # 调用已定义的生成任务（会正确设置目录）
       - task: proto:gen:backend
       - task: proto:gen:frontend
+      - task: docs:openapi
       # 只有生成成功才检查
       - task: proto:check
       - echo "✅ Proto 重新生成完成"
@@ -120,6 +141,7 @@ tasks:
       - powershell -c "Start-Sleep -Milliseconds 200"
       - task: proto:gen:backend
       - task: proto:gen:frontend
+      - task: docs:openapi
       - echo "✅ Proto 重新生成完成"
     ignore_error: true
 

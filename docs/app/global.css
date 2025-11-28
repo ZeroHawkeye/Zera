@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/ocean.css';
 @import 'fumadocs-ui/css/preset.css';
+@import 'fumadocs-openapi/css/preset.css';
 
 /* 自定义样式 */
 :root {
@@ -23,10 +24,10 @@
   --card-foreground: 0 0% 98%;
 }
 
-/* 调整侧边栏宽度 */
+/* 调整侧边栏宽度
 #nd-docs-layout {
   --fd-layout-offset: 0px;
-}
+} */
 
 /* 确保文本可以被选择 */
 body {

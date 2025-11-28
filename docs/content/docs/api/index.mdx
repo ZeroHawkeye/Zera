@@ -1,0 +1,38 @@
+---
+title: API 参考
+description: Zera 后端 API 接口文档
+---
+
+本文档由 OpenAPI 规范自动生成，包含所有后端 API 接口的详细说明。
+
+## 概览
+
+Zera 后端使用 [Connect-RPC](https://connectrpc.com/) 提供 API 服务，所有接口同时支持 gRPC、gRPC-Web 和 Connect 协议。
+
+### 可用服务
+
+- **认证服务 (AuthService)** - 用户登录、注册、登出和令牌刷新
+- **问候服务 (GreetService)** - 示例服务，用于演示基本用法
+
+### 通用请求头
+
+所有请求需要包含以下头信息：
+
+| 头信息 | 描述 | 是否必须 |
+|--------|------|----------|
+| `Connect-Protocol-Version` | Connect 协议版本，固定为 `1` | 是 |
+| `Connect-Timeout-Ms` | 请求超时时间（毫秒） | 否 |
+| `Authorization` | 认证令牌（格式：`Bearer <token>`） | 受保护接口必须 |
+
+### 错误响应
+
+所有接口使用标准的 Connect 错误格式：
+
+```json
+{
+  "code": "not_found",
+  "message": "资源不存在"
+}
+```
+
+错误码包括：`canceled`、`unknown`、`invalid_argument`、`deadline_exceeded`、`not_found`、`already_exists`、`permission_denied`、`resource_exhausted`、`failed_precondition`、`aborted`、`out_of_range`、`unimplemented`、`internal`、`unavailable`、`data_loss`、`unauthenticated`

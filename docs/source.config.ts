@@ -5,8 +5,7 @@ import {
   metaSchema,
 } from 'fumadocs-mdx/config';
 
-// You can customise Zod schemas for frontmatter and `meta.json` here
-// see https://fumadocs.dev/docs/mdx/collections
+// 使用单一文档源，通过 root 文件夹实现 Sidebar Tabs
 export const docs = defineDocs({
   dir: 'content/docs',
   docs: {

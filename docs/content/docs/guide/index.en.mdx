@@ -1,0 +1,70 @@
+---
+title: Quick Start
+description: Learn how to quickly get started with the Zera framework for full-stack development
+---
+
+Welcome to **Zera Framework**! This guide will help you get started and build your first full-stack application.
+
+## What is Zera?
+
+Zera is a modern full-stack development framework based on Protocol Buffers, providing:
+
+- **Type-safe APIs**: Full type safety from proto definitions to frontend and backend code
+- **Automatic code generation**: Auto-generate Go and TypeScript code based on Buf toolchain
+- **Modern tech stack**: Go + React + TypeScript + Connect-RPC
+- **Developer experience first**: Hot reload, automated tasks, and comprehensive toolchain
+
+## Tech Stack
+
+| Layer | Technology | Description |
+|-------|------------|-------------|
+| Frontend | React + TypeScript | Modern frontend application built with Vite |
+| Backend | Go | High-performance Go backend service |
+| Protocol | Protocol Buffers | Cross-language interface definition language |
+| RPC | Connect-RPC | Supports gRPC, gRPC-Web, and Connect protocols |
+| Tools | Buf | Protocol Buffers toolchain |
+
+## Prerequisites
+
+Before getting started, please ensure you have the following tools installed:
+
+1. **[Buf](https://buf.build)** - Protocol Buffers toolchain
+2. **[Taskfile](https://taskfile.dev)** - Task runner
+3. **[mprocs](https://github.com/pvolok/mprocs)** - Multi-process manager (optional, for TUI dev mode)
+4. **[Go](https://go.dev)** - Go runtime (1.21+)
+5. **[Node.js](https://nodejs.org)** - Node.js runtime (20+)
+
+## Quick Start
+
+### 1. Clone the project
+
+```bash
+git clone https://github.com/ZeroHawkeye/Zera.git
+cd zera
+```
+
+### 2. Start development environment
+
+```bash
+# Start full development environment (recommended)
+task dev
+```
+
+This will automatically:
+- Generate frontend and backend proto code
+- Start the Go backend service
+- Start the Vite frontend dev server
+
+### 3. Access the application
+
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:8080
+
+## Next Steps
+
+<Cards>
+  <Card title="Project Structure" href="/docs/structure" />
+  <Card title="Development Commands" href="/docs/commands" />
+  <Card title="API Development" href="/docs/api" />
+  <Card title="Deployment Guide" href="/docs/deployment" />
+</Cards>

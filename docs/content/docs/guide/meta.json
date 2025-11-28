@@ -1,0 +1,17 @@
+{
+  "title": "文档",
+  "description": "Zera Admin 开发文档",
+  "root": true,
+  "icon": "BookOpen",
+  "pages": [
+    "---快速入门---",
+    "index",
+    "structure",
+    "commands",
+    "---开发指南---",
+    "api",
+    "deployment",
+    "---其他---",
+    "test"
+  ]
+}

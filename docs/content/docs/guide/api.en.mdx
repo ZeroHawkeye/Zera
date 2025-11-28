@@ -1,0 +1,251 @@
+---
+title: API Development
+description: Learn how to develop APIs using the Zera framework
+---
+
+Zera uses Protocol Buffers to define APIs and provides services via Connect-RPC.
+
+## Define APIs
+
+### 1. Create Proto Files
+
+Create your proto file under the `proto/` directory:
+
+```proto
+// proto/user/v1/user.proto
+syntax = "proto3";
+
+package user.v1;
+
+import "buf/validate/validate.proto";
+
+// User Service
+service UserService {
+  // Get user information
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  
+  // Create user
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}
+
+message GetUserRequest {
+  string id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message CreateUserRequest {
+  string name = 1 [(buf.validate.field).string.min_len = 1];
+  string email = 2 [(buf.validate.field).string.email = true];
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  int64 created_at = 4;
+}
+```
+
+### 2. Generate Code
+
+```bash
+task proto:gen
+```
+
+This will generate corresponding code in the `backend/gen/` and `frontend/src/gen/` directories.
+
+## Implement Backend Services
+
+### 1. Create Handler
+
+Create a handler under `backend/internal/handler/`:
+
+```go
+// backend/internal/handler/user.go
+package handler
+
+import (
+	"context"
+	
+	"connectrpc.com/connect"
+	userv1 "your-project/gen/user/v1"
+)
+
+type UserHandler struct {
+	// Dependency injection
+}
+
+func NewUserHandler() *UserHandler {
+	return &UserHandler{}
+}
+
+func (h *UserHandler) GetUser(
+	ctx context.Context,
+	req *connect.Request[userv1.GetUserRequest],
+) (*connect.Response[userv1.GetUserResponse], error) {
+	// Implement business logic
+	user := &userv1.User{
+		Id:    req.Msg.Id,
+		Name:  "Example User",
+		Email: "user@example.com",
+	}
+	
+	return connect.NewResponse(&userv1.GetUserResponse{
+		User: user,
+	}), nil
+}
+
+func (h *UserHandler) CreateUser(
+	ctx context.Context,
+	req *connect.Request[userv1.CreateUserRequest],
+) (*connect.Response[userv1.CreateUserResponse], error) {
+	// Implement creation logic
+	user := &userv1.User{
+		Id:    "generated-id",
+		Name:  req.Msg.Name,
+		Email: req.Msg.Email,
+	}
+	
+	return connect.NewResponse(&userv1.CreateUserResponse{
+		User: user,
+	}), nil
+}
+```
+
+### 2. Register Service
+
+Register the handler when starting the server:
+
+```go
+// backend/internal/server/server.go
+import (
+	"your-project/gen/user/v1/userv1connect"
+	"your-project/internal/handler"
+)
+
+func SetupRoutes(mux *http.ServeMux) {
+	userHandler := handler.NewUserHandler()
+	path, h := userv1connect.NewUserServiceHandler(userHandler)
+	mux.Handle(path, h)
+}
+```
+
+## Frontend Calls
+
+### 1. Create Client
+
+```typescript
+// frontend/src/config/index.ts
+import { createClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
+import { UserService } from "../gen/user/v1/user_pb";
+
+const transport = createConnectTransport({
+  baseUrl: "http://localhost:8080",
+});
+
+export const userClient = createClient(UserService, transport);
+```
+
+### 2. Call API
+
+```tsx
+// frontend/src/components/UserProfile.tsx
+import { useEffect, useState } from "react";
+import { userClient } from "../config";
+import type { User } from "../gen/user/v1/user_pb";
+
+export function UserProfile({ userId }: { userId: string }) {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      const response = await userClient.getUser({ id: userId });
+      setUser(response.user);
+    }
+    fetchUser();
+  }, [userId]);
+
+  if (!user) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+```
+
+## Request Validation
+
+Zera uses [buf/validate](https://github.com/bufbuild/protovalidate) for request validation:
+
+```proto
+import "buf/validate/validate.proto";
+
+message CreateUserRequest {
+  // Name must not be empty
+  string name = 1 [(buf.validate.field).string.min_len = 1];
+  
+  // Email must be in valid format
+  string email = 2 [(buf.validate.field).string.email = true];
+  
+  // Age must be between 0-150
+  int32 age = 3 [(buf.validate.field).int32 = {gte: 0, lte: 150}];
+}
+```
+
+## Error Handling
+
+Connect-RPC provides a standard error handling mechanism:
+
+```go
+import "connectrpc.com/connect"
+
+func (h *UserHandler) GetUser(
+	ctx context.Context,
+	req *connect.Request[userv1.GetUserRequest],
+) (*connect.Response[userv1.GetUserResponse], error) {
+	user, err := h.service.FindUser(ctx, req.Msg.Id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, connect.NewError(
+				connect.CodeNotFound,
+				fmt.Errorf("user not found: %s", req.Msg.Id),
+			)
+		}
+		return nil, connect.NewError(
+			connect.CodeInternal,
+			err,
+		)
+	}
+	
+	return connect.NewResponse(&userv1.GetUserResponse{
+		User: user,
+	}), nil
+}
+```
+
+Frontend error handling:
+
+```typescript
+import { ConnectError, Code } from "@connectrpc/connect";
+
+try {
+  const response = await userClient.getUser({ id: userId });
+} catch (err) {
+  if (err instanceof ConnectError) {
+    if (err.code === Code.NotFound) {
+      console.log("User not found");
+    }
+  }
+}
+```
