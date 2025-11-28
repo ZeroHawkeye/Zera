@@ -1,12 +1,11 @@
 import {
   createRootRoute,
   createRoute,
-  createLazyRoute,
   Outlet,
-  type AnyRoute,
+  redirect,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import type { ReactNode } from 'react'
+import { AdminLayout } from '@/layouts'
 
 // ============================================
 // 根路由
@@ -25,69 +24,7 @@ function RootComponent() {
 }
 
 // ============================================
-// 动态路由注册系统
-// ============================================
-
-// 存储动态注册的路由
-const dynamicRoutes: AnyRoute[] = []
-
-/**
- * 注册动态路由（供插件系统使用）
- * @param path 路由路径
- * @param component 路由组件
- * @param parentRoute 父路由（默认为 rootRoute）
- * @returns 创建的路由实例
- */
-export function registerRoute(
-  path: string,
-  component: () => ReactNode,
-  parentRoute: AnyRoute = rootRoute
-) {
-  const route = createRoute({
-    getParentRoute: () => parentRoute,
-    path,
-    component,
-  })
-
-  dynamicRoutes.push(route)
-  return route
-}
-
-/**
- * 注册懒加载路由（供插件系统使用）
- * @param path 路由路径
- * @param lazyImport 懒加载导入函数
- * @param parentRoute 父路由（默认为 rootRoute）
- * @returns 创建的路由实例
- */
-export function registerLazyRoute(
-  path: string,
-  lazyImport: () => Promise<{ default: () => ReactNode }>,
-  parentRoute: AnyRoute = rootRoute
-) {
-  const route = createRoute({
-    getParentRoute: () => parentRoute,
-    path,
-  }).lazy(async () => {
-    const module = await lazyImport()
-    return createLazyRoute(path)({
-      component: module.default,
-    })
-  })
-
-  dynamicRoutes.push(route)
-  return route
-}
-
-/**
- * 获取所有动态注册的路由
- */
-export function getDynamicRoutes() {
-  return dynamicRoutes
-}
-
-// ============================================
-// 核心路由定义
+// 公共路由
 // ============================================
 
 // 首页路由
@@ -103,17 +40,130 @@ export const loginRoute = createRoute({
 }).lazy(() => import('@/pages/login').then((m) => m.Route))
 
 // ============================================
+// 后台管理路由
+// ============================================
+
+// 后台管理布局路由
+export const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  component: () => (
+    <AdminLayout>
+      <Outlet />
+    </AdminLayout>
+  ),
+  // TODO: 添加认证守卫
+  // beforeLoad: async ({ context }) => {
+  //   if (!isAuthenticated()) {
+  //     throw redirect({ to: '/login' })
+  //   }
+  // },
+})
+
+// 后台首页（仪表盘）
+export const adminIndexRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/',
+}).lazy(() => import('@/pages/admin/Dashboard').then((m) => m.Route))
+
+// ============================================
+// 用户管理路由
+// ============================================
+
+export const usersRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/users',
+})
+
+export const usersIndexRoute = createRoute({
+  getParentRoute: () => usersRoute,
+  path: '/',
+}).lazy(() => import('@/pages/admin/users/UserList').then((m) => m.Route))
+
+export const userDetailRoute = createRoute({
+  getParentRoute: () => usersRoute,
+  path: '/$userId',
+}).lazy(() => import('@/pages/admin/users/UserDetail').then((m) => m.Route))
+
+// ============================================
+// 角色管理路由
+// ============================================
+
+export const rolesRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/roles',
+})
+
+export const rolesIndexRoute = createRoute({
+  getParentRoute: () => rolesRoute,
+  path: '/',
+}).lazy(() => import('@/pages/admin/roles/RoleList').then((m) => m.Route))
+
+export const roleDetailRoute = createRoute({
+  getParentRoute: () => rolesRoute,
+  path: '/$roleId',
+}).lazy(() => import('@/pages/admin/roles/RoleDetail').then((m) => m.Route))
+
+// ============================================
+// 系统设置路由
+// ============================================
+
+export const settingsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/settings',
+}).lazy(() => import('@/pages/admin/settings/SettingsLayout').then((m) => m.Route))
+
+export const generalSettingsRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/general',
+}).lazy(() => import('@/pages/admin/settings/GeneralSettings').then((m) => m.Route))
+
+export const securitySettingsRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/security',
+}).lazy(() => import('@/pages/admin/settings/SecuritySettings').then((m) => m.Route))
+
+// 设置首页重定向到基础设置
+export const settingsIndexRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/admin/settings/general' })
+  },
+})
+
+// ============================================
+// 日志管理路由
+// ============================================
+
+export const logsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/logs',
+}).lazy(() => import('@/pages/admin/logs/LogList').then((m) => m.Route))
+
+// ============================================
 // 路由树
 // ============================================
 
-// 构建路由树（合并静态路由和动态路由）
-export function getRouteTree() {
-  return rootRoute.addChildren([
-    indexRoute,
-    loginRoute,
-    ...dynamicRoutes,
-  ])
-}
-
-// 默认导出路由树
-export const routeTree = getRouteTree()
+// 构建路由树
+export const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  adminRoute.addChildren([
+    adminIndexRoute,
+    usersRoute.addChildren([
+      usersIndexRoute,
+      userDetailRoute,
+    ]),
+    rolesRoute.addChildren([
+      rolesIndexRoute,
+      roleDetailRoute,
+    ]),
+    settingsRoute.addChildren([
+      settingsIndexRoute,
+      generalSettingsRoute,
+      securitySettingsRoute,
+    ]),
+    logsRoute,
+  ]),
+])

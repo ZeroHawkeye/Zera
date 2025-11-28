@@ -4,3 +4,79 @@ html,body,#root {
   height: 100%;
   margin: 0;
 }
+
+/* AI 产品风格基础变量 */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --color-primary: #6366f1;
+  --color-primary-light: rgba(99, 102, 241, 0.1);
+  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* 暗色主题变量 */
+.dark {
+  --glass-bg: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --color-primary: #818cf8;
+  --color-primary-light: rgba(129, 140, 248, 0.15);
+  --glow-primary: 0 0 20px rgba(129, 140, 248, 0.2);
+}
+
+/* 毛玻璃效果 */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* 柔和光晕效果 */
+.glow {
+  box-shadow: var(--glow-primary);
+}
+
+.glow-hover:hover {
+  box-shadow: var(--glow-primary);
+}
+
+/* 平滑过渡 */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 菜单项悬停效果 */
+.menu-item-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-item-hover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-primary);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.menu-item-hover:hover::before,
+.menu-item-hover.active::before {
+  transform: scaleY(1);
+}
+
+/* 激活状态背景 */
+.menu-item-active {
+  background: var(--color-primary-light);
+}

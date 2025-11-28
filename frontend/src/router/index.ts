@@ -1,18 +1,51 @@
-import { createRouter } from '@tanstack/react-router'
-import { routeTree } from './routes'
+/**
+ * 路由模块统一导出
+ */
 
-// 创建路由器实例
-export const router = createRouter({
-  routeTree,
-  defaultPreload: 'intent',
-})
+// 类型导出
+export type {
+  RouteMeta,
+  RouteModuleConfig,
+  RouteDefinition,
+  RouteGuardContext,
+  RouteModule,
+  LayoutType,
+  LayoutConfig,
+  ExtendedRouteOptions,
+  RouteTree,
+} from './types'
 
-// 为类型安全注册路由器类型
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
-}
+// 注册中心导出
+export { routeRegistry, defineRouteModule } from './registry'
 
-// 导出路由注册 API，供插件使用
-export { registerRoute, getRouteTree } from './routes'
+// 路由器导出
+export { router } from './router'
+
+// 路由相关工具
+export { routeTree, rootRoute } from './routes'
+
+// 路由守卫
+export {
+  isAuthenticated,
+  getCurrentUser,
+  hasPermission,
+  hasRole,
+  hasAnyPermission,
+  hasAllPermissions,
+  authGuard,
+  permissionGuard,
+  roleGuard,
+  guestGuard,
+} from './guards'
+
+// 路由工具函数
+export {
+  flattenRoutes,
+  getRouteByPath,
+  generateMenuFromRoutes,
+  generateBreadcrumbs,
+  isRouteActive,
+  parseRouteParams,
+  type MenuItem,
+  type BreadcrumbItem,
+} from './utils'
