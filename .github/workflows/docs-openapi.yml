@@ -31,7 +31,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.2"
 
       - name: Install buf
         uses: bufbuild/buf-setup-action@v1
@@ -42,7 +42,7 @@ jobs:
         run: |
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
-          go install github.com/sudorandom/protoc-gen-connect-openapi/cmd/protoc-gen-connect-openapi@main
+          go install github.com/sudorandom/protoc-gen-connect-openapi/cmd/protoc-gen-connect-openapi@v0.18.2
 
       - name: Install Task
         uses: arduino/setup-task@v2
@@ -55,11 +55,13 @@ jobs:
 
       - name: Clean openapi directory
         run: |
-          # Remove all files in docs/openapi directory (keeping the directory structure)
+          # Remove all OpenAPI yaml files in docs/openapi directory
           find docs/openapi -type f -name "*.yaml" -delete 2>/dev/null || true
           # Remove empty directories except the root openapi dir
           find docs/openapi -mindepth 1 -type d -empty -delete 2>/dev/null || true
-          echo "✅ Cleaned docs/openapi directory"
+          # Clean generated API documentation (MDX files) except index and meta.json
+          find docs/content/docs -path "*/api/*.mdx" ! -name "index.mdx" -delete 2>/dev/null || true
+          echo "✅ Cleaned docs/openapi and api docs directories"
 
       - name: Generate backend code and OpenAPI specs
         working-directory: backend
