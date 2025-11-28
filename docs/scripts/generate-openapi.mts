@@ -1,10 +1,14 @@
 /**
  * 根据 openapi 目录下的所有 yaml 文件生成 MDX 文档
+ * 为每个语言目录都生成一份 API 文档
  */
 import { generateFiles } from 'fumadocs-openapi';
 import { createOpenAPI } from 'fumadocs-openapi/server';
 import { glob } from 'glob';
 import path from 'node:path';
+
+// 支持的语言列表
+const LOCALES = ['zh', 'en', 'ja'];
 
 // 将 Windows 路径转换为 POSIX 路径
 function toPosixPath(p: string): string {
@@ -35,15 +39,23 @@ async function generate() {
     },
   });
 
-  await generateFiles({
-    input: openapi,
-    output: './content/docs/api',
-    per: 'tag',
-    includeDescription: true,
-    addGeneratedComment: true,
-  });
+  // 为每个语言目录生成 API 文档
+  console.log(`\n🌐 为 ${LOCALES.length} 个语言目录生成 API 文档...`);
+  
+  for (const locale of LOCALES) {
+    const outputDir = `./content/docs/${locale}/api`;
+    console.log(`  📝 生成 ${locale} 版本 → ${outputDir}`);
+    
+    await generateFiles({
+      input: openapi,
+      output: outputDir,
+      per: 'tag',
+      includeDescription: true,
+      addGeneratedComment: true,
+    });
+  }
 
-  console.log('✨ API 文档生成完成');
+  console.log('\n✨ API 文档生成完成');
 }
 
 generate().catch((err) => {

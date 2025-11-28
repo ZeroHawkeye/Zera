@@ -2,9 +2,32 @@
 
 ## 必要的依赖
 
+### 工具链
+
 1. [buf](https://buf.build) - Protocol Buffers 工具链
 2. [taskfile](https://taskfile.dev) - 任务运行器
 3. [mprocs](https://github.com/pvolok/mprocs) - 多进程管理器
+4. [bun](https://bun.sh) - JavaScript 运行时和包管理器
+
+### Protobuf 代码生成插件
+
+以下插件需要全局安装，用于 `buf generate` 生成后端代码：
+
+5. [protoc-gen-go](https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go) - 生成 Go Protobuf 代码
+   ```bash
+   go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+   ```
+6. [protoc-gen-connect-go](https://pkg.go.dev/connectrpc.com/connect/cmd/protoc-gen-connect-go) - 生成 Connect-Go 代码
+   ```bash
+   go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest
+   ```
+7. [protoc-gen-connect-openapi](https://github.com/sudorandom/protoc-gen-connect-openapi) - 从 Proto 生成 OpenAPI 规范
+   ```bash
+   go install github.com/sudorandom/protoc-gen-connect-openapi@latest
+   ```
+
+> **注意**: 前端 TypeScript 代码生成使用 buf 远程插件，无需本地安装。
+> **注意**: [ent](https://entgo.io) ORM 通过 `go generate` 自动下载，无需预先安装。
 
 ## 快速开始
 

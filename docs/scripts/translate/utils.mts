@@ -14,6 +14,12 @@ import { join, dirname, relative, basename } from 'path';
 const EXCLUDED_FILES = ['meta.json', 'glossary.json'];
 
 /**
+ * 不需要翻译的目录列表
+ * - api: API 文档由 OpenAPI 自动生成，不需要翻译
+ */
+const EXCLUDED_DIRS = ['api'];
+
+/**
  * 递归获取所有需要翻译的 MDX 文件
  * 排除配置类 JSON 文件（meta.json, glossary.json）
  */
@@ -108,7 +114,19 @@ export function filterSourceFiles(
   
   return allFiles.filter(f => {
     const normalizedPath = f.replace(/\\/g, '/');
-    return normalizedPath.startsWith(sourceDir + '/');
+    
+    // 检查是否在源语言目录下
+    if (!normalizedPath.startsWith(sourceDir + '/')) {
+      return false;
+    }
+    
+    // 检查是否在排除目录中（如 api/）
+    const relativePath = normalizedPath.replace(sourceDir + '/', '');
+    const isExcluded = EXCLUDED_DIRS.some(dir => 
+      relativePath.startsWith(dir + '/') || relativePath === dir
+    );
+    
+    return !isExcluded;
   });
 }
 
