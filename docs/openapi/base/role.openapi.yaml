@@ -1,0 +1,744 @@
+openapi: 3.1.0
+info:
+  title: base
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: 本地开发服务器
+paths:
+  /base.RoleService/CreateRole:
+    post:
+      tags:
+        - base.RoleService
+      summary: 创建角色
+      description: 创建角色
+      operationId: base.RoleService.CreateRole
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.CreateRoleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.CreateRoleResponse'
+  /base.RoleService/DeleteRole:
+    post:
+      tags:
+        - base.RoleService
+      summary: 删除角色
+      description: 删除角色
+      operationId: base.RoleService.DeleteRole
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.DeleteRoleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.DeleteRoleResponse'
+  /base.RoleService/GetRole:
+    post:
+      tags:
+        - base.RoleService
+      summary: 获取角色详情
+      description: 获取角色详情
+      operationId: base.RoleService.GetRole
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetRoleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetRoleResponse'
+  /base.RoleService/GetRolePermissions:
+    post:
+      tags:
+        - base.RoleService
+      summary: 获取角色权限
+      description: 获取角色权限
+      operationId: base.RoleService.GetRolePermissions
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetRolePermissionsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetRolePermissionsResponse'
+  /base.RoleService/ListPermissions:
+    post:
+      tags:
+        - base.RoleService
+      summary: 获取权限列表
+      description: 获取权限列表
+      operationId: base.RoleService.ListPermissions
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ListPermissionsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ListPermissionsResponse'
+  /base.RoleService/ListRoles:
+    post:
+      tags:
+        - base.RoleService
+      summary: 获取角色列表
+      description: 获取角色列表
+      operationId: base.RoleService.ListRoles
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ListRolesRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ListRolesResponse'
+  /base.RoleService/UpdateRole:
+    post:
+      tags:
+        - base.RoleService
+      summary: 更新角色
+      description: 更新角色
+      operationId: base.RoleService.UpdateRole
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.UpdateRoleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.UpdateRoleResponse'
+  /base.RoleService/UpdateRolePermissions:
+    post:
+      tags:
+        - base.RoleService
+      summary: 更新角色权限
+      description: 更新角色权限
+      operationId: base.RoleService.UpdateRolePermissions
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.UpdateRolePermissionsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.UpdateRolePermissionsResponse'
+components:
+  schemas:
+    base.CreateRoleRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          title: code
+          maxLength: 50
+          minLength: 1
+          description: 角色代码
+        name:
+          type: string
+          title: name
+          maxLength: 100
+          minLength: 1
+          description: 角色名称
+        description:
+          type: string
+          title: description
+          maxLength: 500
+          description: 角色描述
+        sortOrder:
+          type: integer
+          title: sort_order
+          format: int32
+          description: 排序顺序
+        permissions:
+          type: array
+          items:
+            type: string
+          title: permissions
+          description: 权限代码列表
+      title: CreateRoleRequest
+      additionalProperties: false
+      description: 创建角色请求
+    base.CreateRoleResponse:
+      type: object
+      properties:
+        role:
+          title: role
+          description: 创建的角色
+          $ref: '#/components/schemas/base.RoleInfo'
+      title: CreateRoleResponse
+      additionalProperties: false
+      description: 创建角色响应
+    base.DeleteRoleRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 角色ID
+      title: DeleteRoleRequest
+      additionalProperties: false
+      description: 删除角色请求
+    base.DeleteRoleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+      title: DeleteRoleResponse
+      additionalProperties: false
+      description: 删除角色响应
+    base.GetRolePermissionsRequest:
+      type: object
+      properties:
+        roleId:
+          type: string
+          title: role_id
+          minLength: 1
+          description: 角色ID
+      title: GetRolePermissionsRequest
+      additionalProperties: false
+      description: 获取角色权限请求
+    base.GetRolePermissionsResponse:
+      type: object
+      properties:
+        permissions:
+          type: array
+          items:
+            type: string
+          title: permissions
+          description: 角色拥有的权限代码列表
+        allPermissionGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.PermissionGroup'
+          title: all_permission_groups
+          description: 所有权限分组
+      title: GetRolePermissionsResponse
+      additionalProperties: false
+      description: 获取角色权限响应
+    base.GetRoleRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 角色ID
+      title: GetRoleRequest
+      additionalProperties: false
+      description: 获取角色详情请求
+    base.GetRoleResponse:
+      type: object
+      properties:
+        role:
+          title: role
+          description: 角色信息
+          $ref: '#/components/schemas/base.RoleInfo'
+      title: GetRoleResponse
+      additionalProperties: false
+      description: 获取角色详情响应
+    base.ListPermissionsRequest:
+      type: object
+      properties:
+        resource:
+          type: string
+          title: resource
+          description: 资源类型筛选
+      title: ListPermissionsRequest
+      additionalProperties: false
+      description: 权限列表请求
+    base.ListPermissionsResponse:
+      type: object
+      properties:
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.PermissionInfo'
+          title: permissions
+          description: 权限列表
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.PermissionGroup'
+          title: groups
+          description: 按资源分组的权限列表
+      title: ListPermissionsResponse
+      additionalProperties: false
+      description: 权限列表响应
+    base.ListRolesRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+          title: page
+          minimum: 1
+          format: int32
+          description: 页码，从 1 开始
+        pageSize:
+          type: integer
+          title: page_size
+          maximum: 100
+          minimum: 1
+          format: int32
+          description: 每页数量
+        keyword:
+          type: string
+          title: keyword
+          description: 搜索关键词（角色名称、代码）
+        isSystem:
+          type: boolean
+          title: is_system
+          description: 是否仅显示系统角色
+          nullable: true
+      title: ListRolesRequest
+      additionalProperties: false
+      description: 角色列表请求
+    base.ListRolesResponse:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.RoleInfo'
+          title: roles
+          description: 角色列表
+        total:
+          type:
+            - integer
+            - string
+          title: total
+          format: int64
+          description: 总数
+        page:
+          type: integer
+          title: page
+          format: int32
+          description: 当前页码
+        pageSize:
+          type: integer
+          title: page_size
+          format: int32
+          description: 每页数量
+      title: ListRolesResponse
+      additionalProperties: false
+      description: 角色列表响应
+    base.PermissionGroup:
+      type: object
+      properties:
+        resource:
+          type: string
+          title: resource
+          description: 资源类型（分组名称）
+        resourceName:
+          type: string
+          title: resource_name
+          description: 资源显示名称
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.PermissionInfo'
+          title: permissions
+          description: 该分组下的权限列表
+      title: PermissionGroup
+      additionalProperties: false
+      description: 权限分组信息
+    base.PermissionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: 权限ID
+        code:
+          type: string
+          title: code
+          description: 权限代码
+        name:
+          type: string
+          title: name
+          description: 权限名称
+        description:
+          type: string
+          title: description
+          description: 权限描述
+        resource:
+          type: string
+          title: resource
+          description: 资源类型
+        action:
+          type: string
+          title: action
+          description: 操作类型
+        createdAt:
+          type: string
+          title: created_at
+          description: 创建时间
+      title: PermissionInfo
+      additionalProperties: false
+      description: 权限信息
+    base.RoleInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: 角色ID
+        code:
+          type: string
+          title: code
+          description: 角色代码
+        name:
+          type: string
+          title: name
+          description: 角色名称
+        description:
+          type: string
+          title: description
+          description: 角色描述
+        isSystem:
+          type: boolean
+          title: is_system
+          description: 是否为系统内置角色
+        sortOrder:
+          type: integer
+          title: sort_order
+          format: int32
+          description: 排序顺序
+        permissions:
+          type: array
+          items:
+            type: string
+          title: permissions
+          description: 权限代码列表
+        userCount:
+          type: integer
+          title: user_count
+          format: int32
+          description: 用户数量
+        createdAt:
+          type: string
+          title: created_at
+          description: 创建时间
+        updatedAt:
+          type: string
+          title: updated_at
+          description: 更新时间
+      title: RoleInfo
+      additionalProperties: false
+      description: 角色信息
+    base.UpdateRolePermissionsRequest:
+      type: object
+      properties:
+        roleId:
+          type: string
+          title: role_id
+          minLength: 1
+          description: 角色ID
+        permissions:
+          type: array
+          items:
+            type: string
+          title: permissions
+          description: 权限代码列表（完整替换）
+      title: UpdateRolePermissionsRequest
+      additionalProperties: false
+      description: 更新角色权限请求
+    base.UpdateRolePermissionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+      title: UpdateRolePermissionsResponse
+      additionalProperties: false
+      description: 更新角色权限响应
+    base.UpdateRoleRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 角色ID
+        name:
+          type: string
+          title: name
+          description: 角色名称
+          nullable: true
+        description:
+          type: string
+          title: description
+          description: 角色描述
+          nullable: true
+        sortOrder:
+          type: integer
+          title: sort_order
+          format: int32
+          description: 排序顺序
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+          title: permissions
+          description: 权限代码列表（完整替换）
+      title: UpdateRoleRequest
+      additionalProperties: false
+      description: 更新角色请求
+    base.UpdateRoleResponse:
+      type: object
+      properties:
+        role:
+          title: role
+          description: 更新后的角色
+          $ref: '#/components/schemas/base.RoleInfo'
+      title: UpdateRoleResponse
+      additionalProperties: false
+      description: 更新角色响应
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+security: []
+tags:
+  - name: base.RoleService

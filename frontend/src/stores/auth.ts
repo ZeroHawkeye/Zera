@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
         return !!state.accessToken && !!state.user
       },
 
-      hasPermission: (permission: string) => {
+      hasPermission: (_permission: string) => {
         const { user } = get()
         if (!user) return false
         // 管理员拥有所有权限

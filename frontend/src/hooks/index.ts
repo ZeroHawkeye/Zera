@@ -18,3 +18,11 @@ export {
   useUserActions,
   UserStatus,
 } from './useUser'
+
+export {
+  useRoles,
+  useRole,
+  usePermissions,
+  useRolePermissions,
+  useRoleActions,
+} from './useRole'

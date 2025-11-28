@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package base;
+
+import "buf/validate/validate.proto";
+
+// ============================================
+// 角色管理消息定义
+// ============================================
+
+// 角色信息
+message RoleInfo {
+  // 角色ID
+  string id = 1;
+  // 角色代码
+  string code = 2;
+  // 角色名称
+  string name = 3;
+  // 角色描述
+  string description = 4;
+  // 是否为系统内置角色
+  bool is_system = 5;
+  // 排序顺序
+  int32 sort_order = 6;
+  // 权限代码列表
+  repeated string permissions = 7;
+  // 用户数量
+  int32 user_count = 8;
+  // 创建时间
+  string created_at = 9;
+  // 更新时间
+  string updated_at = 10;
+}
+
+// 权限信息
+message PermissionInfo {
+  // 权限ID
+  string id = 1;
+  // 权限代码
+  string code = 2;
+  // 权限名称
+  string name = 3;
+  // 权限描述
+  string description = 4;
+  // 资源类型
+  string resource = 5;
+  // 操作类型
+  string action = 6;
+  // 创建时间
+  string created_at = 7;
+}
+
+// 权限分组信息
+message PermissionGroup {
+  // 资源类型（分组名称）
+  string resource = 1;
+  // 资源显示名称
+  string resource_name = 2;
+  // 该分组下的权限列表
+  repeated PermissionInfo permissions = 3;
+}
+
+// ============================================
+// 角色列表
+// ============================================
+
+// 角色列表请求
+message ListRolesRequest {
+  // 页码，从 1 开始
+  int32 page = 1 [(buf.validate.field).int32.gte = 1];
+  // 每页数量
+  int32 page_size = 2 [(buf.validate.field).int32 = {gte: 1, lte: 100}];
+  // 搜索关键词（角色名称、代码）
+  string keyword = 3;
+  // 是否仅显示系统角色
+  optional bool is_system = 4;
+}
+
+// 角色列表响应
+message ListRolesResponse {
+  // 角色列表
+  repeated RoleInfo roles = 1;
+  // 总数
+  int64 total = 2;
+  // 当前页码
+  int32 page = 3;
+  // 每页数量
+  int32 page_size = 4;
+}
+
+// ============================================
+// 角色详情
+// ============================================
+
+// 获取角色详情请求
+message GetRoleRequest {
+  // 角色ID
+  string id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// 获取角色详情响应
+message GetRoleResponse {
+  // 角色信息
+  RoleInfo role = 1;
+}
+
+// ============================================
+// 创建角色
+// ============================================
+
+// 创建角色请求
+message CreateRoleRequest {
+  // 角色代码
+  string code = 1 [(buf.validate.field).string = {min_len: 1, max_len: 50}];
+  // 角色名称
+  string name = 2 [(buf.validate.field).string = {min_len: 1, max_len: 100}];
+  // 角色描述
+  string description = 3 [(buf.validate.field).string.max_len = 500];
+  // 排序顺序
+  int32 sort_order = 4;
+  // 权限代码列表
+  repeated string permissions = 5;
+}
+
+// 创建角色响应
+message CreateRoleResponse {
+  // 创建的角色
+  RoleInfo role = 1;
+}
+
+// ============================================
+// 更新角色
+// ============================================
+
+// 更新角色请求
+message UpdateRoleRequest {
+  // 角色ID
+  string id = 1 [(buf.validate.field).string.min_len = 1];
+  // 角色名称
+  optional string name = 2;
+  // 角色描述
+  optional string description = 3;
+  // 排序顺序
+  optional int32 sort_order = 4;
+  // 权限代码列表（完整替换）
+  repeated string permissions = 5;
+}
+
+// 更新角色响应
+message UpdateRoleResponse {
+  // 更新后的角色
+  RoleInfo role = 1;
+}
+
+// ============================================
+// 删除角色
+// ============================================
+
+// 删除角色请求
+message DeleteRoleRequest {
+  // 角色ID
+  string id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// 删除角色响应
+message DeleteRoleResponse {
+  // 是否成功
+  bool success = 1;
+}
+
+// ============================================
+// 权限列表
+// ============================================
+
+// 权限列表请求
+message ListPermissionsRequest {
+  // 资源类型筛选
+  string resource = 1;
+}
+
+// 权限列表响应
+message ListPermissionsResponse {
+  // 权限列表
+  repeated PermissionInfo permissions = 1;
+  // 按资源分组的权限列表
+  repeated PermissionGroup groups = 2;
+}
+
+// ============================================
+// 角色权限管理
+// ============================================
+
+// 获取角色权限请求
+message GetRolePermissionsRequest {
+  // 角色ID
+  string role_id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// 获取角色权限响应
+message GetRolePermissionsResponse {
+  // 角色拥有的权限代码列表
+  repeated string permissions = 1;
+  // 所有权限分组
+  repeated PermissionGroup all_permission_groups = 2;
+}
+
+// 更新角色权限请求
+message UpdateRolePermissionsRequest {
+  // 角色ID
+  string role_id = 1 [(buf.validate.field).string.min_len = 1];
+  // 权限代码列表（完整替换）
+  repeated string permissions = 2;
+}
+
+// 更新角色权限响应
+message UpdateRolePermissionsResponse {
+  // 是否成功
+  bool success = 1;
+}
+
+// ============================================
+// 角色管理服务
+// ============================================
+
+service RoleService {
+  // 获取角色列表
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {}
+  // 获取角色详情
+  rpc GetRole(GetRoleRequest) returns (GetRoleResponse) {}
+  // 创建角色
+  rpc CreateRole(CreateRoleRequest) returns (CreateRoleResponse) {}
+  // 更新角色
+  rpc UpdateRole(UpdateRoleRequest) returns (UpdateRoleResponse) {}
+  // 删除角色
+  rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse) {}
+  // 获取权限列表
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse) {}
+  // 获取角色权限
+  rpc GetRolePermissions(GetRolePermissionsRequest) returns (GetRolePermissionsResponse) {}
+  // 更新角色权限
+  rpc UpdateRolePermissions(UpdateRolePermissionsRequest) returns (UpdateRolePermissionsResponse) {}
+}

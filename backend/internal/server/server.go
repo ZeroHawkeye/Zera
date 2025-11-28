@@ -65,10 +65,12 @@ func New(cfg *config.Config) (*Server, error) {
 	// 初始化服务层
 	authService := service.NewAuthService(db.Client, jwtManager)
 	userService := service.NewUserService(db.Client)
+	roleService := service.NewRoleService(db.Client)
 
 	// 初始化处理器
 	authHandler := handler.NewAuthHandler(validator, authService, jwtManager)
 	userHandler := handler.NewUserHandler(validator, userService)
+	roleHandler := handler.NewRoleHandler(validator, roleService)
 
 	// 创建认证拦截器
 	authInterceptor := middleware.NewAuthInterceptor(jwtManager)
@@ -92,6 +94,13 @@ func New(cfg *config.Config) (*Server, error) {
 		connect.WithInterceptors(authInterceptor),
 	)
 	engine.Any(userPath+"*action", gin.WrapH(userH))
+
+	// 注册角色管理服务路由（需要认证）
+	rolePath, roleH := baseconnect.NewRoleServiceHandler(
+		roleHandler,
+		connect.WithInterceptors(authInterceptor),
+	)
+	engine.Any(rolePath+"*action", gin.WrapH(roleH))
 
 	// 注册 SPA 静态资源（生产环境）
 	// 开发环境下 dist 目录可能不存在或为空，会优雅降级

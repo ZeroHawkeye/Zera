@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { AdminLayout } from '@/layouts'
+import { authGuard, guestGuard, waitForAuthInit } from './guards'
 
 // ============================================
 // 根路由
@@ -37,6 +38,10 @@ export const indexRoute = createRoute({
 export const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
+  beforeLoad: async () => {
+    await waitForAuthInit()
+    guestGuard()
+  },
 }).lazy(() => import('@/pages/login').then((m) => m.Route))
 
 // ============================================
@@ -52,12 +57,10 @@ export const adminRoute = createRoute({
       <Outlet />
     </AdminLayout>
   ),
-  // TODO: 添加认证守卫
-  // beforeLoad: async ({ context }) => {
-  //   if (!isAuthenticated()) {
-  //     throw redirect({ to: '/login' })
-  //   }
-  // },
+  beforeLoad: async () => {
+    await waitForAuthInit()
+    authGuard()
+  },
 })
 
 // 后台首页（仪表盘）

@@ -1,8 +1,10 @@
-import { createLazyRoute } from '@tanstack/react-router'
-import { Table, Button, Space, Card, Tag, Modal } from 'antd'
-import { Plus, Edit, Trash2, Shield } from 'lucide-react'
+import { createLazyRoute, useNavigate } from '@tanstack/react-router'
+import { Table, Button, Space, Card, Tag, Modal, Form, Input, InputNumber, message, Skeleton, Empty } from 'antd'
+import { Plus, Edit, Trash2, Shield, Search } from 'lucide-react'
 import type { ColumnsType } from 'antd/es/table'
 import { useState } from 'react'
+import { useRoles, useRoleActions } from '@/hooks'
+import type { RoleInfo } from '@/api'
 
 export const Route = createLazyRoute('/admin/roles/')({  
   component: RoleList,

@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from '@tanstack/react-router'
+import { Outlet, Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, type ReactNode } from 'react'
 import {
   ChevronLeft,
@@ -14,10 +14,12 @@ import {
   Sparkles,
   Menu,
   X,
+  Shield,
 } from 'lucide-react'
 import { Dropdown, Avatar, Badge, Breadcrumb } from 'antd'
 import type { MenuProps } from 'antd'
 import { useResponsive } from '@/hooks'
+import { useAuthStore } from '@/stores'
 
 interface AdminLayoutProps {
   children?: ReactNode
@@ -37,7 +39,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   })
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   const { isMobile } = useResponsive()
+  const { user, logout } = useAuthStore()
 
   // 持久化侧边栏状态
   useEffect(() => {
@@ -49,21 +53,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setMobileMenuOpen(false)
   }, [location.pathname])
   
-  // TODO: 从路由状态中获取当前路由的 meta 信息
-  // TODO: 实现动态菜单渲染
-  // TODO: 实现权限控制
-
-  /**
-   * 检查菜单项是否激活
-   * 精确匹配或前缀匹配（用于子路由）
-   */
+  // 检查菜单项是否激活
   const isMenuActive = (path: string) => {
     if (path === '/admin') {
-      // 仪表盘只精确匹配
       return location.pathname === '/admin' || location.pathname === '/admin/'
     }
-    // 其他菜单项使用前缀匹配
     return location.pathname.startsWith(path)
+  }
+
+  // 用户菜单项
+  const handleLogout = async () => {
+    await logout()
+    navigate({ to: '/login' })
   }
 
   const userMenuItems: MenuProps['items'] = [
@@ -85,6 +86,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: <LogOut className="w-4 h-4" />,
       label: '退出登录',
       danger: true,
+      onClick: handleLogout,
     },
   ]
 
@@ -160,6 +162,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               to="/admin/users"
               collapsed={!isMobile && sidebarCollapsed}
               active={isMenuActive('/admin/users')}
+            />
+            <SidebarMenuItem
+              icon={<Shield className="w-5 h-5" />}
+              label="角色管理"
+              to="/admin/roles"
+              collapsed={!isMobile && sidebarCollapsed}
+              active={isMenuActive('/admin/roles')}
             />
             <SidebarMenuItem
               icon={<Settings className="w-5 h-5" />}
@@ -244,16 +253,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="relative">
                   <Avatar 
                     size={isMobile ? 32 : 36} 
+                    src={user?.avatar}
                     className="bg-indigo-500 shadow-md shadow-indigo-500/20"
                   >
-                    A
+                    {user?.nickname?.charAt(0) || user?.username?.charAt(0) || 'U'}
                   </Avatar>
                   <div className="absolute -bottom-0.5 -right-0.5 w-2.5 md:w-3 h-2.5 md:h-3 bg-green-500 rounded-full border-2 border-white" />
                 </div>
                 {/* 用户信息 - 移动端隐藏 */}
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-700">Admin</p>
-                  <p className="text-xs text-gray-400">管理员</p>
+                  <p className="text-sm font-medium text-gray-700">{user?.nickname || user?.username || '用户'}</p>
+                  <p className="text-xs text-gray-400">{user?.roles?.[0] || '普通用户'}</p>
                 </div>
                 <ChevronDown className="hidden md:block w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
               </button>
