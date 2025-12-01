@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Spin } from 'antd'
 import { router } from './router/router'
-import { useAuthStore } from './stores'
+import { useAuthStore, useSiteStore } from './stores'
 
 // 创建 QueryClient 实例
 const queryClient = new QueryClient({
@@ -18,18 +18,23 @@ const queryClient = new QueryClient({
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false)
-  const initialize = useAuthStore((state) => state.initialize)
+  const initializeAuth = useAuthStore((state) => state.initialize)
+  const initializeSite = useSiteStore((state) => state.initialize)
 
   useEffect(() => {
     const init = async () => {
       try {
-        await initialize()
+        // 并行初始化认证和站点设置
+        await Promise.all([
+          initializeAuth(),
+          initializeSite(),
+        ])
       } finally {
         setIsInitialized(true)
       }
     }
     init()
-  }, [initialize])
+  }, [initializeAuth, initializeSite])
 
   // 初始化加载状态
   if (!isInitialized) {

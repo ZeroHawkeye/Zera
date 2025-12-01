@@ -16,7 +16,7 @@ import {
 import { Dropdown, Avatar, Badge, Breadcrumb } from 'antd'
 import type { MenuProps } from 'antd'
 import { useResponsive } from '@/hooks'
-import { useAuthStore, useMenuStore } from '@/stores'
+import { useAuthStore, useMenuStore, useSiteStore } from '@/stores'
 import { MenuRenderer } from '@/components/menu'
 import { initAdminMenus, generateBreadcrumbs } from '@/config/menu'
 
@@ -56,6 +56,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     updateByPath,
     getMenuItems,
   } = useMenuStore()
+
+  // 获取站点设置
+  const siteName = useSiteStore((state) => state.siteName)
 
   // 路由变化时更新菜单状态
   useEffect(() => {
@@ -156,7 +159,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 !isMobile && collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
               }`}
             >
-              Zera
+              {siteName}
             </span>
           </Link>
           
@@ -225,7 +228,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-md shadow-indigo-500/25">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-lg font-bold text-gray-900">Zera</span>
+                <span className="text-lg font-bold text-gray-900">{siteName}</span>
               </Link>
             )}
           </div>

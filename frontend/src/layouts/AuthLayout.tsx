@@ -1,5 +1,6 @@
 import { Outlet, Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { useSiteStore } from '@/stores'
 
 interface AuthLayoutProps {
   children?: ReactNode
@@ -11,6 +12,8 @@ interface AuthLayoutProps {
  * 提供统一的认证页面风格
  */
 export function AuthLayout({ children }: AuthLayoutProps) {
+  const siteName = useSiteStore((state) => state.siteName)
+
   return (
     <div className="min-h-screen flex">
       {/* 左侧品牌区域 */}
@@ -26,15 +29,15 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <div>
             <Link to="/" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">Z</span>
+                <span className="text-white font-bold text-xl">{siteName.charAt(0)}</span>
               </div>
-              <span className="text-2xl font-bold">Zera</span>
+              <span className="text-2xl font-bold">{siteName}</span>
             </Link>
           </div>
 
           <div className="max-w-md">
             <h1 className="text-4xl font-bold mb-4">
-              欢迎使用 Zera 管理系统
+              欢迎使用 {siteName} 管理系统
             </h1>
             <p className="text-white/80 text-lg leading-relaxed">
               一个现代化、高效率的企业级管理平台，
@@ -60,9 +63,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <div className="lg:hidden mb-8 text-center">
             <Link to="/" className="inline-flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">Z</span>
+                <span className="text-white font-bold">{siteName.charAt(0)}</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">Zera</span>
+              <span className="text-xl font-bold text-gray-900">{siteName}</span>
             </Link>
           </div>
 
@@ -72,7 +75,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           {/* 页脚 */}
           <div className="mt-12 text-center">
             <p className="text-xs text-gray-400">
-              © {new Date().getFullYear()} Zera. All rights reserved.
+              © {new Date().getFullYear()} {siteName}. All rights reserved.
             </p>
           </div>
         </div>

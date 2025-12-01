@@ -2,7 +2,7 @@ import { createLazyRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Card, Form, Input, Button, Checkbox, message } from 'antd'
 import { Mail, Lock, Sparkles } from 'lucide-react'
-import { useAuthStore } from '@/stores'
+import { useAuthStore, useSiteStore } from '@/stores'
 
 export const Route = createLazyRoute('/login')({
   component: LoginPage,
@@ -18,6 +18,7 @@ function LoginPage() {
   const navigate = useNavigate()
   const search = useSearch({ from: '/login' })
   const login = useAuthStore((state) => state.login)
+  const siteName = useSiteStore((state) => state.siteName)
 
   const handleLogin = async (values: { username: string; password: string; rememberMe?: boolean }) => {
     setLoading(true)
@@ -53,7 +54,7 @@ function LoginPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
             欢迎回来
           </h1>
-          <p className="mt-2 text-gray-500">登录到 Zera 管理系统</p>
+          <p className="mt-2 text-gray-500">登录到 {siteName} 管理系统</p>
         </div>
 
         {/* 登录表单 */}

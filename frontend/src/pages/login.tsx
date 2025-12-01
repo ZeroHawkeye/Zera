@@ -1,9 +1,9 @@
 import { createLazyRoute, useNavigate, Link } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { User, Lock, ArrowRight, AlertCircle } from 'lucide-react'
 import { ConnectError } from '@connectrpc/connect'
 import { authApi } from '@/api/auth'
-import { systemSettingApi } from '@/api/system_setting'
+import { useSiteStore } from '@/stores'
 
 export const Route = createLazyRoute('/login')({
   component: LoginPage,
@@ -16,17 +16,10 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
-  const [registrationEnabled, setRegistrationEnabled] = useState(false)
 
-  // 获取公开设置，检查是否启用注册
-  useEffect(() => {
-    systemSettingApi.getPublicSettings().then((settings) => {
-      setRegistrationEnabled(settings.enableRegistration)
-    }).catch(() => {
-      // 获取失败，默认不显示注册入口
-      setRegistrationEnabled(false)
-    })
-  }, [])
+  // 从全局 store 获取站点设置
+  const siteName = useSiteStore((state) => state.siteName)
+  const registrationEnabled = useSiteStore((state) => state.enableRegistration)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,7 +60,7 @@ function LoginPage() {
         {/* 品牌区域 */}
         <div className="relative z-10 flex flex-col justify-between p-12">
           <div>
-            <h1 className="text-3xl font-bold text-white drop-shadow-lg">Zera</h1>
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">{siteName}</h1>
           </div>
           <div className="max-w-md">
             <blockquote className="text-white/90 text-lg leading-relaxed drop-shadow-md">
@@ -83,7 +76,7 @@ function LoginPage() {
         <div className="w-full max-w-sm">
           {/* 移动端Logo */}
           <div className="lg:hidden mb-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Zera</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{siteName}</h1>
           </div>
 
           {/* 标题 */}
@@ -214,7 +207,7 @@ function LoginPage() {
 
           {/* 页脚 */}
           <div className="mt-12 text-center">
-            <p className="text-xs text-gray-400">© 2024 Zera. All rights reserved.</p>
+            <p className="text-xs text-gray-400">© {new Date().getFullYear()} {siteName}. All rights reserved.</p>
           </div>
         </div>
       </div>

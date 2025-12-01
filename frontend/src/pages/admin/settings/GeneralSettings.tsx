@@ -4,6 +4,7 @@ import { Save, RefreshCw } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { systemSettingApi, type UpdateSettingsParams } from '@/api/system_setting'
 import { roleApi } from '@/api/role'
+import { useSiteStore } from '@/stores'
 import { useState, useEffect } from 'react'
 
 export const Route = createLazyRoute('/admin/settings/general')({
@@ -29,6 +30,7 @@ function GeneralSettings() {
   const queryClient = useQueryClient()
   const { token } = theme.useToken()
   const [hasChanges, setHasChanges] = useState(false)
+  const refreshSiteSettings = useSiteStore((state) => state.refresh)
 
   // 获取系统设置
   const { data, isLoading, error, refetch } = useQuery({
@@ -45,11 +47,13 @@ function GeneralSettings() {
   // 更新系统设置
   const updateMutation = useMutation({
     mutationFn: (params: UpdateSettingsParams) => systemSettingApi.updateSettings(params),
-    onSuccess: () => {
+    onSuccess: async () => {
       message.success('设置已保存')
       setHasChanges(false)
       queryClient.invalidateQueries({ queryKey: ['systemSettings'] })
       queryClient.invalidateQueries({ queryKey: ['publicSettings'] })
+      // 刷新全局站点设置，更新标题和描述
+      await refreshSiteSettings()
     },
     onError: () => {
       message.error('保存设置失败')

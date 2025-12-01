@@ -1,9 +1,9 @@
 import { createLazyRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { User, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { ConnectError } from '@connectrpc/connect'
 import { authApi } from '@/api/auth'
-import { systemSettingApi } from '@/api/system_setting'
+import { useSiteStore } from '@/stores'
 
 export const Route = createLazyRoute('/register')({
   component: RegisterPage,
@@ -21,22 +21,16 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  // 从全局 store 获取站点名称
+  const siteName = useSiteStore((state) => state.siteName)
+
   const passwordPolicy = {
     minLength: 8,
     requireUppercase: true,
     requireNumber: true,
     requireSpecial: false,
   }
-
-  // 获取密码策略
-  useEffect(() => {
-    systemSettingApi.getPublicSettings().then(() => {
-      // 这里暂时使用公开设置，实际密码策略在后端验证
-      // 可以考虑在 GetPublicSettings 中返回密码策略要求
-    }).catch(() => {
-      // 忽略错误，使用默认策略
-    })
-  }, [])
 
   const validatePassword = (password: string): string[] => {
     const errors: string[] = []
@@ -143,7 +137,7 @@ function RegisterPage() {
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex flex-col justify-between p-12">
           <div>
-            <h1 className="text-3xl font-bold text-white drop-shadow-lg">Zera</h1>
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">{siteName}</h1>
           </div>
           <div className="max-w-md">
             <blockquote className="text-white/90 text-lg leading-relaxed drop-shadow-md">
@@ -159,7 +153,7 @@ function RegisterPage() {
         <div className="w-full max-w-sm">
           {/* 移动端Logo */}
           <div className="lg:hidden mb-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Zera</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{siteName}</h1>
           </div>
 
           {/* 标题 */}
@@ -356,7 +350,7 @@ function RegisterPage() {
 
           {/* 页脚 */}
           <div className="mt-12 text-center">
-            <p className="text-xs text-gray-400">© 2024 Zera. All rights reserved.</p>
+            <p className="text-xs text-gray-400">© {new Date().getFullYear()} {siteName}. All rights reserved.</p>
           </div>
         </div>
       </div>

@@ -15,6 +15,29 @@ services:
     networks:
       - zera_network
 
+  # rustfs对象存储
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: zera_rustfs
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-zera}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-zera}
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_SERVER_DOMAINS: ${RUSTFS_SERVER_DOMAINS:-example.com}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/rustfs:/data
+    command: >
+      --address :9000
+      --console-enable
+      --server-domains ${RUSTFS_SERVER_DOMAINS:-example.com}
+      --access-key ${RUSTFS_ACCESS_KEY:-zera}
+      --secret-key ${RUSTFS_SECRET_KEY:-zera}
+    networks:
+      - zera_network
+
 # 网络
 networks:
   zera_network:
