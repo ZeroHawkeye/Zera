@@ -597,6 +597,10 @@ components:
           type: string
           title: updated_at
           description: 更新时间
+        isAllPermissions:
+          type: boolean
+          title: is_all_permissions
+          description: 是否拥有全部权限（如 admin 角色）
       title: RoleInfo
       additionalProperties: false
       description: 角色信息

@@ -30,6 +30,8 @@ message RoleInfo {
   string created_at = 9;
   // 更新时间
   string updated_at = 10;
+  // 是否拥有全部权限（如 admin 角色）
+  bool is_all_permissions = 11;
 }
 
 // 权限信息
@@ -69,7 +71,10 @@ message ListRolesRequest {
   // 页码，从 1 开始
   int32 page = 1 [(buf.validate.field).int32.gte = 1];
   // 每页数量
-  int32 page_size = 2 [(buf.validate.field).int32 = {gte: 1, lte: 100}];
+  int32 page_size = 2 [(buf.validate.field).int32 = {
+    gte: 1
+    lte: 100
+  }];
   // 搜索关键词（角色名称、代码）
   string keyword = 3;
   // 是否仅显示系统角色
@@ -111,9 +116,15 @@ message GetRoleResponse {
 // 创建角色请求
 message CreateRoleRequest {
   // 角色代码
-  string code = 1 [(buf.validate.field).string = {min_len: 1, max_len: 50}];
+  string code = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 50
+  }];
   // 角色名称
-  string name = 2 [(buf.validate.field).string = {min_len: 1, max_len: 100}];
+  string name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
   // 角色描述
   string description = 3 [(buf.validate.field).string.max_len = 500];
   // 排序顺序

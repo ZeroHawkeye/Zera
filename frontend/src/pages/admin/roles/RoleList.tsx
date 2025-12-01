@@ -120,7 +120,7 @@ function RoleCard({
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <Lock className="w-3.5 h-3.5" />
-          <span>{role.permissions.length} 个权限</span>
+          <span>{role.isAllPermissions ? '全部权限' : `${role.permissions.length} 个权限`}</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-400 ml-auto">
           <Calendar className="w-3.5 h-3.5" />
@@ -260,12 +260,13 @@ function RoleList() {
       ),
     },
     {
-      title: '权限数',
-      dataIndex: 'permissions',
+      title: '权限',
       key: 'permissions',
       width: 100,
-      render: (permissions: string[]) => (
-        <Tag color="blue">{permissions?.length || 0} 个权限</Tag>
+      render: (_: unknown, record: RoleInfo) => (
+        record.isAllPermissions 
+          ? <Tag color="gold">全部权限</Tag>
+          : <Tag color="blue">{record.permissions?.length || 0} 个权限</Tag>
       ),
     },
     {

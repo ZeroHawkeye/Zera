@@ -378,17 +378,21 @@ func (s *RoleService) toRoleInfo(r *ent.Role) *base.RoleInfo {
 		permissions = append(permissions, p.Code)
 	}
 
+	// admin 角色拥有全部权限
+	isAllPermissions := r.Code == "admin"
+
 	return &base.RoleInfo{
-		Id:          strconv.Itoa(r.ID),
-		Code:        r.Code,
-		Name:        r.Name,
-		Description: r.Description,
-		IsSystem:    r.IsSystem,
-		SortOrder:   int32(r.SortOrder),
-		Permissions: permissions,
-		UserCount:   int32(len(r.Edges.Users)),
-		CreatedAt:   r.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:   r.UpdatedAt.Format(time.RFC3339),
+		Id:               strconv.Itoa(r.ID),
+		Code:             r.Code,
+		Name:             r.Name,
+		Description:      r.Description,
+		IsSystem:         r.IsSystem,
+		SortOrder:        int32(r.SortOrder),
+		Permissions:      permissions,
+		UserCount:        int32(len(r.Edges.Users)),
+		CreatedAt:        r.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:        r.UpdatedAt.Format(time.RFC3339),
+		IsAllPermissions: isAllPermissions,
 	}
 }
 
