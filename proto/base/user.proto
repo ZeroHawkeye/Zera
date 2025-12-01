@@ -28,18 +28,16 @@ message UserDetail {
   string avatar = 4;
   // 邮箱
   string email = 5;
-  // 手机号
-  string phone = 6;
   // 用户状态
-  UserStatus status = 7;
+  UserStatus status = 6;
   // 角色列表
-  repeated string roles = 8;
+  repeated string roles = 7;
   // 创建时间
-  string created_at = 9;
+  string created_at = 8;
   // 更新时间
-  string updated_at = 10;
+  string updated_at = 9;
   // 最后登录时间
-  string last_login_at = 11;
+  string last_login_at = 10;
 }
 
 // ============================================
@@ -51,7 +49,10 @@ message ListUsersRequest {
   // 页码，从 1 开始
   int32 page = 1 [(buf.validate.field).int32.gte = 1];
   // 每页数量
-  int32 page_size = 2 [(buf.validate.field).int32 = {gte: 1, lte: 100}];
+  int32 page_size = 2 [(buf.validate.field).int32 = {
+    gte: 1
+    lte: 100
+  }];
   // 搜索关键词（用户名、邮箱、昵称）
   string keyword = 3;
   // 状态筛选
@@ -99,21 +100,25 @@ message GetUserResponse {
 // 创建用户请求
 message CreateUserRequest {
   // 用户名
-  string username = 1 [(buf.validate.field).string = {min_len: 1, max_len: 50}];
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 50
+  }];
   // 密码
-  string password = 2 [(buf.validate.field).string = {min_len: 6, max_len: 128}];
+  string password = 2 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 128
+  }];
   // 邮箱
   string email = 3 [(buf.validate.field).string.email = true];
   // 昵称
   string nickname = 4 [(buf.validate.field).string.max_len = 100];
-  // 手机号
-  string phone = 5;
   // 头像URL
-  string avatar = 6;
+  string avatar = 5;
   // 角色列表
-  repeated string roles = 7;
+  repeated string roles = 6;
   // 用户状态
-  UserStatus status = 8;
+  UserStatus status = 7;
 }
 
 // 创建用户响应
@@ -134,14 +139,12 @@ message UpdateUserRequest {
   optional string nickname = 2;
   // 邮箱
   optional string email = 3;
-  // 手机号
-  optional string phone = 4;
   // 头像URL
-  optional string avatar = 5;
+  optional string avatar = 4;
   // 角色列表
-  repeated string roles = 6;
+  repeated string roles = 5;
   // 用户状态
-  optional UserStatus status = 7;
+  optional UserStatus status = 6;
 }
 
 // 更新用户响应
@@ -175,7 +178,10 @@ message ResetUserPasswordRequest {
   // 用户ID
   string id = 1 [(buf.validate.field).string.min_len = 1];
   // 新密码
-  string new_password = 2 [(buf.validate.field).string = {min_len: 6, max_len: 128}];
+  string new_password = 2 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 128
+  }];
 }
 
 // 重置用户密码响应

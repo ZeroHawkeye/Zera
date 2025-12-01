@@ -103,14 +103,32 @@ export const useAuthStore = create<AuthState>()(
         return !!state.accessToken && !!state.user
       },
 
-      hasPermission: (_permission: string) => {
+      hasPermission: (permission: string) => {
         const { user } = get()
         if (!user) return false
+
         // 管理员拥有所有权限
         if (user.roles.includes('admin') || user.roles.includes('super_admin')) {
           return true
         }
-        // TODO: 当用户信息中包含 permissions 时，检查权限
+
+        // 检查用户权限列表
+        if (!user.permissions || user.permissions.length === 0) {
+          return false
+        }
+
+        // 检查是否包含目标权限
+        for (const p of user.permissions) {
+          // 完全匹配
+          if (p === permission) return true
+          // 通配符权限 (如 user:* 匹配 user:read)
+          if (p === '*') return true
+          if (p.endsWith(':*')) {
+            const prefix = p.slice(0, -1) // 移除末尾的 *
+            if (permission.startsWith(prefix)) return true
+          }
+        }
+
         return false
       },
 

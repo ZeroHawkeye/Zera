@@ -12,6 +12,7 @@ import (
 	"zera/ent/user"
 	"zera/gen/base"
 	"zera/internal/auth"
+	"zera/internal/permission"
 )
 
 var (
@@ -27,15 +28,17 @@ var (
 
 // AuthService 认证服务
 type AuthService struct {
-	client     *ent.Client
-	jwtManager *auth.JWTManager
+	client            *ent.Client
+	jwtManager        *auth.JWTManager
+	permissionChecker *permission.Checker
 }
 
 // NewAuthService 创建认证服务
 func NewAuthService(client *ent.Client, jwtManager *auth.JWTManager) *AuthService {
 	return &AuthService{
-		client:     client,
-		jwtManager: jwtManager,
+		client:            client,
+		jwtManager:        jwtManager,
+		permissionChecker: permission.NewChecker(client),
 	}
 }
 
@@ -44,7 +47,9 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*ba
 	// 查询用户
 	u, err := s.client.User.Query().
 		Where(user.Username(username)).
-		WithRoles().
+		WithRoles(func(q *ent.RoleQuery) {
+			q.WithPermissions()
+		}).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -71,8 +76,11 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*ba
 		return nil, err
 	}
 
+	// 获取用户角色和权限
+	roles, permissions := s.extractRolesAndPermissions(u)
+
 	// 生成令牌
-	accessToken, err := s.jwtManager.GenerateAccessToken(u.ID, u.Username)
+	accessToken, err := s.jwtManager.GenerateAccessToken(u.ID, u.Username, roles, permissions)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +91,7 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*ba
 	}
 
 	// 构建用户信息
-	userInfo := s.buildUserInfo(u)
+	userInfo := s.buildUserInfo(u, permissions)
 
 	return &base.LoginResponse{
 		AccessToken:  accessToken,
@@ -114,9 +122,12 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*b
 		return nil, ErrInvalidToken
 	}
 
-	// 查询用户确保用户仍然有效
+	// 查询用户确保用户仍然有效，并获取最新的角色和权限
 	u, err := s.client.User.Query().
 		Where(user.ID(claims.UserID)).
+		WithRoles(func(q *ent.RoleQuery) {
+			q.WithPermissions()
+		}).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -130,8 +141,11 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*b
 		return nil, ErrUserInactive
 	}
 
+	// 获取用户角色和权限
+	roles, permissions := s.extractRolesAndPermissions(u)
+
 	// 生成新的令牌
-	newAccessToken, err := s.jwtManager.GenerateAccessToken(u.ID, u.Username)
+	newAccessToken, err := s.jwtManager.GenerateAccessToken(u.ID, u.Username, roles, permissions)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +166,9 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*b
 func (s *AuthService) GetCurrentUser(ctx context.Context, userID int) (*base.UserInfo, error) {
 	u, err := s.client.User.Query().
 		Where(user.ID(userID)).
-		WithRoles().
+		WithRoles(func(q *ent.RoleQuery) {
+			q.WithPermissions()
+		}).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -161,23 +177,57 @@ func (s *AuthService) GetCurrentUser(ctx context.Context, userID int) (*base.Use
 		return nil, err
 	}
 
-	return s.buildUserInfo(u), nil
+	_, permissions := s.extractRolesAndPermissions(u)
+	return s.buildUserInfo(u, permissions), nil
+}
+
+// extractRolesAndPermissions 从用户实体中提取角色和权限
+func (s *AuthService) extractRolesAndPermissions(u *ent.User) ([]string, []string) {
+	roles := make([]string, 0, len(u.Edges.Roles))
+	permissionSet := make(map[string]bool)
+	isAdmin := false
+
+	for _, r := range u.Edges.Roles {
+		roles = append(roles, r.Code)
+		// 检查是否为管理员角色
+		if r.Code == "admin" || r.Code == "super_admin" {
+			isAdmin = true
+		}
+		// 收集该角色的所有权限
+		for _, p := range r.Edges.Permissions {
+			permissionSet[p.Code] = true
+		}
+	}
+
+	// 管理员拥有所有权限
+	if isAdmin {
+		return roles, []string{"*"}
+	}
+
+	// 转换为切片
+	permissions := make([]string, 0, len(permissionSet))
+	for code := range permissionSet {
+		permissions = append(permissions, code)
+	}
+
+	return roles, permissions
 }
 
 // buildUserInfo 构建用户信息
-func (s *AuthService) buildUserInfo(u *ent.User) *base.UserInfo {
+func (s *AuthService) buildUserInfo(u *ent.User, permissions []string) *base.UserInfo {
 	roles := make([]string, 0, len(u.Edges.Roles))
 	for _, r := range u.Edges.Roles {
 		roles = append(roles, r.Code)
 	}
 
 	return &base.UserInfo{
-		Id:       intToString(u.ID),
-		Username: u.Username,
-		Nickname: u.Nickname,
-		Avatar:   u.Avatar,
-		Email:    u.Email,
-		Roles:    roles,
+		Id:          intToString(u.ID),
+		Username:    u.Username,
+		Nickname:    u.Nickname,
+		Avatar:      u.Avatar,
+		Email:       u.Email,
+		Roles:       roles,
+		Permissions: permissions,
 	}
 }
 

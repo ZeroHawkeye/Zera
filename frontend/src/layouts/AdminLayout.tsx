@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect, type ReactNode } from 'react'
+import React, { useEffect, useMemo, type ReactNode } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,23 +9,29 @@ import {
   LogOut,
   Settings,
   ChevronDown,
-  LayoutDashboard,
-  Users,
   Sparkles,
   Menu,
   X,
-  Shield,
 } from 'lucide-react'
 import { Dropdown, Avatar, Badge, Breadcrumb } from 'antd'
 import type { MenuProps } from 'antd'
 import { useResponsive } from '@/hooks'
-import { useAuthStore } from '@/stores'
+import { useAuthStore, useMenuStore } from '@/stores'
+import { MenuRenderer } from '@/components/menu'
+import { initAdminMenus, generateBreadcrumbs } from '@/config/menu'
 
 interface AdminLayoutProps {
   children?: ReactNode
 }
 
-const SIDEBAR_COLLAPSED_KEY = 'admin_sidebar_collapsed'
+// 初始化菜单（只执行一次）
+let menuInitialized = false
+function ensureMenuInitialized() {
+  if (!menuInitialized) {
+    initAdminMenus()
+    menuInitialized = true
+  }
+}
 
 /**
  * 后台管理布局
@@ -33,33 +39,36 @@ const SIDEBAR_COLLAPSED_KEY = 'admin_sidebar_collapsed'
  * 采用现代 AI 产品风格：毛玻璃效果、柔和光晕
  */
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
-    return saved === 'true'
-  })
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // 确保菜单已初始化
+  ensureMenuInitialized()
+
   const location = useLocation()
   const navigate = useNavigate()
   const { isMobile } = useResponsive()
   const { user, logout } = useAuthStore()
+  
+  // 使用菜单状态管理
+  const {
+    collapsed,
+    mobileMenuOpen,
+    setCollapsed,
+    setMobileMenuOpen,
+    updateByPath,
+    getMenuItems,
+  } = useMenuStore()
 
-  // 持久化侧边栏状态
+  // 路由变化时更新菜单状态
   useEffect(() => {
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed))
-  }, [sidebarCollapsed])
+    updateByPath(location.pathname)
+  }, [location.pathname, updateByPath])
 
   // 路由变化时关闭移动端菜单
   useEffect(() => {
     setMobileMenuOpen(false)
-  }, [location.pathname])
-  
-  // 检查菜单项是否激活
-  const isMenuActive = (path: string) => {
-    if (path === '/admin') {
-      return location.pathname === '/admin' || location.pathname === '/admin/'
-    }
-    return location.pathname.startsWith(path)
-  }
+  }, [location.pathname, setMobileMenuOpen])
+
+  // 获取菜单项
+  const menuItems = useMemo(() => getMenuItems(), [getMenuItems])
 
   // 用户菜单项
   const handleLogout = async () => {
@@ -90,11 +99,28 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     },
   ]
 
-  // TODO: 从路由配置中动态生成面包屑
-  const breadcrumbItems = [
-    { title: <Link to="/admin">首页</Link> },
-    { title: '当前页面' },
-  ]
+  // 动态生成面包屑
+  const breadcrumbData = useMemo(
+    () => generateBreadcrumbs(menuItems, location.pathname),
+    [menuItems, location.pathname]
+  )
+
+  const breadcrumbItems = useMemo(() => {
+    const items: Array<{ title: React.ReactNode }> = [{ title: <Link to="/admin">首页</Link> }]
+    
+    breadcrumbData.forEach((item, index) => {
+      if (index === breadcrumbData.length - 1) {
+        // 最后一项不可点击
+        items.push({ title: item.label })
+      } else if (item.path) {
+        items.push({ title: <Link to={item.path}>{item.label}</Link> })
+      } else {
+        items.push({ title: item.label })
+      }
+    })
+    
+    return items
+  }, [breadcrumbData])
 
   return (
     <div className="min-h-screen flex bg-slate-50 relative">
@@ -112,7 +138,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           fixed left-0 top-0 h-full glass border-r-0 transition-all duration-300 ease-out z-40
           ${isMobile 
             ? `w-64 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}` 
-            : sidebarCollapsed ? 'w-[72px]' : 'w-64'
+            : collapsed ? 'w-[72px]' : 'w-64'
           }
         `}
         style={{
@@ -127,7 +153,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             <span 
               className={`text-xl font-bold text-gray-900 whitespace-nowrap overflow-hidden transition-all duration-300 ${
-                !isMobile && sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                !isMobile && collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
               }`}
             >
               Zera
@@ -145,48 +171,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           )}
         </div>
 
-        {/* 菜单区域 */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3">
-          {/* TODO: 动态渲染菜单项 */}
-          <div className="space-y-1.5">
-            <SidebarMenuItem
-              icon={<LayoutDashboard className="w-5 h-5" />}
-              label="仪表盘"
-              to="/admin"
-              collapsed={!isMobile && sidebarCollapsed}
-              active={isMenuActive('/admin')}
-            />
-            <SidebarMenuItem
-              icon={<Users className="w-5 h-5" />}
-              label="用户管理"
-              to="/admin/users"
-              collapsed={!isMobile && sidebarCollapsed}
-              active={isMenuActive('/admin/users')}
-            />
-            <SidebarMenuItem
-              icon={<Shield className="w-5 h-5" />}
-              label="角色管理"
-              to="/admin/roles"
-              collapsed={!isMobile && sidebarCollapsed}
-              active={isMenuActive('/admin/roles')}
-            />
-            <SidebarMenuItem
-              icon={<Settings className="w-5 h-5" />}
-              label="系统设置"
-              to="/admin/settings"
-              collapsed={!isMobile && sidebarCollapsed}
-              active={isMenuActive('/admin/settings')}
-            />
-          </div>
+        {/* 菜单区域 - 使用新的菜单渲染器 */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <MenuRenderer
+            items={menuItems}
+            collapsed={!isMobile && collapsed}
+          />
         </nav>
 
         {/* 折叠按钮 - 仅桌面端显示 */}
         {!isMobile && (
           <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onClick={() => setCollapsed(!collapsed)}
             className="absolute -right-3 top-[54px] w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 hover:bg-indigo-500 hover:border-transparent hover:text-white text-gray-400 transition-all duration-200 group"
           >
-            {sidebarCollapsed ? (
+            {collapsed ? (
               <ChevronRight className="w-3.5 h-3.5" />
             ) : (
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -198,7 +197,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* 主内容区 */}
       <div
         className={`flex-1 transition-all duration-300 ${
-          isMobile ? 'ml-0' : sidebarCollapsed ? 'ml-[72px]' : 'ml-64'
+          isMobile ? 'ml-0' : collapsed ? 'ml-[72px]' : 'ml-64'
         }`}
       >
         {/* 顶部导航 */}
@@ -277,69 +276,5 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </main>
       </div>
     </div>
-  )
-}
-
-/**
- * 侧边栏菜单项
- * 带有悬停动效
- */
-interface SidebarMenuItemProps {
-  icon: ReactNode
-  label: string
-  to: string
-  collapsed?: boolean
-  active?: boolean
-}
-
-function SidebarMenuItem({
-  icon,
-  label,
-  to,
-  collapsed,
-  active,
-}: SidebarMenuItemProps) {
-  return (
-    <Link
-      to={to}
-      className={`
-        flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden group
-        ${active 
-          ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-          : 'text-gray-500 hover:bg-white/60 hover:text-gray-700 hover:shadow-sm'
-        }
-      `}
-      title={collapsed ? label : undefined}
-    >
-      {/* 激活指示条 */}
-      <div 
-        className={`
-          absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-indigo-500 transition-all duration-200
-          ${active ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}
-        `}
-      />
-      
-      <span className={`flex-shrink-0 transition-transform duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>
-        {icon}
-      </span>
-      
-      {/* 使用固定宽度和 overflow hidden 避免换行抖动 */}
-      <span 
-        className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${
-          collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-        }`}
-      >
-        {label}
-      </span>
-      
-      {/* 激活状态指示点 - 仅在展开时显示 */}
-      {!collapsed && (
-        <div 
-          className={`absolute right-3 w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse transition-opacity duration-200 ${
-            active ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      )}
-    </Link>
   )
 }

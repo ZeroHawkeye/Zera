@@ -22,9 +22,11 @@ const (
 
 // Claims JWT 声明
 type Claims struct {
-	UserID   int       `json:"uid"`
-	Username string    `json:"username"`
-	Type     TokenType `json:"type"`
+	UserID      int       `json:"uid"`
+	Username    string    `json:"username"`
+	Roles       []string  `json:"roles,omitempty"`
+	Permissions []string  `json:"permissions,omitempty"`
+	Type        TokenType `json:"type"`
 	jwt.RegisteredClaims
 }
 
@@ -45,22 +47,25 @@ func NewJWTManager(cfg *config.JWTConfig) *JWTManager {
 }
 
 // GenerateAccessToken 生成访问令牌
-func (m *JWTManager) GenerateAccessToken(userID int, username string) (string, error) {
-	return m.generateToken(userID, username, AccessToken, m.accessTokenExpire)
+func (m *JWTManager) GenerateAccessToken(userID int, username string, roles []string, permissions []string) (string, error) {
+	return m.generateToken(userID, username, roles, permissions, AccessToken, m.accessTokenExpire)
 }
 
 // GenerateRefreshToken 生成刷新令牌
 func (m *JWTManager) GenerateRefreshToken(userID int, username string) (string, error) {
-	return m.generateToken(userID, username, RefreshToken, m.refreshTokenExpire)
+	// 刷新令牌不包含角色和权限信息
+	return m.generateToken(userID, username, nil, nil, RefreshToken, m.refreshTokenExpire)
 }
 
 // generateToken 生成令牌
-func (m *JWTManager) generateToken(userID int, username string, tokenType TokenType, expire time.Duration) (string, error) {
+func (m *JWTManager) generateToken(userID int, username string, roles []string, permissions []string, tokenType TokenType, expire time.Duration) (string, error) {
 	now := time.Now()
 	claims := Claims{
-		UserID:   userID,
-		Username: username,
-		Type:     tokenType,
+		UserID:      userID,
+		Username:    username,
+		Roles:       roles,
+		Permissions: permissions,
+		Type:        tokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(expire)),
 			IssuedAt:  jwt.NewNumericDate(now),

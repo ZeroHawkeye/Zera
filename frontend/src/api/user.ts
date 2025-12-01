@@ -52,7 +52,6 @@ export interface CreateUserParams {
   password: string
   email: string
   nickname?: string
-  phone?: string
   avatar?: string
   roles?: string[]
   status?: UserStatus
@@ -65,7 +64,6 @@ export interface UpdateUserParams {
   id: string
   nickname?: string
   email?: string
-  phone?: string
   avatar?: string
   roles?: string[]
   status?: UserStatus
@@ -109,7 +107,6 @@ export const userApi = {
       password: params.password,
       email: params.email,
       nickname: params.nickname ?? '',
-      phone: params.phone ?? '',
       avatar: params.avatar ?? '',
       roles: params.roles ?? [],
       status: params.status ?? UserStatus.ACTIVE,
@@ -126,7 +123,6 @@ export const userApi = {
       id: params.id,
       nickname: params.nickname,
       email: params.email,
-      phone: params.phone,
       avatar: params.avatar,
       roles: params.roles ?? [],
       status: params.status,

@@ -3,3 +3,4 @@
  */
 
 export { useAuthStore, type AuthState } from './auth'
+export { useMenuStore, type MenuState } from './menu'

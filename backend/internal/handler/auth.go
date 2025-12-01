@@ -23,6 +23,10 @@ const (
 	ContextKeyUserID ContextKey = "user_id"
 	// ContextKeyUsername 用户名上下文键
 	ContextKeyUsername ContextKey = "username"
+	// ContextKeyRoles 角色列表上下文键
+	ContextKeyRoles ContextKey = "roles"
+	// ContextKeyPermissions 权限列表上下文键
+	ContextKeyPermissions ContextKey = "permissions"
 )
 
 // AuthHandler 认证处理器

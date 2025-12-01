@@ -17,3 +17,4 @@ backend/ent/runtime/
 backend/ent/user/
 backend/ent/role/
 backend/ent/permission/
+.idea/

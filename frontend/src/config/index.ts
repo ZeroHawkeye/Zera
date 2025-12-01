@@ -25,3 +25,9 @@ const prodConfig: AppConfig = {
 }
 
 export const config: AppConfig = import.meta.env.PROD ? prodConfig : devConfig
+
+// 菜单配置导出
+export * from './menu'
+
+// 权限配置导出
+export * from './permissions'

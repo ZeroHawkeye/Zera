@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
+	"os"
 
 	"zera/gen/base/baseconnect"
 	"zera/internal/auth"
@@ -11,6 +13,7 @@ import (
 	"zera/internal/database"
 	"zera/internal/handler"
 	"zera/internal/middleware"
+	"zera/internal/permission"
 	"zera/internal/service"
 	"zera/internal/static"
 
@@ -28,6 +31,11 @@ type Server struct {
 
 // New 创建服务器实例
 func New(cfg *config.Config) (*Server, error) {
+	// 创建日志器
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+
 	// 初始化数据库连接
 	db, err := database.New(cfg)
 	if err != nil {
@@ -46,6 +54,13 @@ func New(cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to init system roles: %w", err)
 	}
 
+	// 同步权限到数据库
+	permSyncer := permission.NewSyncer(db.Client, logger)
+	if _, err := permSyncer.SyncPermissions(context.Background()); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to sync permissions: %w", err)
+	}
+
 	// 初始化管理员用户
 	if err := db.InitAdminUser(context.Background()); err != nil {
 		db.Close()
@@ -62,6 +77,9 @@ func New(cfg *config.Config) (*Server, error) {
 	// 初始化 JWT 管理器
 	jwtManager := auth.NewJWTManager(&cfg.JWT)
 
+	// 初始化权限检查器
+	permChecker := permission.NewChecker(db.Client)
+
 	// 初始化服务层
 	authService := service.NewAuthService(db.Client, jwtManager)
 	userService := service.NewUserService(db.Client)
@@ -72,8 +90,8 @@ func New(cfg *config.Config) (*Server, error) {
 	userHandler := handler.NewUserHandler(validator, userService)
 	roleHandler := handler.NewRoleHandler(validator, roleService)
 
-	// 创建认证拦截器
-	authInterceptor := middleware.NewAuthInterceptor(jwtManager)
+	// 创建权限拦截器（替代原来的认证拦截器）
+	permInterceptor := middleware.NewPermissionInterceptor(jwtManager, permChecker)
 
 	// 创建 Gin 引擎
 	engine := gin.Default()
@@ -81,24 +99,24 @@ func New(cfg *config.Config) (*Server, error) {
 	// 注册中间件
 	engine.Use(middleware.CORS())
 
-	// 注册认证服务路由（公开接口）
+	// 注册认证服务路由
 	authPath, authH := baseconnect.NewAuthServiceHandler(
 		authHandler,
-		connect.WithInterceptors(authInterceptor),
+		connect.WithInterceptors(permInterceptor),
 	)
 	engine.Any(authPath+"*action", gin.WrapH(authH))
 
-	// 注册用户管理服务路由（需要认证）
+	// 注册用户管理服务路由
 	userPath, userH := baseconnect.NewUserServiceHandler(
 		userHandler,
-		connect.WithInterceptors(authInterceptor),
+		connect.WithInterceptors(permInterceptor),
 	)
 	engine.Any(userPath+"*action", gin.WrapH(userH))
 
-	// 注册角色管理服务路由（需要认证）
+	// 注册角色管理服务路由
 	rolePath, roleH := baseconnect.NewRoleServiceHandler(
 		roleHandler,
-		connect.WithInterceptors(authInterceptor),
+		connect.WithInterceptors(permInterceptor),
 	)
 	engine.Any(rolePath+"*action", gin.WrapH(roleH))
 

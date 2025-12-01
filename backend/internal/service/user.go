@@ -233,9 +233,6 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *base.UpdateUs
 		}
 		update = update.SetEmail(*req.Email)
 	}
-	if req.Phone != nil {
-		update = update.SetNillableAvatar(req.Phone) // 注意：这里应该是 Phone 字段，需要在 schema 中添加
-	}
 	if req.Avatar != nil {
 		update = update.SetAvatar(*req.Avatar)
 	}

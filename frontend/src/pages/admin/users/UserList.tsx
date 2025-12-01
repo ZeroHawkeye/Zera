@@ -12,7 +12,8 @@ import {
   Modal,
   Empty,
   Skeleton,
-  Pagination
+  Pagination,
+  Tooltip
 } from 'antd'
 import {
   Plus,
@@ -21,31 +22,29 @@ import {
   Trash2,
   MoreVertical,
   Mail,
-  Calendar
+  Calendar,
+  Key
 } from 'lucide-react'
 import type { ColumnsType } from 'antd/es/table'
 import type { MenuProps } from 'antd'
-import { useResponsive, useUsers, UserStatus } from '@/hooks'
+import { useResponsive, useUsers, useUserActions, UserStatus } from '@/hooks'
+import { UserFormModal } from './UserFormModal'
+import { ResetPasswordModal } from './ResetPasswordModal'
+import type { UserDetail } from '@/api/user'
 
 export const Route = createLazyRoute('/admin/users/')({
   component: UserList,
 })
 
-import type { UserDetail } from '@/api/user'
-
-// 兼容后端 UserStatus 枚举
-const STATUS_MAP = {
-  1: 'active', // ACTIVE
-  2: 'inactive', // INACTIVE
-  3: 'inactive', // BANNED
-} as const
-
 /**
- * 用户状态配置
+ * 用户状态配置 - 与后端 UserStatus 枚举对齐
+ * UNSPECIFIED = 0, ACTIVE = 1, INACTIVE = 2, BANNED = 3
  */
-const STATUS_CONFIG = {
-  active: { color: 'green', text: '活跃', dotClass: 'bg-green-500' },
-  inactive: { color: 'default', text: '未激活', dotClass: 'bg-gray-400' },
+const STATUS_CONFIG: Record<UserStatus, { color: string; text: string; dotClass: string }> = {
+  [UserStatus.UNSPECIFIED]: { color: 'default', text: '未知', dotClass: 'bg-gray-400' },
+  [UserStatus.ACTIVE]: { color: 'green', text: '活跃', dotClass: 'bg-green-500' },
+  [UserStatus.INACTIVE]: { color: 'default', text: '未激活', dotClass: 'bg-gray-400' },
+  [UserStatus.BANNED]: { color: 'red', text: '已禁用', dotClass: 'bg-red-500' },
 }
 
 /**
@@ -53,7 +52,7 @@ const STATUS_CONFIG = {
  */
 const ROLE_COLORS: Record<string, string> = {
   '管理员': 'blue',
-  '编辑': 'purple',
+  '编辑': 'cyan',
   '普通用户': 'default',
 }
 
@@ -64,15 +63,16 @@ const ROLE_COLORS: Record<string, string> = {
 function UserCard({ 
   user, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onResetPassword,
 }: { 
   user: UserDetail
   onEdit: (user: UserDetail) => void
-  onDelete: (user: UserDetail) => void 
+  onDelete: (user: UserDetail) => void
+  onResetPassword: (user: UserDetail) => void
 }) {
-  // 兼容后端 UserStatus 枚举
-  const statusKey = STATUS_MAP[user.status as keyof typeof STATUS_MAP] || 'inactive'
-  const statusConfig = STATUS_CONFIG[statusKey]
+  // 获取状态配置
+  const statusConfig = STATUS_CONFIG[user.status] || STATUS_CONFIG[UserStatus.UNSPECIFIED]
 
   const menuItems: MenuProps['items'] = [
     {
@@ -80,6 +80,12 @@ function UserCard({
       icon: <Edit className="w-4 h-4" />,
       label: '编辑',
       onClick: () => onEdit(user),
+    },
+    {
+      key: 'reset-password',
+      icon: <Key className="w-4 h-4" />,
+      label: '重置密码',
+      onClick: () => onResetPassword(user),
     },
     {
       type: 'divider',
@@ -102,7 +108,7 @@ function UserCard({
           <Avatar 
             size={48}
             src={user.avatar}
-            className="bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20"
+            className="bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/20"
           >
             {user.nickname?.charAt(0) || user.username?.charAt(0) || '-'}
           </Avatar>
@@ -193,6 +199,13 @@ function UserListSkeleton({ isMobile }: { isMobile: boolean }) {
 function UserList() {
   const { isMobile } = useResponsive()
   const [searchValue, setSearchValue] = useState('')
+  
+  // 模态框状态
+  const [formModalOpen, setFormModalOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<UserDetail | null>(null)
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
+  const [resetPasswordUser, setResetPasswordUser] = useState<{ id: string; name: string } | null>(null)
+  
   const {
     users,
     total,
@@ -201,7 +214,10 @@ function UserList() {
     updatePagination,
     search,
     error,
+    refresh,
   } = useUsers()
+
+  const { deleteUser, loading: actionLoading } = useUserActions()
 
   // 桌面端表格列配置
   const columns: ColumnsType<any> = [
@@ -210,15 +226,14 @@ function UserList() {
       dataIndex: 'name',
       key: 'name',
       render: (_: string, record) => {
-        // 兼容后端 UserStatus 枚举
-        const statusKey = STATUS_MAP[record.status as keyof typeof STATUS_MAP] || 'inactive'
-        const statusConfig = STATUS_CONFIG[statusKey]
+        // 获取状态配置
+        const statusConfig = STATUS_CONFIG[record.status as UserStatus] || STATUS_CONFIG[UserStatus.UNSPECIFIED]
         return (
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar 
                 src={record.avatar}
-                className="bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20"
+                className="bg-gradient-to-br from-blue-500 to-blue-600 shadow-md shadow-blue-500/20"
               >
                 {record.nickname?.charAt(0) || record.username?.charAt(0) || '-'}
               </Avatar>
@@ -248,9 +263,8 @@ function UserList() {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (_: any, record) => {
-        const status = record.status === UserStatus.ACTIVE ? 'active' : 'inactive'
-        const config = STATUS_CONFIG[status]
+      render: (_: unknown, record) => {
+        const config = STATUS_CONFIG[record.status as UserStatus] || STATUS_CONFIG[UserStatus.UNSPECIFIED]
         return <Tag color={config.color}>{config.text}</Tag>
       },
     },
@@ -264,51 +278,109 @@ function UserList() {
     {
       title: '操作',
       key: 'actions',
-      width: 100,
+      width: 140,
       fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="text"
-            size="small"
-            icon={<Edit className="w-4 h-4" />}
-            onClick={() => handleEdit(record)}
-            className="!text-gray-500 hover:!text-indigo-600 hover:!bg-indigo-50"
-          />
-          <Button
-            type="text"
-            danger
-            size="small"
-            icon={<Trash2 className="w-4 h-4" />}
-            onClick={() => handleDelete(record)}
-          />
-        </Space>
-      ),
+      render: (_, record) => {
+        const menuItems: MenuProps['items'] = [
+          {
+            key: 'reset-password',
+            icon: <Key className="w-4 h-4" />,
+            label: '重置密码',
+            onClick: () => handleResetPassword(record),
+          },
+          {
+            type: 'divider',
+          },
+          {
+            key: 'delete',
+            icon: <Trash2 className="w-4 h-4" />,
+            label: '删除',
+            danger: true,
+            onClick: () => handleDelete(record),
+          },
+        ]
+
+        return (
+          <Space size="small">
+            <Tooltip title="编辑">
+              <Button
+                type="text"
+                size="small"
+                icon={<Edit className="w-4 h-4" />}
+                onClick={() => handleEdit(record)}
+                className="!text-gray-500 hover:!text-indigo-600 hover:!bg-indigo-50"
+              />
+            </Tooltip>
+            <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+              <Button
+                type="text"
+                size="small"
+                icon={<MoreVertical className="w-4 h-4" />}
+                className="!text-gray-400 hover:!text-gray-600"
+              />
+            </Dropdown>
+          </Space>
+        )
+      },
     },
   ]
 
+  // 编辑用户
   const handleEdit = (user: UserDetail) => {
-    // TODO: 实现编辑功能
-    console.log('Edit user:', user)
+    setEditingUser(user)
+    setFormModalOpen(true)
   }
 
+  // 删除用户
   const handleDelete = (user: UserDetail) => {
-    // TODO: 实现删除确认弹窗
     Modal.confirm({
       title: '确认删除',
       content: `确定要删除用户「${user.nickname || user.username}」吗？此操作不可恢复。`,
       okText: '删除',
       okType: 'danger',
       cancelText: '取消',
-      onOk: () => {
-        console.log('Delete user:', user)
+      okButtonProps: { loading: actionLoading },
+      onOk: async () => {
+        try {
+          await deleteUser(user.id)
+          refresh()
+        } catch {
+          // 错误已在 hook 中处理
+        }
       },
     })
   }
 
+  // 重置密码
+  const handleResetPassword = (user: UserDetail) => {
+    setResetPasswordUser({
+      id: user.id,
+      name: user.nickname || user.username,
+    })
+    setResetPasswordModalOpen(true)
+  }
+
+  // 添加用户
   const handleAddUser = () => {
-    // TODO: 实现添加用户功能
-    console.log('Add user')
+    setEditingUser(null)
+    setFormModalOpen(true)
+  }
+
+  // 表单提交成功
+  const handleFormSuccess = () => {
+    refresh()
+  }
+
+  // 关闭表单模态框
+  const handleFormClose = () => {
+    setFormModalOpen(false)
+    setEditingUser(null)
+  }
+
+  // 关闭重置密码模态框
+  const handleResetPasswordClose = () => {
+    setResetPasswordModalOpen(false)
+    setResetPasswordUser(null)
   }
 
   // 加载或错误状态
@@ -367,6 +439,7 @@ function UserList() {
               user={user}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onResetPassword={handleResetPassword}
             />
           ))}
           {/* 移动端分页 */}
@@ -401,6 +474,22 @@ function UserList() {
           />
         </Card>
       )}
+
+      {/* 用户表单模态框 */}
+      <UserFormModal
+        open={formModalOpen}
+        user={editingUser}
+        onClose={handleFormClose}
+        onSuccess={handleFormSuccess}
+      />
+
+      {/* 重置密码模态框 */}
+      <ResetPasswordModal
+        open={resetPasswordModalOpen}
+        userId={resetPasswordUser?.id ?? null}
+        userName={resetPasswordUser?.name}
+        onClose={handleResetPasswordClose}
+      />
     </div>
   )
 }
@@ -430,10 +519,6 @@ function PageHeader({
         icon={<Plus className="w-4 h-4" />}
         onClick={onAdd}
         className={`
-          !rounded-xl !h-10 !px-5 !font-medium
-          !bg-gradient-to-r !from-indigo-500 !to-purple-600 
-          hover:!from-indigo-600 hover:!to-purple-700
-          !border-0 !shadow-lg !shadow-indigo-500/25
           ${isMobile ? 'w-full' : 'self-start sm:self-auto'}
         `}
       >

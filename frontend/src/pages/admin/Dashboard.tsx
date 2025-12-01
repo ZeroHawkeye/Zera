@@ -16,7 +16,7 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       {/* 欢迎信息 */}
-      <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25">
+      <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25">
         <h1 className="text-2xl md:text-3xl font-bold mb-2">
           欢迎回来，{user?.nickname || user?.username}！
         </h1>
@@ -62,8 +62,8 @@ function Dashboard() {
             <Statistic
               title="今日活跃"
               value={234}
-              prefix={<Activity className="w-5 h-5 text-purple-500" />}
-              valueStyle={{ color: '#a855f7' }}
+              prefix={<Activity className="w-5 h-5 text-blue-500" />}
+              valueStyle={{ color: '#3b82f6' }}
             />
           </Card>
         </Col>
@@ -119,7 +119,7 @@ function QuickActionCard({
       className="block p-4 rounded-xl bg-gradient-to-br from-white to-gray-50 border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all duration-200 group"
     >
       <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 group-hover:scale-110 transition-transform">
+        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform">
           {icon}
         </div>
         <div className="flex-1 min-w-0">

@@ -2,8 +2,6 @@ package middleware
 
 import (
 	"context"
-	"net/http"
-	"strings"
 
 	"zera/gen/base/baseconnect"
 	"zera/internal/auth"
@@ -12,12 +10,14 @@ import (
 	"connectrpc.com/connect"
 )
 
-// AuthInterceptor 认证拦截器
+// AuthInterceptor 认证拦截器（已弃用，请使用 PermissionInterceptor）
+// 保留用于向后兼容
 type AuthInterceptor struct {
 	jwtManager *auth.JWTManager
 }
 
 // NewAuthInterceptor 创建认证拦截器
+// Deprecated: 请使用 NewPermissionInterceptor
 func NewAuthInterceptor(jwtManager *auth.JWTManager) *AuthInterceptor {
 	return &AuthInterceptor{
 		jwtManager: jwtManager,
@@ -53,6 +53,8 @@ func (i *AuthInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 		// 将用户信息存入上下文
 		ctx = context.WithValue(ctx, handler.ContextKeyUserID, claims.UserID)
 		ctx = context.WithValue(ctx, handler.ContextKeyUsername, claims.Username)
+		ctx = context.WithValue(ctx, handler.ContextKeyRoles, claims.Roles)
+		ctx = context.WithValue(ctx, handler.ContextKeyPermissions, claims.Permissions)
 
 		return next(ctx, req)
 	}
@@ -66,19 +68,4 @@ func (i *AuthInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) 
 // WrapStreamingHandler 包装流式处理器
 func (i *AuthInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return next
-}
-
-// extractToken 从请求头提取令牌
-func extractToken(header http.Header) string {
-	authHeader := header.Get("Authorization")
-	if authHeader == "" {
-		return ""
-	}
-
-	parts := strings.SplitN(authHeader, " ", 2)
-	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-		return ""
-	}
-
-	return parts[1]
 }

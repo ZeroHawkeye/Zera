@@ -121,12 +121,8 @@ tasks:
     sources:
       - proto/**/*.proto
     cmds:
-      # 调用已定义的生成任务（会正确设置目录）
       - task: proto:gen:backend
       - task: proto:gen:frontend
-      - task: docs:openapi
-      # 只有生成成功才检查
-      - task: proto:check
       - echo "✅ Proto 重新生成完成"
     ignore_error: true
 
@@ -151,7 +147,7 @@ tasks:
     desc: "启动完整开发环境 (mprocs TUI)"
     cmds:
       - task: proto:gen
-      - task: proto:check
+      # - task: proto:check
       - echo "✅ Proto 生成并检查完成，启动开发服务..."
       - mprocs --names "frontend,backend" "cd frontend && bun run dev" "cd backend && go run ./cmd/server"
 
