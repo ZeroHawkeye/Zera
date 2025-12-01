@@ -1,12 +1,15 @@
 /**
  * 全局搜索组件
  * 支持 Ctrl+K 快捷键搜索所有菜单项并进行路由跳转
+ * 支持拼音、拼音首字母、中文搜索
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Modal, Input, Empty } from 'antd'
+import type { InputRef } from 'antd'
 import { Search, Command, CornerDownLeft } from 'lucide-react'
+import { pinyin, match } from 'pinyin-pro'
 import { useMenuStore } from '@/stores'
 import type { MenuItem, MenuNavItem } from '@/config/menu'
 import { isMenuNavItem, isMenuGroup } from '@/config/menu/types'
@@ -136,12 +139,49 @@ export function GlobalSearch({
   const { getMenuItems } = useMenuStore()
   const [searchValue, setSearchValue] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
+  const inputRef = useRef<InputRef>(null)
 
   // 获取所有菜单项并扁平化
   const allSearchItems = useMemo(() => {
     const menuItems = getMenuItems()
     return flattenMenuForSearch(menuItems)
   }, [getMenuItems])
+
+  /**
+   * 检查文本是否匹配搜索词（支持拼音、首字母、中文）
+   * @param text 要匹配的文本
+   * @param search 搜索词（已转小写）
+   * @returns 是否匹配
+   */
+  const matchText = useCallback((text: string, search: string): boolean => {
+    const lowerText = text.toLowerCase()
+
+    // 1. 直接匹配（中英文）
+    if (lowerText.includes(search)) {
+      return true
+    }
+
+    // 2. 使用 pinyin-pro 的 match 函数进行拼音匹配
+    // match 函数会自动处理全拼、首字母、混合匹配
+    const matchResult = match(text, search)
+    if (matchResult) {
+      return true
+    }
+
+    // 3. 获取完整拼音进行匹配
+    const fullPinyin = pinyin(text, { toneType: 'none', type: 'array' }).join('')
+    if (fullPinyin.includes(search)) {
+      return true
+    }
+
+    // 4. 获取拼音首字母进行匹配
+    const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none', type: 'array' }).join('')
+    if (firstLetters.includes(search)) {
+      return true
+    }
+
+    return false
+  }, [])
 
   // 根据搜索词过滤结果
   const filteredItems = useMemo(() => {
@@ -151,30 +191,36 @@ export function GlobalSearch({
 
     const lowerSearch = searchValue.toLowerCase()
     return allSearchItems.filter((item) => {
-      // 匹配标签
-      if (item.label.toLowerCase().includes(lowerSearch)) {
+      // 匹配标签（支持拼音）
+      if (matchText(item.label, lowerSearch)) {
         return true
       }
-      // 匹配面包屑路径
-      if (item.breadcrumb.some((b) => b.toLowerCase().includes(lowerSearch))) {
+      // 匹配面包屑路径（支持拼音）
+      if (item.breadcrumb.some((b) => matchText(b, lowerSearch))) {
         return true
       }
-      // 匹配路由路径
+      // 匹配路由路径（只匹配英文）
       if (item.path.toLowerCase().includes(lowerSearch)) {
         return true
       }
       return false
     })
-  }, [allSearchItems, searchValue])
+  }, [allSearchItems, searchValue, matchText])
 
   // 重置选中项
   useEffect(() => {
     setActiveIndex(0)
   }, [searchValue])
 
-  // 关闭时重置状态
+  // 打开时聚焦输入框，关闭时重置状态
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // 使用 setTimeout 确保 Modal 动画完成后再聚焦
+      const timer = setTimeout(() => {
+        inputRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    } else {
       setSearchValue('')
       setActiveIndex(0)
     }
@@ -237,6 +283,7 @@ export function GlobalSearch({
       {/* 搜索输入框 */}
       <div className="p-4 border-b border-gray-100">
         <Input
+          ref={inputRef}
           autoFocus
           size="large"
           placeholder="搜索菜单..."

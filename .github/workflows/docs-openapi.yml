@@ -2,15 +2,8 @@ name: Generate Docs API
 
 on:
   push:
-    branches:
-      - main
-      - dev
-    paths:
-      - "proto/**"
-      - "backend/buf.gen.yaml"
-      - "backend/openapi.base.yaml"
-      - "docs/scripts/**"
-      - ".github/workflows/docs-openapi.yml"
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
