@@ -31,3 +31,13 @@ secret = "your-super-secret-key-please-change-in-production"
 access_token_expire = 3600
 # 刷新令牌过期时间（秒）
 refresh_token_expire = 604800
+
+[storage]
+# 对象存储配置（S3 兼容，使用 RustFS）
+enabled = true
+endpoint = "http://localhost:9000"
+access_key = "zera"
+secret_key = "zera"
+bucket = "zera"
+region = "us-east-1"
+use_path_style = true

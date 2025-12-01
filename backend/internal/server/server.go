@@ -17,6 +17,7 @@ import (
 	"zera/internal/permission"
 	"zera/internal/service"
 	"zera/internal/static"
+	"zera/internal/storage"
 
 	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
@@ -28,6 +29,7 @@ type Server struct {
 	config      *config.Config
 	engine      *gin.Engine
 	db          *database.Database
+	storage     *storage.Storage
 	auditLogger *logger.AsyncLogger
 }
 
@@ -67,6 +69,20 @@ func New(cfg *config.Config) (*Server, error) {
 	if err := db.InitAdminUser(context.Background()); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to init admin user: %w", err)
+	}
+
+	// 初始化对象存储服务
+	storageClient, err := storage.New(&cfg.Storage, slogger)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to init storage service: %w", err)
+	}
+
+	// 确保默认存储桶存在
+	if err := storageClient.EnsureBucket(context.Background()); err != nil {
+		db.Close()
+		storageClient.Close()
+		return nil, fmt.Errorf("failed to ensure storage bucket: %w", err)
 	}
 
 	// 创建验证器
@@ -171,6 +187,7 @@ func New(cfg *config.Config) (*Server, error) {
 		config:      cfg,
 		engine:      engine,
 		db:          db,
+		storage:     storageClient,
 		auditLogger: asyncLogger,
 	}, nil
 }
@@ -188,6 +205,13 @@ func (s *Server) Close() error {
 	if s.auditLogger != nil {
 		if err := s.auditLogger.Close(); err != nil {
 			log.Printf("Warning: failed to close audit logger: %v", err)
+		}
+	}
+
+	// 关闭存储服务
+	if s.storage != nil {
+		if err := s.storage.Close(); err != nil {
+			log.Printf("Warning: failed to close storage: %v", err)
 		}
 	}
 

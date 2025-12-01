@@ -31,3 +31,6 @@ export * from './menu'
 
 // 权限配置导出
 export * from './permissions'
+
+// 存储配置导出
+export * from './storage'

@@ -8,6 +8,30 @@
 - 任何对接api与前端的开发需要确定数据库表结构与proto文件结构进行对齐
 - 任何新增的API需要和backend\internal\permission对齐,避免权限不统一的情况
 
+## 基础设施服务
+
+### Docker 服务 (`Docker/docker-compose.yml`)
+- **PostgreSQL 数据库**: 端口 5432，用户/密码/数据库名通过环境变量配置
+- **RustFS 对象存储**: S3 兼容协议，API 端口 9000，控制台端口 9001
+
+### RustFS 对象存储
+- **控制台地址**: http://localhost:9001/
+- **API 端点**: http://localhost:9000
+- **默认凭证**: access_key=`zera`, secret_key=`zera`
+- **协议**: S3 兼容，使用 AWS S3 SDK 连接
+
+#### 后端存储模块
+- **配置文件**: `backend/config.toml` 的 `[storage]` 节
+- **存储客户端**: `backend/internal/storage/storage.go`
+- **配置结构**: `backend/internal/config/config.go` 的 `StorageConfig`
+- **环境变量**: `STORAGE_ENABLED`, `STORAGE_ENDPOINT`, `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_BUCKET`, `STORAGE_REGION`
+
+#### 前端存储模块
+- **配置文件**: `frontend/src/config/storage.ts`
+- **存储客户端**: `frontend/src/api/storage.ts`
+- **使用方式**: `import { storage } from '@/api/storage'`
+- **环境变量**: `VITE_STORAGE_ENDPOINT`, `VITE_STORAGE_ACCESS_KEY`, `VITE_STORAGE_SECRET_KEY`, `VITE_STORAGE_BUCKET`, `VITE_STORAGE_REGION`
+
 ## 前端开发规则
 - 使用`bun add|remove <package>`进行依赖的添加与管理
 - 禁止运行`bun run dev`

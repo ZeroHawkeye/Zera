@@ -22,17 +22,17 @@ services:
     environment:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-zera}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-zera}
-      RUSTFS_CONSOLE_ENABLE: "true"
-      RUSTFS_SERVER_DOMAINS: ${RUSTFS_SERVER_DOMAINS:-example.com}
+      RUSTFS_CONSOLE_ENABLE: true
+      # RUSTFS_SERVER_DOMAINS: ${RUSTFS_SERVER_DOMAINS:-example.com}
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
       - ./data/rustfs:/data
+    # --server-domains ${RUSTFS_SERVER_DOMAINS:-example.com}
     command: >
       --address :9000
       --console-enable
-      --server-domains ${RUSTFS_SERVER_DOMAINS:-example.com}
       --access-key ${RUSTFS_ACCESS_KEY:-zera}
       --secret-key ${RUSTFS_SECRET_KEY:-zera}
     networks:

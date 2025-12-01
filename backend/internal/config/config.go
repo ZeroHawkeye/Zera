@@ -16,6 +16,7 @@ type Config struct {
 	App      AppConfig      `toml:"app"`
 	Admin    AdminConfig    `toml:"admin"`
 	JWT      JWTConfig      `toml:"jwt"`
+	Storage  StorageConfig  `toml:"storage"`
 }
 
 // ServerConfig 服务器配置
@@ -53,6 +54,17 @@ type JWTConfig struct {
 	RefreshTokenExpire int64  `toml:"refresh_token_expire"`
 }
 
+// StorageConfig 对象存储配置（S3 兼容）
+type StorageConfig struct {
+	Enabled      bool   `toml:"enabled"`        // 是否启用存储服务
+	Endpoint     string `toml:"endpoint"`       // 存储服务端点
+	AccessKey    string `toml:"access_key"`     // 访问密钥
+	SecretKey    string `toml:"secret_key"`     // 密钥
+	Bucket       string `toml:"bucket"`         // 默认存储桶
+	Region       string `toml:"region"`         // 区域（S3 兼容需要）
+	UsePathStyle bool   `toml:"use_path_style"` // 是否使用路径样式（非虚拟主机样式）
+}
+
 // DSN 返回 PostgreSQL 连接字符串
 func (d *DatabaseConfig) DSN() string {
 	return fmt.Sprintf(
@@ -88,6 +100,15 @@ func defaultConfig() *Config {
 			Secret:             "your-super-secret-key-please-change-in-production",
 			AccessTokenExpire:  3600,   // 1 小时
 			RefreshTokenExpire: 604800, // 7 天
+		},
+		Storage: StorageConfig{
+			Enabled:      false,
+			Endpoint:     "http://localhost:9000",
+			AccessKey:    "zera",
+			SecretKey:    "zera",
+			Bucket:       "zera",
+			Region:       "us-east-1",
+			UsePathStyle: true,
 		},
 	}
 }
@@ -215,6 +236,29 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if expire := getEnvInt64("JWT_REFRESH_TOKEN_EXPIRE"); expire != 0 {
 		cfg.JWT.RefreshTokenExpire = expire
+	}
+
+	// Storage 配置
+	if enabled := os.Getenv("STORAGE_ENABLED"); enabled != "" {
+		cfg.Storage.Enabled = enabled == "true" || enabled == "1"
+	}
+	if endpoint := os.Getenv("STORAGE_ENDPOINT"); endpoint != "" {
+		cfg.Storage.Endpoint = endpoint
+	}
+	if accessKey := os.Getenv("STORAGE_ACCESS_KEY"); accessKey != "" {
+		cfg.Storage.AccessKey = accessKey
+	}
+	if secretKey := os.Getenv("STORAGE_SECRET_KEY"); secretKey != "" {
+		cfg.Storage.SecretKey = secretKey
+	}
+	if bucket := os.Getenv("STORAGE_BUCKET"); bucket != "" {
+		cfg.Storage.Bucket = bucket
+	}
+	if region := os.Getenv("STORAGE_REGION"); region != "" {
+		cfg.Storage.Region = region
+	}
+	if usePathStyle := os.Getenv("STORAGE_USE_PATH_STYLE"); usePathStyle != "" {
+		cfg.Storage.UsePathStyle = usePathStyle == "true" || usePathStyle == "1"
 	}
 }
 
