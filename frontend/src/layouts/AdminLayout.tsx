@@ -3,8 +3,6 @@ import React, { useEffect, useMemo, type ReactNode } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
-  Bell,
-  Search,
   User,
   LogOut,
   Settings,
@@ -13,11 +11,12 @@ import {
   Menu,
   X,
 } from 'lucide-react'
-import { Dropdown, Avatar, Badge, Breadcrumb } from 'antd'
+import { Dropdown, Avatar, Breadcrumb } from 'antd'
 import type { MenuProps } from 'antd'
 import { useResponsive } from '@/hooks'
 import { useAuthStore, useMenuStore, useSiteStore } from '@/stores'
 import { MenuRenderer } from '@/components/menu'
+import { GlobalSearchTrigger } from '@/components/GlobalSearch'
 import { initAdminMenus, generateBreadcrumbs } from '@/config/menu'
 
 interface AdminLayoutProps {
@@ -235,17 +234,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* 右侧：工具栏 */}
           <div className="flex items-center gap-1 md:gap-2">
-            {/* 搜索 - 移动端隐藏 */}
-            <button className="hidden md:flex p-2.5 hover:bg-white/60 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700 hover:shadow-sm">
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* 通知 */}
-            <Badge count={5} size="small" offset={[-2, 2]}>
-              <button className="p-2 md:p-2.5 hover:bg-white/60 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700 hover:shadow-sm">
-                <Bell className="w-5 h-5" />
-              </button>
-            </Badge>
+            {/* 搜索按钮 */}
+            <GlobalSearchTrigger />
 
             <div className="hidden md:block w-px h-8 bg-gray-200/60 mx-2" />
 

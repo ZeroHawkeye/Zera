@@ -1,0 +1,341 @@
+/**
+ * 全局搜索组件
+ * 支持 Ctrl+K 快捷键搜索所有菜单项并进行路由跳转
+ */
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { Modal, Input, Empty } from 'antd'
+import { Search, Command, CornerDownLeft } from 'lucide-react'
+import { useMenuStore } from '@/stores'
+import type { MenuItem, MenuNavItem } from '@/config/menu'
+import { isMenuNavItem, isMenuGroup } from '@/config/menu/types'
+
+/**
+ * 扁平化后的搜索项
+ */
+interface SearchItem {
+  /** 唯一标识 */
+  key: string
+  /** 显示标签 */
+  label: string
+  /** 路由路径 */
+  path: string
+  /** 面包屑路径（用于显示层级） */
+  breadcrumb: string[]
+  /** 图标组件 */
+  icon?: React.ComponentType<{ className?: string }>
+}
+
+/**
+ * 将菜单项扁平化为可搜索的列表
+ */
+function flattenMenuForSearch(
+  items: MenuItem[],
+  breadcrumb: string[] = []
+): SearchItem[] {
+  const result: SearchItem[] = []
+
+  for (const item of items) {
+    if (isMenuNavItem(item)) {
+      const navItem = item as MenuNavItem
+      const currentBreadcrumb = [...breadcrumb, navItem.label]
+
+      // 有路径的菜单项添加到搜索结果
+      if (navItem.path && !navItem.hidden) {
+        result.push({
+          key: navItem.key,
+          label: navItem.label,
+          path: navItem.path,
+          breadcrumb: currentBreadcrumb,
+          icon: typeof navItem.icon === 'function' ? navItem.icon : undefined,
+        })
+      }
+
+      // 递归处理子菜单
+      if (navItem.children && navItem.children.length > 0) {
+        result.push(...flattenMenuForSearch(navItem.children, currentBreadcrumb))
+      }
+    } else if (isMenuGroup(item)) {
+      // 分组菜单只处理子项
+      const currentBreadcrumb = [...breadcrumb, item.label]
+      result.push(...flattenMenuForSearch(item.children, currentBreadcrumb))
+    }
+  }
+
+  return result
+}
+
+/**
+ * 搜索结果项组件
+ */
+function SearchResultItem({
+  item,
+  isActive,
+  onClick,
+}: {
+  item: SearchItem
+  isActive: boolean
+  onClick: () => void
+}) {
+  const Icon = item.icon
+
+  return (
+    <div
+      onClick={onClick}
+      className={`
+        flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+        ${isActive
+          ? 'bg-blue-50 border-l-2 border-blue-500'
+          : 'hover:bg-gray-50 border-l-2 border-transparent'
+        }
+      `}
+    >
+      {/* 图标 */}
+      <div
+        className={`
+          flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
+          ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}
+        `}
+      >
+        {Icon ? <Icon className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+      </div>
+
+      {/* 内容 */}
+      <div className="flex-1 min-w-0">
+        <div className={`font-medium ${isActive ? 'text-blue-700' : 'text-gray-900'}`}>
+          {item.label}
+        </div>
+        <div className="text-xs text-gray-400 truncate">
+          {item.breadcrumb.join(' / ')}
+        </div>
+      </div>
+
+      {/* 回车提示 */}
+      {isActive && (
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          <CornerDownLeft className="w-3 h-3" />
+          <span>进入</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * 全局搜索弹窗组件
+ */
+export function GlobalSearch({
+  open,
+  onClose,
+}: {
+  open: boolean
+  onClose: () => void
+}) {
+  const navigate = useNavigate()
+  const { getMenuItems } = useMenuStore()
+  const [searchValue, setSearchValue] = useState('')
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  // 获取所有菜单项并扁平化
+  const allSearchItems = useMemo(() => {
+    const menuItems = getMenuItems()
+    return flattenMenuForSearch(menuItems)
+  }, [getMenuItems])
+
+  // 根据搜索词过滤结果
+  const filteredItems = useMemo(() => {
+    if (!searchValue.trim()) {
+      return allSearchItems
+    }
+
+    const lowerSearch = searchValue.toLowerCase()
+    return allSearchItems.filter((item) => {
+      // 匹配标签
+      if (item.label.toLowerCase().includes(lowerSearch)) {
+        return true
+      }
+      // 匹配面包屑路径
+      if (item.breadcrumb.some((b) => b.toLowerCase().includes(lowerSearch))) {
+        return true
+      }
+      // 匹配路由路径
+      if (item.path.toLowerCase().includes(lowerSearch)) {
+        return true
+      }
+      return false
+    })
+  }, [allSearchItems, searchValue])
+
+  // 重置选中项
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [searchValue])
+
+  // 关闭时重置状态
+  useEffect(() => {
+    if (!open) {
+      setSearchValue('')
+      setActiveIndex(0)
+    }
+  }, [open])
+
+  // 处理导航
+  const handleNavigate = useCallback(
+    (item: SearchItem) => {
+      navigate({ to: item.path })
+      onClose()
+    },
+    [navigate, onClose]
+  )
+
+  // 处理键盘事件
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setActiveIndex((prev) =>
+            prev < filteredItems.length - 1 ? prev + 1 : 0
+          )
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setActiveIndex((prev) =>
+            prev > 0 ? prev - 1 : filteredItems.length - 1
+          )
+          break
+        case 'Enter':
+          e.preventDefault()
+          if (filteredItems[activeIndex]) {
+            handleNavigate(filteredItems[activeIndex])
+          }
+          break
+        case 'Escape':
+          e.preventDefault()
+          onClose()
+          break
+      }
+    },
+    [filteredItems, activeIndex, handleNavigate, onClose]
+  )
+
+  return (
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      closable={false}
+      width={560}
+      centered
+      className="global-search-modal"
+      styles={{
+        body: { padding: 0 },
+        mask: { backdropFilter: 'blur(4px)' },
+      }}
+    >
+      {/* 搜索输入框 */}
+      <div className="p-4 border-b border-gray-100">
+        <Input
+          autoFocus
+          size="large"
+          placeholder="搜索菜单..."
+          prefix={<Search className="w-5 h-5 text-gray-400" />}
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="!border-0 !shadow-none !bg-transparent"
+          allowClear
+        />
+      </div>
+
+      {/* 搜索结果 */}
+      <div className="max-h-[400px] overflow-y-auto">
+        {filteredItems.length > 0 ? (
+          <div className="py-2">
+            {filteredItems.map((item, index) => (
+              <SearchResultItem
+                key={item.key}
+                item={item}
+                isActive={index === activeIndex}
+                onClick={() => handleNavigate(item)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-12">
+            <Empty description="未找到相关菜单" />
+          </div>
+        )}
+      </div>
+
+      {/* 快捷键提示 */}
+      <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">↑</kbd>
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">↓</kbd>
+            <span className="ml-1">选择</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">↵</kbd>
+            <span className="ml-1">确认</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">esc</kbd>
+            <span className="ml-1">关闭</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Command className="w-3 h-3" />
+          <span>+</span>
+          <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">K</kbd>
+          <span className="ml-1">打开搜索</span>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+/**
+ * 全局搜索触发按钮组件
+ * 包含快捷键监听
+ */
+export function GlobalSearchTrigger() {
+  const [open, setOpen] = useState(false)
+
+  // 监听全局快捷键 Ctrl+K / Cmd+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        setOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  return (
+    <>
+      {/* 搜索触发按钮 */}
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-2 px-3 py-2 hover:bg-white/60 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700 hover:shadow-sm"
+      >
+        <Search className="w-5 h-5" />
+        <span className="hidden md:inline text-sm">搜索</span>
+        <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs text-gray-400">
+          <Command className="w-3 h-3" />
+          <span>K</span>
+        </kbd>
+      </button>
+
+      {/* 搜索弹窗 */}
+      <GlobalSearch open={open} onClose={() => setOpen(false)} />
+    </>
+  )
+}
+
+export default GlobalSearchTrigger

@@ -4,3 +4,4 @@
 
 export * from './menu'
 export * from './Authorized'
+export * from './GlobalSearch'
