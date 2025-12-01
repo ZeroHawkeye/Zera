@@ -12,6 +12,7 @@ import (
 	"zera/internal/config"
 	"zera/internal/database"
 	"zera/internal/handler"
+	"zera/internal/logger"
 	"zera/internal/middleware"
 	"zera/internal/permission"
 	"zera/internal/service"
@@ -24,15 +25,16 @@ import (
 
 // Server HTTP 服务器
 type Server struct {
-	config *config.Config
-	engine *gin.Engine
-	db     *database.Database
+	config      *config.Config
+	engine      *gin.Engine
+	db          *database.Database
+	auditLogger *logger.AsyncLogger
 }
 
 // New 创建服务器实例
 func New(cfg *config.Config) (*Server, error) {
 	// 创建日志器
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	slogger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
 
@@ -55,7 +57,7 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	// 同步权限到数据库
-	permSyncer := permission.NewSyncer(db.Client, logger)
+	permSyncer := permission.NewSyncer(db.Client, slogger)
 	if _, err := permSyncer.SyncPermissions(context.Background()); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to sync permissions: %w", err)
@@ -80,18 +82,27 @@ func New(cfg *config.Config) (*Server, error) {
 	// 初始化权限检查器
 	permChecker := permission.NewChecker(db.Client)
 
+	// 初始化审计日志记录器
+	entLogger := logger.NewEntLogger(db.Client)
+	asyncLogger := logger.NewAsyncLogger(entLogger, entLogger, slogger, nil)
+
 	// 初始化服务层
 	authService := service.NewAuthService(db.Client, jwtManager)
 	userService := service.NewUserService(db.Client)
 	roleService := service.NewRoleService(db.Client)
+	auditLogService := service.NewAuditLogService(asyncLogger)
 
 	// 初始化处理器
 	authHandler := handler.NewAuthHandler(validator, authService, jwtManager)
 	userHandler := handler.NewUserHandler(validator, userService)
 	roleHandler := handler.NewRoleHandler(validator, roleService)
+	auditLogHandler := handler.NewAuditLogHandler(validator, auditLogService)
 
 	// 创建权限拦截器（替代原来的认证拦截器）
 	permInterceptor := middleware.NewPermissionInterceptor(jwtManager, permChecker)
+
+	// 创建审计日志拦截器
+	auditLogInterceptor := middleware.NewAuditLogInterceptor(asyncLogger)
 
 	// 创建 Gin 引擎
 	engine := gin.Default()
@@ -99,26 +110,36 @@ func New(cfg *config.Config) (*Server, error) {
 	// 注册中间件
 	engine.Use(middleware.CORS())
 
+	// 创建拦截器链：权限拦截器 -> 审计日志拦截器
+	interceptors := connect.WithInterceptors(permInterceptor, auditLogInterceptor)
+
 	// 注册认证服务路由
 	authPath, authH := baseconnect.NewAuthServiceHandler(
 		authHandler,
-		connect.WithInterceptors(permInterceptor),
+		interceptors,
 	)
 	engine.Any(authPath+"*action", gin.WrapH(authH))
 
 	// 注册用户管理服务路由
 	userPath, userH := baseconnect.NewUserServiceHandler(
 		userHandler,
-		connect.WithInterceptors(permInterceptor),
+		interceptors,
 	)
 	engine.Any(userPath+"*action", gin.WrapH(userH))
 
 	// 注册角色管理服务路由
 	rolePath, roleH := baseconnect.NewRoleServiceHandler(
 		roleHandler,
-		connect.WithInterceptors(permInterceptor),
+		interceptors,
 	)
 	engine.Any(rolePath+"*action", gin.WrapH(roleH))
+
+	// 注册审计日志服务路由
+	auditLogPath, auditLogH := baseconnect.NewAuditLogServiceHandler(
+		auditLogHandler,
+		interceptors,
+	)
+	engine.Any(auditLogPath+"*action", gin.WrapH(auditLogH))
 
 	// 注册 SPA 静态资源（生产环境）
 	// 开发环境下 dist 目录可能不存在或为空，会优雅降级
@@ -129,9 +150,10 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	return &Server{
-		config: cfg,
-		engine: engine,
-		db:     db,
+		config:      cfg,
+		engine:      engine,
+		db:          db,
+		auditLogger: asyncLogger,
 	}, nil
 }
 
@@ -144,6 +166,13 @@ func (s *Server) Run() error {
 
 // Close 关闭服务器资源
 func (s *Server) Close() error {
+	// 关闭审计日志记录器
+	if s.auditLogger != nil {
+		if err := s.auditLogger.Close(); err != nil {
+			log.Printf("Warning: failed to close audit logger: %v", err)
+		}
+	}
+
 	if s.db != nil {
 		return s.db.Close()
 	}

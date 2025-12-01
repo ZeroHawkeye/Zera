@@ -5,6 +5,8 @@
   "icon": "Code",
   "pages": [
     "index",
+    "---base.AuditLogService---",
+    "base.auditlogservice",
     "---认证服务---",
     "base.authservice",
     "---角色服务---",

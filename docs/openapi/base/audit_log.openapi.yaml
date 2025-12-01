@@ -1,0 +1,543 @@
+openapi: 3.1.0
+info:
+  title: base
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: 本地开发服务器
+paths:
+  /base.AuditLogService/GetAuditLog:
+    post:
+      tags:
+        - base.AuditLogService
+      summary: 获取日志详情
+      description: 获取日志详情
+      operationId: base.AuditLogService.GetAuditLog
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetAuditLogRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetAuditLogResponse'
+  /base.AuditLogService/GetAuditLogStats:
+    post:
+      tags:
+        - base.AuditLogService
+      summary: 获取日志统计
+      description: 获取日志统计
+      operationId: base.AuditLogService.GetAuditLogStats
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetAuditLogStatsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetAuditLogStatsResponse'
+  /base.AuditLogService/ListAuditLogModules:
+    post:
+      tags:
+        - base.AuditLogService
+      summary: 获取可用模块列表
+      description: 获取可用模块列表
+      operationId: base.AuditLogService.ListAuditLogModules
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ListAuditLogModulesRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ListAuditLogModulesResponse'
+  /base.AuditLogService/ListAuditLogs:
+    post:
+      tags:
+        - base.AuditLogService
+      summary: 获取日志列表
+      description: 获取日志列表
+      operationId: base.AuditLogService.ListAuditLogs
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ListAuditLogsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ListAuditLogsResponse'
+components:
+  schemas:
+    base.AuditLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: 日志ID
+        level:
+          title: level
+          description: 日志级别
+          $ref: '#/components/schemas/base.LogLevel'
+        module:
+          type: string
+          title: module
+          description: 模块名称
+        action:
+          type: string
+          title: action
+          description: 操作名称
+        resource:
+          type: string
+          title: resource
+          description: 资源类型
+        resourceId:
+          type: string
+          title: resource_id
+          description: 资源ID
+        userId:
+          type: string
+          title: user_id
+          description: 操作用户ID
+        username:
+          type: string
+          title: username
+          description: 操作用户名
+        ip:
+          type: string
+          title: ip
+          description: 客户端IP地址
+        userAgent:
+          type: string
+          title: user_agent
+          description: 用户代理
+        method:
+          type: string
+          title: method
+          description: 请求方法
+        path:
+          type: string
+          title: path
+          description: 请求路径
+        statusCode:
+          type: integer
+          title: status_code
+          format: int32
+          description: 响应状态码
+        durationMs:
+          type:
+            - integer
+            - string
+          title: duration_ms
+          format: int64
+          description: 请求耗时(毫秒)
+        errorMessage:
+          type: string
+          title: error_message
+          description: 错误信息
+        details:
+          type: string
+          title: details
+          description: 详细信息
+        createdAt:
+          type: string
+          title: created_at
+          description: 创建时间
+      title: AuditLogEntry
+      additionalProperties: false
+      description: 审计日志条目
+    base.GetAuditLogRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          minLength: 1
+          description: 日志ID
+      title: GetAuditLogRequest
+      additionalProperties: false
+      description: 获取日志详情请求
+    base.GetAuditLogResponse:
+      type: object
+      properties:
+        log:
+          title: log
+          description: 日志详情
+          $ref: '#/components/schemas/base.AuditLogEntry'
+      title: GetAuditLogResponse
+      additionalProperties: false
+      description: 获取日志详情响应
+    base.GetAuditLogStatsRequest:
+      type: object
+      properties:
+        startTime:
+          type: string
+          title: start_time
+          description: 开始时间 (RFC3339格式)
+        endTime:
+          type: string
+          title: end_time
+          description: 结束时间 (RFC3339格式)
+      title: GetAuditLogStatsRequest
+      additionalProperties: false
+      description: 日志统计请求
+    base.GetAuditLogStatsResponse:
+      type: object
+      properties:
+        total:
+          type:
+            - integer
+            - string
+          title: total
+          format: int64
+          description: 总日志数
+        levelCounts:
+          type: object
+          title: level_counts
+          additionalProperties:
+            type:
+              - integer
+              - string
+            title: value
+            format: int64
+          description: 各级别日志数量
+        moduleCounts:
+          type: object
+          title: module_counts
+          additionalProperties:
+            type:
+              - integer
+              - string
+            title: value
+            format: int64
+          description: 各模块日志数量
+        actionCounts:
+          type: object
+          title: action_counts
+          additionalProperties:
+            type:
+              - integer
+              - string
+            title: value
+            format: int64
+          description: 各操作日志数量
+      title: GetAuditLogStatsResponse
+      additionalProperties: false
+      description: 日志统计响应
+    base.GetAuditLogStatsResponse.ActionCountsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type:
+            - integer
+            - string
+          title: value
+          format: int64
+      title: ActionCountsEntry
+      additionalProperties: false
+    base.GetAuditLogStatsResponse.LevelCountsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type:
+            - integer
+            - string
+          title: value
+          format: int64
+      title: LevelCountsEntry
+      additionalProperties: false
+    base.GetAuditLogStatsResponse.ModuleCountsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          type:
+            - integer
+            - string
+          title: value
+          format: int64
+      title: ModuleCountsEntry
+      additionalProperties: false
+    base.ListAuditLogModulesRequest:
+      type: object
+      title: ListAuditLogModulesRequest
+      additionalProperties: false
+      description: 获取可用模块列表请求
+    base.ListAuditLogModulesResponse:
+      type: object
+      properties:
+        modules:
+          type: array
+          items:
+            type: string
+          title: modules
+          description: 模块列表
+      title: ListAuditLogModulesResponse
+      additionalProperties: false
+      description: 获取可用模块列表响应
+    base.ListAuditLogsRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+          title: page
+          minimum: 1
+          format: int32
+          description: 页码，从 1 开始
+        pageSize:
+          type: integer
+          title: page_size
+          maximum: 100
+          minimum: 1
+          format: int32
+          description: 每页数量
+        level:
+          title: level
+          description: 日志级别筛选
+          $ref: '#/components/schemas/base.LogLevel'
+        module:
+          type: string
+          title: module
+          description: 模块筛选
+        action:
+          type: string
+          title: action
+          description: 操作筛选
+        username:
+          type: string
+          title: username
+          description: 用户名筛选
+        ip:
+          type: string
+          title: ip
+          description: IP地址筛选
+        resource:
+          type: string
+          title: resource
+          description: 资源类型筛选
+        startTime:
+          type: string
+          title: start_time
+          description: 开始时间 (RFC3339格式)
+        endTime:
+          type: string
+          title: end_time
+          description: 结束时间 (RFC3339格式)
+        keyword:
+          type: string
+          title: keyword
+          description: 搜索关键词
+        sortBy:
+          type: string
+          title: sort_by
+          description: 排序字段
+        descending:
+          type: boolean
+          title: descending
+          description: 是否降序
+      title: ListAuditLogsRequest
+      additionalProperties: false
+      description: 日志列表请求
+    base.ListAuditLogsResponse:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.AuditLogEntry'
+          title: logs
+          description: 日志列表
+        total:
+          type:
+            - integer
+            - string
+          title: total
+          format: int64
+          description: 总数
+        page:
+          type: integer
+          title: page
+          format: int32
+          description: 当前页码
+        pageSize:
+          type: integer
+          title: page_size
+          format: int32
+          description: 每页数量
+      title: ListAuditLogsResponse
+      additionalProperties: false
+      description: 日志列表响应
+    base.LogLevel:
+      type: string
+      title: LogLevel
+      enum:
+        - LOG_LEVEL_UNSPECIFIED
+        - LOG_LEVEL_DEBUG
+        - LOG_LEVEL_INFO
+        - LOG_LEVEL_WARNING
+        - LOG_LEVEL_ERROR
+      description: 日志级别枚举
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+security: []
+tags:
+  - name: base.AuditLogService

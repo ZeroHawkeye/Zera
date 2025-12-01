@@ -8,6 +8,8 @@ import {
   Users,
   Shield,
   Settings,
+  FileText,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import { MenuType, type MenuItem } from './types'
@@ -74,14 +76,34 @@ const adminCoreMenuItems: MenuItem[] = [
     ],
   },
 
-  // 系统设置
+  // 系统管理 - 包含日志和系统设置
   {
-    key: 'settings',
+    key: 'system-management',
     type: MenuType.ITEM,
-    label: '系统设置',
-    icon: createIcon(Settings),
-    path: '/admin/settings',
+    label: '系统管理',
+    icon: createIcon(Wrench),
     order: 200,
+    defaultOpen: false,
+    children: [
+      // 日志查看
+      {
+        key: 'logs',
+        type: MenuType.ITEM,
+        label: '日志查看',
+        icon: createIcon(FileText),
+        path: '/admin/logs',
+        order: 0,
+      },
+      // 系统设置
+      {
+        key: 'settings',
+        type: MenuType.ITEM,
+        label: '系统设置',
+        icon: createIcon(Settings),
+        path: '/admin/settings',
+        order: 10,
+      },
+    ],
   },
 ]
 

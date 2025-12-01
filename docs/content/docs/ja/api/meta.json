@@ -5,6 +5,8 @@
   "icon": "Code",
   "pages": [
     "index",
+    "---base.AuditLogService---",
+    "base.auditlogservice",
     "---認証サービス---",
     "base.authservice",
     "---ロールサービス---",

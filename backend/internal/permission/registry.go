@@ -218,6 +218,46 @@ var Registry = []APIPermission{
 		Action:      "assign",
 		RequireAuth: true,
 	},
+
+	// ============================================
+	// 审计日志服务
+	// ============================================
+	{
+		Procedure:   baseconnect.AuditLogServiceListAuditLogsProcedure,
+		Code:        "audit_log:read",
+		Name:        "查看审计日志",
+		Description: "获取系统审计日志列表",
+		Resource:    "audit_log",
+		Action:      "read",
+		RequireAuth: true,
+	},
+	{
+		Procedure:   baseconnect.AuditLogServiceGetAuditLogProcedure,
+		Code:        "audit_log:read",
+		Name:        "查看日志详情",
+		Description: "获取单条审计日志详情",
+		Resource:    "audit_log",
+		Action:      "read",
+		RequireAuth: true,
+	},
+	{
+		Procedure:   baseconnect.AuditLogServiceGetAuditLogStatsProcedure,
+		Code:        "audit_log:read",
+		Name:        "查看日志统计",
+		Description: "获取审计日志统计信息",
+		Resource:    "audit_log",
+		Action:      "read",
+		RequireAuth: true,
+	},
+	{
+		Procedure:   baseconnect.AuditLogServiceListAuditLogModulesProcedure,
+		Code:        "audit_log:read",
+		Name:        "查看日志模块",
+		Description: "获取可用的日志模块列表",
+		Resource:    "audit_log",
+		Action:      "read",
+		RequireAuth: true,
+	},
 }
 
 // ResourceGroups 资源分组定义 - 用于前端权限配置界面展示
@@ -242,6 +282,13 @@ var ResourceGroups = []ResourceGroup{
 		Description: "系统权限配置",
 		Icon:        "SafetyOutlined",
 		Order:       3,
+	},
+	{
+		Resource:    "audit_log",
+		Name:        "审计日志",
+		Description: "系统操作日志查看",
+		Icon:        "FileTextOutlined",
+		Order:       4,
 	},
 }
 

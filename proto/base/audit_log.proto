@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package base;
+
+import "buf/validate/validate.proto";
+
+// ============================================
+// 审计日志消息定义
+// ============================================
+
+// 日志级别枚举
+enum LogLevel {
+  LOG_LEVEL_UNSPECIFIED = 0;
+  LOG_LEVEL_DEBUG = 1;
+  LOG_LEVEL_INFO = 2;
+  LOG_LEVEL_WARNING = 3;
+  LOG_LEVEL_ERROR = 4;
+}
+
+// 审计日志条目
+message AuditLogEntry {
+  // 日志ID
+  string id = 1;
+  // 日志级别
+  LogLevel level = 2;
+  // 模块名称
+  string module = 3;
+  // 操作名称
+  string action = 4;
+  // 资源类型
+  string resource = 5;
+  // 资源ID
+  string resource_id = 6;
+  // 操作用户ID
+  string user_id = 7;
+  // 操作用户名
+  string username = 8;
+  // 客户端IP地址
+  string ip = 9;
+  // 用户代理
+  string user_agent = 10;
+  // 请求方法
+  string method = 11;
+  // 请求路径
+  string path = 12;
+  // 响应状态码
+  int32 status_code = 13;
+  // 请求耗时(毫秒)
+  int64 duration_ms = 14;
+  // 错误信息
+  string error_message = 15;
+  // 详细信息
+  string details = 16;
+  // 创建时间
+  string created_at = 17;
+}
+
+// ============================================
+// 日志列表
+// ============================================
+
+// 日志列表请求
+message ListAuditLogsRequest {
+  // 页码，从 1 开始
+  int32 page = 1 [(buf.validate.field).int32.gte = 1];
+  // 每页数量
+  int32 page_size = 2 [(buf.validate.field).int32 = {
+    gte: 1
+    lte: 100
+  }];
+  // 日志级别筛选
+  LogLevel level = 3;
+  // 模块筛选
+  string module = 4;
+  // 操作筛选
+  string action = 5;
+  // 用户名筛选
+  string username = 6;
+  // IP地址筛选
+  string ip = 7;
+  // 资源类型筛选
+  string resource = 8;
+  // 开始时间 (RFC3339格式)
+  string start_time = 9;
+  // 结束时间 (RFC3339格式)
+  string end_time = 10;
+  // 搜索关键词
+  string keyword = 11;
+  // 排序字段
+  string sort_by = 12;
+  // 是否降序
+  bool descending = 13;
+}
+
+// 日志列表响应
+message ListAuditLogsResponse {
+  // 日志列表
+  repeated AuditLogEntry logs = 1;
+  // 总数
+  int64 total = 2;
+  // 当前页码
+  int32 page = 3;
+  // 每页数量
+  int32 page_size = 4;
+}
+
+// ============================================
+// 日志详情
+// ============================================
+
+// 获取日志详情请求
+message GetAuditLogRequest {
+  // 日志ID
+  string id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// 获取日志详情响应
+message GetAuditLogResponse {
+  // 日志详情
+  AuditLogEntry log = 1;
+}
+
+// ============================================
+// 日志统计
+// ============================================
+
+// 日志统计请求
+message GetAuditLogStatsRequest {
+  // 开始时间 (RFC3339格式)
+  string start_time = 1;
+  // 结束时间 (RFC3339格式)
+  string end_time = 2;
+}
+
+// 日志统计响应
+message GetAuditLogStatsResponse {
+  // 总日志数
+  int64 total = 1;
+  // 各级别日志数量
+  map<string, int64> level_counts = 2;
+  // 各模块日志数量
+  map<string, int64> module_counts = 3;
+  // 各操作日志数量
+  map<string, int64> action_counts = 4;
+}
+
+// ============================================
+// 日志模块列表
+// ============================================
+
+// 获取可用模块列表请求
+message ListAuditLogModulesRequest {}
+
+// 获取可用模块列表响应
+message ListAuditLogModulesResponse {
+  // 模块列表
+  repeated string modules = 1;
+}
+
+// ============================================
+// 审计日志服务
+// ============================================
+
+service AuditLogService {
+  // 获取日志列表
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse) {}
+  // 获取日志详情
+  rpc GetAuditLog(GetAuditLogRequest) returns (GetAuditLogResponse) {}
+  // 获取日志统计
+  rpc GetAuditLogStats(GetAuditLogStatsRequest) returns (GetAuditLogStatsResponse) {}
+  // 获取可用模块列表
+  rpc ListAuditLogModules(ListAuditLogModulesRequest) returns (ListAuditLogModulesResponse) {}
+}
