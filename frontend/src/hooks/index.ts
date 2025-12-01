@@ -26,3 +26,8 @@ export {
   useRolePermissions,
   useRoleActions,
 } from './useRole'
+
+export {
+  useFavicon,
+  useFaviconActions,
+} from './useFavicon'

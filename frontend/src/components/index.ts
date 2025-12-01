@@ -5,3 +5,4 @@
 export * from './menu'
 export * from './Authorized'
 export * from './GlobalSearch'
+export * from './Logo'

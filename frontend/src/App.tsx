@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Spin } from 'antd'
 import { router } from './router/router'
 import { useAuthStore, useSiteStore } from './stores'
+import { useFavicon } from './hooks'
 
 // 创建 QueryClient 实例
 const queryClient = new QueryClient({
@@ -20,6 +21,9 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false)
   const initializeAuth = useAuthStore((state) => state.initialize)
   const initializeSite = useSiteStore((state) => state.initialize)
+
+  // 动态更新 favicon
+  useFavicon()
 
   useEffect(() => {
     const init = async () => {

@@ -1,6 +1,6 @@
 /**
  * 站点设置状态管理
- * 管理公开的站点设置，包括站点名称、描述等
+ * 管理公开的站点设置，包括站点名称、描述、Logo 等
  */
 
 import { create } from 'zustand'
@@ -14,6 +14,10 @@ export interface SiteState {
   siteName: string
   /** 站点描述 */
   siteDescription: string
+  /** 站点 Logo URL - TODO: 后续从后台设置获取 */
+  siteLogo: string
+  /** 站点 Favicon URL - TODO: 后续从后台设置获取 */
+  siteFavicon: string
   /** 是否启用注册 */
   enableRegistration: boolean
   /** 是否处于维护模式 */
@@ -29,6 +33,10 @@ export interface SiteState {
   refresh: () => Promise<void>
   /** 更新文档标题 */
   updateDocumentTitle: (pageTitle?: string) => void
+  /** 设置站点 Logo - TODO: 后续接入后台设置 */
+  setSiteLogo: (url: string) => void
+  /** 设置站点 Favicon - TODO: 后续接入后台设置 */
+  setSiteFavicon: (url: string) => void
 }
 
 /** 默认站点名称 */
@@ -43,6 +51,8 @@ const DEFAULT_SITE_DESCRIPTION = ''
 export const useSiteStore = create<SiteState>()((set, get) => ({
   siteName: DEFAULT_SITE_NAME,
   siteDescription: DEFAULT_SITE_DESCRIPTION,
+  siteLogo: '',
+  siteFavicon: '',
   enableRegistration: false,
   maintenanceMode: false,
   isLoading: false,
@@ -63,10 +73,15 @@ export const useSiteStore = create<SiteState>()((set, get) => ({
       
       const siteName = response.siteName || DEFAULT_SITE_NAME
       const siteDescription = response.siteDescription || DEFAULT_SITE_DESCRIPTION
+      // TODO: 后续从响应中获取 logo 和 favicon
+      // const siteLogo = response.siteLogo || ''
+      // const siteFavicon = response.siteFavicon || ''
 
       set({
         siteName,
         siteDescription,
+        // siteLogo,
+        // siteFavicon,
         enableRegistration: response.enableRegistration,
         maintenanceMode: response.maintenanceMode,
         isLoading: false,
@@ -137,5 +152,13 @@ export const useSiteStore = create<SiteState>()((set, get) => ({
     } else {
       document.title = siteName
     }
+  },
+
+  setSiteLogo: (url: string) => {
+    set({ siteLogo: url })
+  },
+
+  setSiteFavicon: (url: string) => {
+    set({ siteFavicon: url })
   },
 }))
