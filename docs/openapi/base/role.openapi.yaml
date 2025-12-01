@@ -6,191 +6,11 @@ servers:
   - url: http://localhost:8080
     description: 本地开发服务器
 paths:
-  /base.RoleService/CreateRole:
-    post:
-      tags:
-        - base.RoleService
-      summary: 创建角色
-      description: 创建角色
-      operationId: base.RoleService.CreateRole
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.CreateRoleRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.CreateRoleResponse'
-  /base.RoleService/DeleteRole:
-    post:
-      tags:
-        - base.RoleService
-      summary: 删除角色
-      description: 删除角色
-      operationId: base.RoleService.DeleteRole
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.DeleteRoleRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.DeleteRoleResponse'
-  /base.RoleService/GetRole:
-    post:
-      tags:
-        - base.RoleService
-      summary: 获取角色详情
-      description: 获取角色详情
-      operationId: base.RoleService.GetRole
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.GetRoleRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.GetRoleResponse'
-  /base.RoleService/GetRolePermissions:
-    post:
-      tags:
-        - base.RoleService
-      summary: 获取角色权限
-      description: 获取角色权限
-      operationId: base.RoleService.GetRolePermissions
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.GetRolePermissionsRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.GetRolePermissionsResponse'
-  /base.RoleService/ListPermissions:
-    post:
-      tags:
-        - base.RoleService
-      summary: 获取权限列表
-      description: 获取权限列表
-      operationId: base.RoleService.ListPermissions
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.ListPermissionsRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.ListPermissionsResponse'
   /base.RoleService/ListRoles:
     post:
       tags:
         - base.RoleService
-      summary: 获取角色列表
+      summary: ListRoles
       description: 获取角色列表
       operationId: base.RoleService.ListRoles
       parameters:
@@ -222,11 +42,83 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/base.ListRolesResponse'
+  /base.RoleService/GetRole:
+    post:
+      tags:
+        - base.RoleService
+      summary: GetRole
+      description: 获取角色详情
+      operationId: base.RoleService.GetRole
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetRoleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetRoleResponse'
+  /base.RoleService/CreateRole:
+    post:
+      tags:
+        - base.RoleService
+      summary: CreateRole
+      description: 创建角色
+      operationId: base.RoleService.CreateRole
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.CreateRoleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.CreateRoleResponse'
   /base.RoleService/UpdateRole:
     post:
       tags:
         - base.RoleService
-      summary: 更新角色
+      summary: UpdateRole
       description: 更新角色
       operationId: base.RoleService.UpdateRole
       parameters:
@@ -258,11 +150,119 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/base.UpdateRoleResponse'
+  /base.RoleService/DeleteRole:
+    post:
+      tags:
+        - base.RoleService
+      summary: DeleteRole
+      description: 删除角色
+      operationId: base.RoleService.DeleteRole
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.DeleteRoleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.DeleteRoleResponse'
+  /base.RoleService/ListPermissions:
+    post:
+      tags:
+        - base.RoleService
+      summary: ListPermissions
+      description: 获取权限列表
+      operationId: base.RoleService.ListPermissions
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ListPermissionsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ListPermissionsResponse'
+  /base.RoleService/GetRolePermissions:
+    post:
+      tags:
+        - base.RoleService
+      summary: GetRolePermissions
+      description: 获取角色权限
+      operationId: base.RoleService.GetRolePermissions
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetRolePermissionsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetRolePermissionsResponse'
   /base.RoleService/UpdateRolePermissions:
     post:
       tags:
         - base.RoleService
-      summary: 更新角色权限
+      summary: UpdateRolePermissions
       description: 更新角色权限
       operationId: base.RoleService.UpdateRolePermissions
       parameters:
@@ -713,36 +713,24 @@ components:
         message:
           type: string
           description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
-        details:
-          type: array
-          items:
-            $ref: '#/components/schemas/connect.error_details.Any'
-          description: A list of messages that carry the error details. There is no limit on the number of messages.
+        detail:
+          $ref: '#/components/schemas/google.protobuf.Any'
       title: Connect Error
       additionalProperties: true
       description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
-    connect.error_details.Any:
+    google.protobuf.Any:
       type: object
       properties:
         type:
           type: string
-          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
         value:
           type: string
           format: binary
-          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
         debug:
-          oneOf:
-            - type: object
-              title: Any
-              additionalProperties: true
-              description: Detailed error information.
-          discriminator:
-            propertyName: type
-          title: Debug
-          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+          type: object
+          additionalProperties: true
       additionalProperties: true
-      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
 security: []
 tags:
   - name: base.RoleService
