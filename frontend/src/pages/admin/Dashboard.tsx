@@ -1,4 +1,4 @@
-import { createLazyRoute } from '@tanstack/react-router'
+import { createLazyRoute, Link } from '@tanstack/react-router'
 import { Card, Row, Col, Statistic } from 'antd'
 import { Users, UserCheck, UserX, Activity } from 'lucide-react'
 import { useAuthStore } from '@/stores'
@@ -114,8 +114,8 @@ function QuickActionCard({
   link: string
 }) {
   return (
-    <a
-      href={link}
+    <Link
+      to={link}
       className="block p-4 rounded-xl bg-gradient-to-br from-white to-gray-50 border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all duration-200 group"
     >
       <div className="flex items-start gap-4">
@@ -127,6 +127,6 @@ function QuickActionCard({
           <p className="text-sm text-gray-500">{description}</p>
         </div>
       </div>
-    </a>
+    </Link>
   )
 }
