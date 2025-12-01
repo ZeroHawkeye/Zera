@@ -7,6 +7,7 @@ import {
   LogOut,
   Settings,
   ChevronDown,
+  Sparkles,
   Menu,
   X,
 } from 'lucide-react'
@@ -16,7 +17,6 @@ import { useResponsive } from '@/hooks'
 import { useAuthStore, useMenuStore, useSiteStore } from '@/stores'
 import { MenuRenderer } from '@/components/menu'
 import { GlobalSearchTrigger } from '@/components/GlobalSearch'
-import { LogoIcon } from '@/components/Logo'
 import { initAdminMenus, generateBreadcrumbs } from '@/config/menu'
 
 interface AdminLayoutProps {
@@ -150,8 +150,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between border-b border-white/20 px-4">
           <Link to="/admin" className="flex items-center gap-3 group">
-            <div className="flex-shrink-0 shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-shadow duration-300 rounded-xl">
-              <LogoIcon size={36} />
+            <div className="w-9 h-9 flex-shrink-0 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-shadow duration-300">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span 
               className={`text-xl font-bold text-gray-900 whitespace-nowrap overflow-hidden transition-all duration-300 ${
@@ -185,7 +185,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {!isMobile && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute -right-3 top-[54px] w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 hover:bg-indigo-500 hover:border-transparent hover:text-white text-gray-400 transition-all duration-200 group"
+            className="absolute -right-3 cursor-pointer  top-[54px] w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 hover:bg-indigo-500 hover:border-transparent hover:text-white text-gray-400 transition-all duration-200 group"
           >
             {collapsed ? (
               <ChevronRight className="w-3.5 h-3.5" />
@@ -224,8 +224,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {/* 移动端 Logo */}
             {isMobile && (
               <Link to="/admin" className="flex items-center gap-2">
-                <div className="shadow-md shadow-indigo-500/25 rounded-lg">
-                  <LogoIcon size={32} />
+                <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-md shadow-indigo-500/25">
+                  <Sparkles className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-lg font-bold text-gray-900">{siteName}</span>
               </Link>
