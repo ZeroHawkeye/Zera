@@ -12,10 +12,12 @@ import {
   LogoutRequestSchema,
   RefreshTokenRequestSchema,
   GetCurrentUserRequestSchema,
+  RegisterRequestSchema,
   type LoginResponse,
   type LogoutResponse,
   type RefreshTokenResponse,
   type GetCurrentUserResponse,
+  type RegisterResponse,
   type UserInfo,
 } from '@/gen/base/login_pb'
 
@@ -34,6 +36,17 @@ export interface LoginParams {
   username: string
   password: string
   rememberMe?: boolean
+}
+
+/**
+ * 注册参数
+ */
+export interface RegisterParams {
+  username: string
+  password: string
+  confirmPassword: string
+  email: string
+  nickname?: string
 }
 
 /**
@@ -126,6 +139,21 @@ export const authApi = {
   },
 
   /**
+   * 用户注册
+   */
+  async register(params: RegisterParams): Promise<RegisterResponse> {
+    const request = create(RegisterRequestSchema, {
+      username: params.username,
+      password: params.password,
+      confirmPassword: params.confirmPassword,
+      email: params.email,
+      nickname: params.nickname || '',
+    })
+
+    return await authClient.register(request)
+  },
+
+  /**
    * 获取本地存储的用户信息
    */
   getStoredUser(): UserInfo | null {
@@ -163,4 +191,4 @@ export const authApi = {
   },
 }
 
-export type { LoginResponse, LogoutResponse, RefreshTokenResponse, GetCurrentUserResponse, UserInfo }
+export type { LoginResponse, LogoutResponse, RefreshTokenResponse, GetCurrentUserResponse, RegisterResponse, UserInfo }

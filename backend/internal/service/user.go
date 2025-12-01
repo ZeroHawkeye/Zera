@@ -138,6 +138,16 @@ func (s *UserService) GetUser(ctx context.Context, id int) (*base.GetUserRespons
 
 // CreateUser 创建用户
 func (s *UserService) CreateUser(ctx context.Context, req *base.CreateUserRequest) (*base.CreateUserResponse, error) {
+	// 验证密码策略
+	settingService := NewSystemSettingService(s.client)
+	policy, err := GetPasswordPolicy(ctx, settingService)
+	if err != nil {
+		return nil, err
+	}
+	if err := ValidatePassword(req.Password, policy); err != nil {
+		return nil, err
+	}
+
 	// 检查用户名是否已存在
 	exists, err := s.client.User.Query().Where(user.Username(req.Username)).Exist(ctx)
 	if err != nil {
@@ -296,8 +306,20 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 
 // ResetPassword 重置用户密码
 func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword string) error {
-	err := s.client.User.UpdateOneID(id).
+	// 验证密码策略
+	settingService := NewSystemSettingService(s.client)
+	policy, err := GetPasswordPolicy(ctx, settingService)
+	if err != nil {
+		return err
+	}
+	if err := ValidatePassword(newPassword, policy); err != nil {
+		return err
+	}
+
+	err = s.client.User.UpdateOneID(id).
 		SetPasswordHash(hashPassword(newPassword)).
+		SetLoginAttempts(0).
+		ClearLockedUntil().
 		Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {

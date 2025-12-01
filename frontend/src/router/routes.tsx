@@ -44,6 +44,16 @@ export const loginRoute = createRoute({
   },
 }).lazy(() => import('@/pages/login').then((m) => m.Route))
 
+// 注册路由
+export const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  beforeLoad: async () => {
+    await waitForAuthInit()
+    guestGuard()
+  },
+}).lazy(() => import('@/pages/register').then((m) => m.Route))
+
 // ============================================
 // 后台管理路由
 // ============================================
@@ -152,6 +162,7 @@ export const logsRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
+  registerRoute,
   adminRoute.addChildren([
     adminIndexRoute,
     usersRoute.addChildren([

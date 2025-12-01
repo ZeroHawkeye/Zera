@@ -1,8 +1,9 @@
-import { createLazyRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { createLazyRoute, useNavigate, Link } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
 import { User, Lock, ArrowRight, AlertCircle } from 'lucide-react'
 import { ConnectError } from '@connectrpc/connect'
 import { authApi } from '@/api/auth'
+import { systemSettingApi } from '@/api/system_setting'
 
 export const Route = createLazyRoute('/login')({
   component: LoginPage,
@@ -15,6 +16,17 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
+  const [registrationEnabled, setRegistrationEnabled] = useState(false)
+
+  // 获取公开设置，检查是否启用注册
+  useEffect(() => {
+    systemSettingApi.getPublicSettings().then((settings) => {
+      setRegistrationEnabled(settings.enableRegistration)
+    }).catch(() => {
+      // 获取失败，默认不显示注册入口
+      setRegistrationEnabled(false)
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -191,12 +203,14 @@ function LoginPage() {
           </div>
 
           {/* 注册提示 */}
-          <p className="text-center text-sm text-gray-600">
-            还没有账号?{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
-              立即注册
-            </a>
-          </p>
+          {registrationEnabled && (
+            <p className="text-center text-sm text-gray-600">
+              还没有账号?{' '}
+              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                立即注册
+              </Link>
+            </p>
+          )}
 
           {/* 页脚 */}
           <div className="mt-12 text-center">

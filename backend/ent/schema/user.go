@@ -55,6 +55,13 @@ func (User) Fields() []ent.Field {
 			Optional().
 			Nillable().
 			Comment("最后登录时间"),
+		field.Int("login_attempts").
+			Default(0).
+			Comment("登录失败次数"),
+		field.Time("locked_until").
+			Optional().
+			Nillable().
+			Comment("账号锁定截止时间"),
 	}
 }
 

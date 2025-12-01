@@ -50,6 +50,11 @@ var Registry = []APIPermission{
 		RequireAuth: false,
 	},
 	{
+		Procedure:   baseconnect.AuthServiceRegisterProcedure,
+		IsPublic:    true,
+		RequireAuth: false,
+	},
+	{
 		Procedure:   baseconnect.AuthServiceRefreshTokenProcedure,
 		IsPublic:    true,
 		RequireAuth: false,
@@ -258,6 +263,34 @@ var Registry = []APIPermission{
 		Action:      "read",
 		RequireAuth: true,
 	},
+
+	// ============================================
+	// 系统设置服务
+	// ============================================
+	{
+		Procedure:   baseconnect.SystemSettingServiceGetPublicSettingsProcedure,
+		IsPublic:    true,
+		RequireAuth: false,
+		// 公开设置无需认证
+	},
+	{
+		Procedure:   baseconnect.SystemSettingServiceGetSystemSettingsProcedure,
+		Code:        "system_setting:read",
+		Name:        "查看系统设置",
+		Description: "获取系统设置信息",
+		Resource:    "system_setting",
+		Action:      "read",
+		RequireAuth: true,
+	},
+	{
+		Procedure:   baseconnect.SystemSettingServiceUpdateSystemSettingsProcedure,
+		Code:        "system_setting:update",
+		Name:        "更新系统设置",
+		Description: "修改系统设置",
+		Resource:    "system_setting",
+		Action:      "update",
+		RequireAuth: true,
+	},
 }
 
 // ResourceGroups 资源分组定义 - 用于前端权限配置界面展示
@@ -289,6 +322,13 @@ var ResourceGroups = []ResourceGroup{
 		Description: "系统操作日志查看",
 		Icon:        "FileTextOutlined",
 		Order:       4,
+	},
+	{
+		Resource:    "system_setting",
+		Name:        "系统设置",
+		Description: "系统配置管理",
+		Icon:        "SettingOutlined",
+		Order:       5,
 	},
 }
 

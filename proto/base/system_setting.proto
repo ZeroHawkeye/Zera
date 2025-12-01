@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+package base;
+
+import "buf/validate/validate.proto";
+
+// ============================================
+// 系统设置消息定义
+// ============================================
+
+// 系统设置项
+message SystemSettingItem {
+  // 配置键名
+  string key = 1;
+  // 配置值
+  string value = 2;
+  // 值类型: string, bool, int, json
+  string type = 3;
+  // 配置分组: general, security, feature
+  string group = 4;
+  // 配置描述
+  string description = 5;
+  // 更新时间
+  string updated_at = 6;
+}
+
+// 通用设置
+message GeneralSettings {
+  // 站点名称
+  string site_name = 1;
+  // 站点描述
+  string site_description = 2;
+}
+
+// 功能开关设置
+message FeatureSettings {
+  // 启用注册
+  bool enable_registration = 1;
+  // 维护模式
+  bool maintenance_mode = 2;
+  // 默认注册角色代码
+  string default_register_role = 3;
+}
+
+// 安全设置
+message SecuritySettings {
+  // 最大登录尝试次数
+  int32 max_login_attempts = 1;
+  // 账号锁定时长（分钟）
+  int32 lockout_duration = 2;
+  // 会话超时时间（分钟）
+  int32 session_timeout = 3;
+  // 密码最小长度
+  int32 password_min_length = 4;
+  // 要求包含大写字母
+  bool password_require_uppercase = 5;
+  // 要求包含数字
+  bool password_require_number = 6;
+  // 要求包含特殊字符
+  bool password_require_special = 7;
+}
+
+// 完整系统设置
+message SystemSettings {
+  // 通用设置
+  GeneralSettings general = 1;
+  // 功能开关
+  FeatureSettings features = 2;
+  // 安全设置
+  SecuritySettings security = 3;
+}
+
+// ============================================
+// 获取系统设置
+// ============================================
+
+// 获取系统设置请求
+message GetSystemSettingsRequest {
+  // 可选：指定分组筛选
+  string group = 1;
+}
+
+// 获取系统设置响应
+message GetSystemSettingsResponse {
+  // 完整系统设置
+  SystemSettings settings = 1;
+  // 原始设置列表（用于调试或高级用途）
+  repeated SystemSettingItem items = 2;
+}
+
+// ============================================
+// 更新系统设置
+// ============================================
+
+// 更新系统设置请求
+message UpdateSystemSettingsRequest {
+  // 完整系统设置
+  SystemSettings settings = 1 [(buf.validate.field).required = true];
+}
+
+// 更新系统设置响应
+message UpdateSystemSettingsResponse {
+  // 是否成功
+  bool success = 1;
+  // 更新后的设置
+  SystemSettings settings = 2;
+}
+
+// ============================================
+// 获取公开设置（无需认证）
+// ============================================
+
+// 获取公开设置请求
+message GetPublicSettingsRequest {}
+
+// 获取公开设置响应
+message GetPublicSettingsResponse {
+  // 站点名称
+  string site_name = 1;
+  // 站点描述
+  string site_description = 2;
+  // 是否启用注册
+  bool enable_registration = 3;
+  // 是否处于维护模式
+  bool maintenance_mode = 4;
+}
+
+// ============================================
+// 系统设置服务
+// ============================================
+
+service SystemSettingService {
+  // 获取系统设置（需要管理权限）
+  rpc GetSystemSettings(GetSystemSettingsRequest) returns (GetSystemSettingsResponse) {}
+  // 更新系统设置（需要管理权限）
+  rpc UpdateSystemSettings(UpdateSystemSettingsRequest) returns (UpdateSystemSettingsResponse) {}
+  // 获取公开设置（无需认证）
+  rpc GetPublicSettings(GetPublicSettingsRequest) returns (GetPublicSettingsResponse) {}
+}

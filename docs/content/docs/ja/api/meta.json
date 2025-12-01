@@ -11,6 +11,8 @@
     "base.authservice",
     "---ロールサービス---",
     "base.roleservice",
+    "---base.SystemSettingService---",
+    "base.systemsettingservice",
     "---ユーザーサービス---",
     "base.userservice"
   ]

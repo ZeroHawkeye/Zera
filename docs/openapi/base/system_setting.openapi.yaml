@@ -1,0 +1,387 @@
+openapi: 3.1.0
+info:
+  title: base
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: 本地开发服务器
+paths:
+  /base.SystemSettingService/GetPublicSettings:
+    post:
+      tags:
+        - base.SystemSettingService
+      summary: 获取公开设置（无需认证）
+      description: 获取公开设置（无需认证）
+      operationId: base.SystemSettingService.GetPublicSettings
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetPublicSettingsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetPublicSettingsResponse'
+  /base.SystemSettingService/GetSystemSettings:
+    post:
+      tags:
+        - base.SystemSettingService
+      summary: 获取系统设置（需要管理权限）
+      description: 获取系统设置（需要管理权限）
+      operationId: base.SystemSettingService.GetSystemSettings
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetSystemSettingsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetSystemSettingsResponse'
+  /base.SystemSettingService/UpdateSystemSettings:
+    post:
+      tags:
+        - base.SystemSettingService
+      summary: 更新系统设置（需要管理权限）
+      description: 更新系统设置（需要管理权限）
+      operationId: base.SystemSettingService.UpdateSystemSettings
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.UpdateSystemSettingsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.UpdateSystemSettingsResponse'
+components:
+  schemas:
+    base.FeatureSettings:
+      type: object
+      properties:
+        enableRegistration:
+          type: boolean
+          title: enable_registration
+          description: 启用注册
+        maintenanceMode:
+          type: boolean
+          title: maintenance_mode
+          description: 维护模式
+        defaultRegisterRole:
+          type: string
+          title: default_register_role
+          description: 默认注册角色代码
+      title: FeatureSettings
+      additionalProperties: false
+      description: 功能开关设置
+    base.GeneralSettings:
+      type: object
+      properties:
+        siteName:
+          type: string
+          title: site_name
+          description: 站点名称
+        siteDescription:
+          type: string
+          title: site_description
+          description: 站点描述
+      title: GeneralSettings
+      additionalProperties: false
+      description: 通用设置
+    base.GetPublicSettingsRequest:
+      type: object
+      title: GetPublicSettingsRequest
+      additionalProperties: false
+      description: 获取公开设置请求
+    base.GetPublicSettingsResponse:
+      type: object
+      properties:
+        siteName:
+          type: string
+          title: site_name
+          description: 站点名称
+        siteDescription:
+          type: string
+          title: site_description
+          description: 站点描述
+        enableRegistration:
+          type: boolean
+          title: enable_registration
+          description: 是否启用注册
+        maintenanceMode:
+          type: boolean
+          title: maintenance_mode
+          description: 是否处于维护模式
+      title: GetPublicSettingsResponse
+      additionalProperties: false
+      description: 获取公开设置响应
+    base.GetSystemSettingsRequest:
+      type: object
+      properties:
+        group:
+          type: string
+          title: group
+          description: 可选：指定分组筛选
+      title: GetSystemSettingsRequest
+      additionalProperties: false
+      description: 获取系统设置请求
+    base.GetSystemSettingsResponse:
+      type: object
+      properties:
+        settings:
+          title: settings
+          description: 完整系统设置
+          $ref: '#/components/schemas/base.SystemSettings'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/base.SystemSettingItem'
+          title: items
+          description: 原始设置列表（用于调试或高级用途）
+      title: GetSystemSettingsResponse
+      additionalProperties: false
+      description: 获取系统设置响应
+    base.SecuritySettings:
+      type: object
+      properties:
+        maxLoginAttempts:
+          type: integer
+          title: max_login_attempts
+          format: int32
+          description: 最大登录尝试次数
+        lockoutDuration:
+          type: integer
+          title: lockout_duration
+          format: int32
+          description: 账号锁定时长（分钟）
+        sessionTimeout:
+          type: integer
+          title: session_timeout
+          format: int32
+          description: 会话超时时间（分钟）
+        passwordMinLength:
+          type: integer
+          title: password_min_length
+          format: int32
+          description: 密码最小长度
+        passwordRequireUppercase:
+          type: boolean
+          title: password_require_uppercase
+          description: 要求包含大写字母
+        passwordRequireNumber:
+          type: boolean
+          title: password_require_number
+          description: 要求包含数字
+        passwordRequireSpecial:
+          type: boolean
+          title: password_require_special
+          description: 要求包含特殊字符
+      title: SecuritySettings
+      additionalProperties: false
+      description: 安全设置
+    base.SystemSettingItem:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+          description: 配置键名
+        value:
+          type: string
+          title: value
+          description: 配置值
+        type:
+          type: string
+          title: type
+          description: '值类型: string, bool, int, json'
+        group:
+          type: string
+          title: group
+          description: '配置分组: general, security, feature'
+        description:
+          type: string
+          title: description
+          description: 配置描述
+        updatedAt:
+          type: string
+          title: updated_at
+          description: 更新时间
+      title: SystemSettingItem
+      additionalProperties: false
+      description: 系统设置项
+    base.SystemSettings:
+      type: object
+      properties:
+        general:
+          title: general
+          description: 通用设置
+          $ref: '#/components/schemas/base.GeneralSettings'
+        features:
+          title: features
+          description: 功能开关
+          $ref: '#/components/schemas/base.FeatureSettings'
+        security:
+          title: security
+          description: 安全设置
+          $ref: '#/components/schemas/base.SecuritySettings'
+      title: SystemSettings
+      additionalProperties: false
+      description: 完整系统设置
+    base.UpdateSystemSettingsRequest:
+      type: object
+      properties:
+        settings:
+          title: settings
+          description: 完整系统设置
+          $ref: '#/components/schemas/base.SystemSettings'
+      title: UpdateSystemSettingsRequest
+      required:
+        - settings
+      additionalProperties: false
+      description: 更新系统设置请求
+    base.UpdateSystemSettingsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+        settings:
+          title: settings
+          description: 更新后的设置
+          $ref: '#/components/schemas/base.SystemSettings'
+      title: UpdateSystemSettingsResponse
+      additionalProperties: false
+      description: 更新系统设置响应
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+security: []
+tags:
+  - name: base.SystemSettingService

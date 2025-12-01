@@ -6,227 +6,11 @@ servers:
   - url: http://localhost:8080
     description: 本地开发服务器
 paths:
-  /base.UserService/ListUsers:
-    post:
-      tags:
-        - base.UserService
-      summary: ListUsers
-      description: 获取用户列表
-      operationId: base.UserService.ListUsers
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.ListUsersRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.ListUsersResponse'
-  /base.UserService/GetUser:
-    post:
-      tags:
-        - base.UserService
-      summary: GetUser
-      description: 获取用户详情
-      operationId: base.UserService.GetUser
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.GetUserRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.GetUserResponse'
-  /base.UserService/CreateUser:
-    post:
-      tags:
-        - base.UserService
-      summary: CreateUser
-      description: 创建用户
-      operationId: base.UserService.CreateUser
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.CreateUserRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.CreateUserResponse'
-  /base.UserService/UpdateUser:
-    post:
-      tags:
-        - base.UserService
-      summary: UpdateUser
-      description: 更新用户
-      operationId: base.UserService.UpdateUser
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.UpdateUserRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.UpdateUserResponse'
-  /base.UserService/DeleteUser:
-    post:
-      tags:
-        - base.UserService
-      summary: DeleteUser
-      description: 删除用户
-      operationId: base.UserService.DeleteUser
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.DeleteUserRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.DeleteUserResponse'
-  /base.UserService/ResetUserPassword:
-    post:
-      tags:
-        - base.UserService
-      summary: ResetUserPassword
-      description: 重置用户密码
-      operationId: base.UserService.ResetUserPassword
-      parameters:
-        - name: Connect-Protocol-Version
-          in: header
-          required: true
-          schema:
-            $ref: '#/components/schemas/connect-protocol-version'
-        - name: Connect-Timeout-Ms
-          in: header
-          schema:
-            $ref: '#/components/schemas/connect-timeout-header'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/base.ResetUserPasswordRequest'
-        required: true
-      responses:
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/connect.error'
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/base.ResetUserPasswordResponse'
   /base.UserService/BatchDeleteUsers:
     post:
       tags:
         - base.UserService
-      summary: BatchDeleteUsers
+      summary: 批量删除用户
       description: 批量删除用户
       operationId: base.UserService.BatchDeleteUsers
       parameters:
@@ -262,7 +46,7 @@ paths:
     post:
       tags:
         - base.UserService
-      summary: BatchUpdateUserStatus
+      summary: 批量更新用户状态
       description: 批量更新用户状态
       operationId: base.UserService.BatchUpdateUserStatus
       parameters:
@@ -294,17 +78,224 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/base.BatchUpdateUserStatusResponse'
+  /base.UserService/CreateUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 创建用户
+      description: 创建用户
+      operationId: base.UserService.CreateUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.CreateUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.CreateUserResponse'
+  /base.UserService/DeleteUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 删除用户
+      description: 删除用户
+      operationId: base.UserService.DeleteUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.DeleteUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.DeleteUserResponse'
+  /base.UserService/GetUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 获取用户详情
+      description: 获取用户详情
+      operationId: base.UserService.GetUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetUserResponse'
+  /base.UserService/ListUsers:
+    post:
+      tags:
+        - base.UserService
+      summary: 获取用户列表
+      description: 获取用户列表
+      operationId: base.UserService.ListUsers
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ListUsersRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ListUsersResponse'
+  /base.UserService/ResetUserPassword:
+    post:
+      tags:
+        - base.UserService
+      summary: 重置用户密码
+      description: 重置用户密码
+      operationId: base.UserService.ResetUserPassword
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.ResetUserPasswordRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.ResetUserPasswordResponse'
+  /base.UserService/UpdateUser:
+    post:
+      tags:
+        - base.UserService
+      summary: 更新用户
+      description: 更新用户
+      operationId: base.UserService.UpdateUser
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.UpdateUserRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.UpdateUserResponse'
 components:
   schemas:
-    base.UserStatus:
-      type: string
-      title: UserStatus
-      enum:
-        - USER_STATUS_UNSPECIFIED
-        - USER_STATUS_ACTIVE
-        - USER_STATUS_INACTIVE
-        - USER_STATUS_BANNED
-      description: 用户状态枚举
     base.BatchDeleteUsersRequest:
       type: object
       properties:
@@ -655,6 +646,15 @@ components:
       title: UserDetail
       additionalProperties: false
       description: 用户详细信息（包含更多字段）
+    base.UserStatus:
+      type: string
+      title: UserStatus
+      enum:
+        - USER_STATUS_UNSPECIFIED
+        - USER_STATUS_ACTIVE
+        - USER_STATUS_INACTIVE
+        - USER_STATUS_BANNED
+      description: 用户状态枚举
     connect-protocol-version:
       type: number
       title: Connect-Protocol-Version
@@ -694,24 +694,36 @@ components:
         message:
           type: string
           description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
-        detail:
-          $ref: '#/components/schemas/google.protobuf.Any'
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
       title: Connect Error
       additionalProperties: true
       description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
-    google.protobuf.Any:
+    connect.error_details.Any:
       type: object
       properties:
         type:
           type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
         value:
           type: string
           format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
         debug:
-          type: object
-          additionalProperties: true
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
       additionalProperties: true
-      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
 security: []
 tags:
   - name: base.UserService

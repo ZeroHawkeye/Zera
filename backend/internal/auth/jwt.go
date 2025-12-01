@@ -46,9 +46,25 @@ func NewJWTManager(cfg *config.JWTConfig) *JWTManager {
 	}
 }
 
+// SetAccessTokenExpire 动态设置访问令牌过期时间（分钟）
+func (m *JWTManager) SetAccessTokenExpire(minutes int) {
+	if minutes > 0 {
+		m.accessTokenExpire = time.Duration(minutes) * time.Minute
+	}
+}
+
 // GenerateAccessToken 生成访问令牌
 func (m *JWTManager) GenerateAccessToken(userID int, username string, roles []string, permissions []string) (string, error) {
 	return m.generateToken(userID, username, roles, permissions, AccessToken, m.accessTokenExpire)
+}
+
+// GenerateAccessTokenWithExpire 生成指定过期时间的访问令牌
+func (m *JWTManager) GenerateAccessTokenWithExpire(userID int, username string, roles []string, permissions []string, expireMinutes int) (string, error) {
+	expire := m.accessTokenExpire
+	if expireMinutes > 0 {
+		expire = time.Duration(expireMinutes) * time.Minute
+	}
+	return m.generateToken(userID, username, roles, permissions, AccessToken, expire)
 }
 
 // GenerateRefreshToken 生成刷新令牌

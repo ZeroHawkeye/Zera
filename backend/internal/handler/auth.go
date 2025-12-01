@@ -80,6 +80,39 @@ func (h *AuthHandler) Login(
 	return connect.NewResponse(resp), nil
 }
 
+// Register 用户注册
+func (h *AuthHandler) Register(
+	ctx context.Context,
+	req *connect.Request[base.RegisterRequest],
+) (*connect.Response[base.RegisterResponse], error) {
+	// 验证请求
+	if err := h.validator.Validate(req.Msg); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	log.Printf("Registration attempt for user: %s", req.Msg.Username)
+
+	// 调用服务层
+	resp, err := h.authService.Register(ctx, req.Msg)
+	if err != nil {
+		if errors.Is(err, service.ErrRegistrationDisabled) {
+			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("系统当前未开放注册"))
+		}
+		if errors.Is(err, service.ErrPasswordTooShort) ||
+			errors.Is(err, service.ErrPasswordNoUppercase) ||
+			errors.Is(err, service.ErrPasswordNoNumber) ||
+			errors.Is(err, service.ErrPasswordNoSpecialChar) {
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
+		log.Printf("Registration error: %v", err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	log.Printf("User %s registered successfully", req.Msg.Username)
+
+	return connect.NewResponse(resp), nil
+}
+
 // Logout 用户登出
 func (h *AuthHandler) Logout(
 	ctx context.Context,

@@ -91,15 +91,26 @@ func New(cfg *config.Config) (*Server, error) {
 	userService := service.NewUserService(db.Client)
 	roleService := service.NewRoleService(db.Client)
 	auditLogService := service.NewAuditLogService(asyncLogger)
+	systemSettingService := service.NewSystemSettingService(db.Client)
+
+	// 初始化默认系统设置
+	if err := systemSettingService.InitDefaultSettings(context.Background()); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to init system settings: %w", err)
+	}
 
 	// 初始化处理器
 	authHandler := handler.NewAuthHandler(validator, authService, jwtManager)
 	userHandler := handler.NewUserHandler(validator, userService)
 	roleHandler := handler.NewRoleHandler(validator, roleService)
 	auditLogHandler := handler.NewAuditLogHandler(validator, auditLogService)
+	systemSettingHandler := handler.NewSystemSettingHandler(validator, systemSettingService)
 
 	// 创建权限拦截器（替代原来的认证拦截器）
 	permInterceptor := middleware.NewPermissionInterceptor(jwtManager, permChecker)
+
+	// 创建维护模式拦截器
+	maintenanceInterceptor := middleware.NewMaintenanceInterceptor(db.Client)
 
 	// 创建审计日志拦截器
 	auditLogInterceptor := middleware.NewAuditLogInterceptor(asyncLogger)
@@ -110,8 +121,8 @@ func New(cfg *config.Config) (*Server, error) {
 	// 注册中间件
 	engine.Use(middleware.CORS())
 
-	// 创建拦截器链：权限拦截器 -> 审计日志拦截器
-	interceptors := connect.WithInterceptors(permInterceptor, auditLogInterceptor)
+	// 创建拦截器链：权限拦截器 -> 维护模式拦截器 -> 审计日志拦截器
+	interceptors := connect.WithInterceptors(permInterceptor, maintenanceInterceptor, auditLogInterceptor)
 
 	// 注册认证服务路由
 	authPath, authH := baseconnect.NewAuthServiceHandler(
@@ -140,6 +151,13 @@ func New(cfg *config.Config) (*Server, error) {
 		interceptors,
 	)
 	engine.Any(auditLogPath+"*action", gin.WrapH(auditLogH))
+
+	// 注册系统设置服务路由
+	systemSettingPath, systemSettingH := baseconnect.NewSystemSettingServiceHandler(
+		systemSettingHandler,
+		interceptors,
+	)
+	engine.Any(systemSettingPath+"*action", gin.WrapH(systemSettingH))
 
 	// 注册 SPA 静态资源（生产环境）
 	// 开发环境下 dist 目录可能不存在或为空，会优雅降级

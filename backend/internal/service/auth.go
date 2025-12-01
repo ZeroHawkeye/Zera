@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"zera/ent"
+	"zera/ent/role"
 	"zera/ent/user"
 	"zera/gen/base"
 	"zera/internal/auth"
@@ -24,6 +25,8 @@ var (
 	ErrUserInactive = errors.New("user is inactive or banned")
 	// ErrInvalidToken 无效的令牌
 	ErrInvalidToken = errors.New("invalid token")
+	// ErrAccountLocked 账号已锁定
+	ErrAccountLocked = errors.New("account is locked")
 )
 
 // AuthService 认证服务
@@ -44,6 +47,13 @@ func NewAuthService(client *ent.Client, jwtManager *auth.JWTManager) *AuthServic
 
 // Login 用户登录
 func (s *AuthService) Login(ctx context.Context, username, password string) (*base.LoginResponse, error) {
+	// 获取安全设置
+	settingService := NewSystemSettingService(s.client)
+	securitySettings, err := s.getSecuritySettings(ctx, settingService)
+	if err != nil {
+		return nil, err
+	}
+
 	// 查询用户
 	u, err := s.client.User.Query().
 		Where(user.Username(username)).
@@ -58,8 +68,50 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*ba
 		return nil, err
 	}
 
+	// 检查账号是否被锁定
+	if u.LockedUntil != nil && u.LockedUntil.After(time.Now()) {
+		remainingMinutes := int(time.Until(*u.LockedUntil).Minutes()) + 1
+		return nil, errors.New("账号已锁定，请在 " + strconv.Itoa(remainingMinutes) + " 分钟后重试")
+	}
+
+	// 如果锁定时间已过，重置登录尝试次数
+	if u.LockedUntil != nil && u.LockedUntil.Before(time.Now()) {
+		_, err = u.Update().
+			SetLoginAttempts(0).
+			ClearLockedUntil().
+			Save(ctx)
+		if err != nil {
+			return nil, err
+		}
+		u.LoginAttempts = 0
+		u.LockedUntil = nil
+	}
+
 	// 验证密码
 	if !s.verifyPassword(password, u.PasswordHash) {
+		// 增加登录失败次数
+		newAttempts := u.LoginAttempts + 1
+		update := u.Update().SetLoginAttempts(newAttempts)
+
+		// 检查是否需要锁定账号
+		if newAttempts >= securitySettings.maxLoginAttempts {
+			lockUntil := time.Now().Add(time.Duration(securitySettings.lockoutDuration) * time.Minute)
+			update = update.SetLockedUntil(lockUntil)
+			_, err = update.Save(ctx)
+			if err != nil {
+				return nil, err
+			}
+			return nil, errors.New("登录失败次数过多，账号已被锁定 " + strconv.Itoa(securitySettings.lockoutDuration) + " 分钟")
+		}
+
+		_, err = update.Save(ctx)
+		if err != nil {
+			return nil, err
+		}
+		remainingAttempts := securitySettings.maxLoginAttempts - newAttempts
+		if remainingAttempts > 0 {
+			return nil, errors.New("用户名或密码错误，还剩 " + strconv.Itoa(remainingAttempts) + " 次尝试机会")
+		}
 		return nil, ErrInvalidCredentials
 	}
 
@@ -68,8 +120,10 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*ba
 		return nil, ErrUserInactive
 	}
 
-	// 更新最后登录时间
+	// 登录成功，重置登录尝试次数并更新最后登录时间
 	_, err = u.Update().
+		SetLoginAttempts(0).
+		ClearLockedUntil().
 		SetLastLoginAt(time.Now()).
 		Save(ctx)
 	if err != nil {
@@ -79,8 +133,8 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*ba
 	// 获取用户角色和权限
 	roles, permissions := s.extractRolesAndPermissions(u)
 
-	// 生成令牌
-	accessToken, err := s.jwtManager.GenerateAccessToken(u.ID, u.Username, roles, permissions)
+	// 生成令牌（使用系统设置的会话超时时间）
+	accessToken, err := s.jwtManager.GenerateAccessTokenWithExpire(u.ID, u.Username, roles, permissions, securitySettings.sessionTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +150,161 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*ba
 	return &base.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:    s.jwtManager.GetAccessTokenExpire(),
+		ExpiresIn:    int64(securitySettings.sessionTimeout * 60), // 转换为秒
 		User:         userInfo,
+	}, nil
+}
+
+// securitySettingsData 安全设置数据
+type securitySettingsData struct {
+	maxLoginAttempts int
+	lockoutDuration  int
+	sessionTimeout   int
+}
+
+// getSecuritySettings 获取安全设置
+func (s *AuthService) getSecuritySettings(ctx context.Context, settingService *SystemSettingService) (*securitySettingsData, error) {
+	resp, err := settingService.GetAllSettings(ctx)
+	if err != nil {
+		// 如果获取失败，使用默认值
+		return &securitySettingsData{
+			maxLoginAttempts: 5,
+			lockoutDuration:  30,
+			sessionTimeout:   60,
+		}, nil
+	}
+
+	settings := &securitySettingsData{
+		maxLoginAttempts: 5,
+		lockoutDuration:  30,
+		sessionTimeout:   60,
+	}
+
+	if resp.Settings != nil && resp.Settings.Security != nil {
+		if resp.Settings.Security.MaxLoginAttempts > 0 {
+			settings.maxLoginAttempts = int(resp.Settings.Security.MaxLoginAttempts)
+		}
+		if resp.Settings.Security.LockoutDuration > 0 {
+			settings.lockoutDuration = int(resp.Settings.Security.LockoutDuration)
+		}
+		if resp.Settings.Security.SessionTimeout > 0 {
+			settings.sessionTimeout = int(resp.Settings.Security.SessionTimeout)
+		}
+	}
+
+	return settings, nil
+}
+
+// Register 用户注册
+func (s *AuthService) Register(ctx context.Context, req *base.RegisterRequest) (*base.RegisterResponse, error) {
+	settingService := NewSystemSettingService(s.client)
+
+	// 检查是否开启注册
+	registrationEnabled, err := settingService.IsRegistrationEnabled(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !registrationEnabled {
+		return nil, ErrRegistrationDisabled
+	}
+
+	// 检查密码是否一致
+	if req.Password != req.ConfirmPassword {
+		return nil, errors.New("两次输入的密码不一致")
+	}
+
+	// 验证密码策略
+	policy, err := GetPasswordPolicy(ctx, settingService)
+	if err != nil {
+		return nil, err
+	}
+	if err := ValidatePassword(req.Password, policy); err != nil {
+		return nil, err
+	}
+
+	// 检查用户名是否已存在
+	exists, err := s.client.User.Query().Where(user.Username(req.Username)).Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, errors.New("用户名已被使用")
+	}
+
+	// 检查邮箱是否已存在
+	exists, err = s.client.User.Query().Where(user.Email(req.Email)).Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, errors.New("邮箱已被使用")
+	}
+
+	// 设置昵称，默认使用用户名
+	nickname := req.Nickname
+	if nickname == "" {
+		nickname = req.Username
+	}
+
+	// 获取默认注册角色
+	defaultRoleCode, err := settingService.GetDefaultRegisterRole(ctx)
+	if err != nil {
+		defaultRoleCode = "user" // 默认使用 user 角色
+	}
+
+	// 查询默认角色
+	defaultRole, err := s.client.Role.Query().
+		Where(role.Code(defaultRoleCode)).
+		Only(ctx)
+	if err != nil {
+		// 如果找不到配置的角色，尝试使用 user 角色
+		if ent.IsNotFound(err) && defaultRoleCode != "user" {
+			defaultRole, err = s.client.Role.Query().
+				Where(role.Code("user")).
+				Only(ctx)
+		}
+		if err != nil {
+			// 如果仍然找不到，忽略角色分配
+			defaultRole = nil
+		}
+	}
+
+	// 创建用户
+	userCreate := s.client.User.Create().
+		SetUsername(req.Username).
+		SetEmail(req.Email).
+		SetPasswordHash(hashPassword(req.Password)).
+		SetNickname(nickname).
+		SetStatus(user.StatusActive)
+
+	// 分配默认角色
+	if defaultRole != nil {
+		userCreate = userCreate.AddRoles(defaultRole)
+	}
+
+	u, err := userCreate.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 构建用户信息
+	roles := []string{}
+	if defaultRole != nil {
+		roles = append(roles, defaultRole.Code)
+	}
+
+	userInfo := &base.UserInfo{
+		Id:       strconv.Itoa(u.ID),
+		Username: u.Username,
+		Nickname: u.Nickname,
+		Email:    u.Email,
+		Roles:    roles,
+	}
+
+	return &base.RegisterResponse{
+		Success: true,
+		User:    userInfo,
+		Message: "注册成功",
 	}, nil
 }
 

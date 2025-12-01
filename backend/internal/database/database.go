@@ -18,9 +18,8 @@ import (
 
 // 系统内置角色代码
 const (
-	RoleCodeAdmin  = "admin"
-	RoleCodeUser   = "user"
-	RoleCodeEditor = "editor"
+	RoleCodeAdmin = "admin"
+	RoleCodeUser  = "user"
 )
 
 // Database 数据库连接管理
@@ -80,7 +79,6 @@ func (d *Database) InitSystemRoles(ctx context.Context) error {
 		SortOrder   int
 	}{
 		{RoleCodeAdmin, "管理员", "系统管理员，拥有所有权限", 1},
-		{RoleCodeEditor, "编辑", "内容编辑人员", 10},
 		{RoleCodeUser, "普通用户", "普通注册用户", 100},
 	}
 

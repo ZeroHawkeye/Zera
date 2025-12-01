@@ -86,10 +86,46 @@ message GetCurrentUserResponse {
   UserInfo user = 1;
 }
 
+// 用户注册请求
+message RegisterRequest {
+  // 用户名
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 3
+    max_len: 50
+    pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"
+  }];
+  // 密码
+  string password = 2 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 128
+  }];
+  // 确认密码
+  string confirm_password = 3 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 128
+  }];
+  // 邮箱
+  string email = 4 [(buf.validate.field).string.email = true];
+  // 昵称（可选）
+  string nickname = 5;
+}
+
+// 用户注册响应
+message RegisterResponse {
+  // 是否成功
+  bool success = 1;
+  // 用户信息
+  UserInfo user = 2;
+  // 提示消息
+  string message = 3;
+}
+
 // 认证服务
 service AuthService {
   // 用户登录
   rpc Login(LoginRequest) returns (LoginResponse) {}
+  // 用户注册
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
   // 用户登出
   rpc Logout(LogoutRequest) returns (LogoutResponse) {}
   // 刷新令牌
