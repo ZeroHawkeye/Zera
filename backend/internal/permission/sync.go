@@ -6,6 +6,7 @@ import (
 
 	"zera/ent"
 	entPermission "zera/ent/permission"
+	"zera/internal/logger"
 )
 
 // Syncer 权限同步器 - 负责将代码中定义的权限同步到数据库
@@ -36,7 +37,7 @@ type SyncResult struct {
 // 3. 如果已存在，则更新名称和描述（权限代码不变）
 // 4. 不删除数据库中多余的权限（避免意外删除已分配的权限）
 func (s *Syncer) SyncPermissions(ctx context.Context) (*SyncResult, error) {
-	s.logger.Info("开始同步权限到数据库")
+	logger.InfoContext(ctx, "开始同步权限到数据库")
 
 	permissions := GetUniquePermissions()
 	result := &SyncResult{}
@@ -64,14 +65,14 @@ func (s *Syncer) SyncPermissions(ctx context.Context) (*SyncResult, error) {
 				Save(ctx)
 
 			if err != nil {
-				s.logger.Error("创建权限失败", "code", p.Code, "error", err)
+				logger.ErrorContext(ctx, "创建权限失败", "code", p.Code, "error", err)
 				return nil, err
 			}
 			result.Created++
-			s.logger.Debug("创建权限", "code", p.Code, "name", p.Name)
+			logger.DebugContext(ctx, "创建权限", "code", p.Code, "name", p.Name)
 
 		} else if err != nil {
-			s.logger.Error("查询权限失败", "code", p.Code, "error", err)
+			logger.ErrorContext(ctx, "查询权限失败", "code", p.Code, "error", err)
 			return nil, err
 
 		} else {
@@ -90,18 +91,18 @@ func (s *Syncer) SyncPermissions(ctx context.Context) (*SyncResult, error) {
 					Save(ctx)
 
 				if err != nil {
-					s.logger.Error("更新权限失败", "code", p.Code, "error", err)
+					logger.ErrorContext(ctx, "更新权限失败", "code", p.Code, "error", err)
 					return nil, err
 				}
 				result.Updated++
-				s.logger.Debug("更新权限", "code", p.Code, "name", p.Name)
+				logger.DebugContext(ctx, "更新权限", "code", p.Code, "name", p.Name)
 			} else {
 				result.Skipped++
 			}
 		}
 	}
 
-	s.logger.Info("权限同步完成",
+	logger.InfoContext(ctx, "权限同步完成",
 		"created", result.Created,
 		"updated", result.Updated,
 		"skipped", result.Skipped,
@@ -130,7 +131,7 @@ func (s *Syncer) ListOrphanPermissions(ctx context.Context) ([]string, error) {
 	for _, dbP := range dbPermissions {
 		if !validCodes[dbP.Code] {
 			orphans = append(orphans, dbP.Code)
-			s.logger.Warn("发现孤立权限", "code", dbP.Code, "name", dbP.Name)
+			logger.WarnContext(ctx, "发现孤立权限", "code", dbP.Code, "name", dbP.Name)
 		}
 	}
 
@@ -159,7 +160,7 @@ func (s *Syncer) CleanOrphanPermissions(ctx context.Context) (int, error) {
 		return 0, err
 	}
 
-	s.logger.Info("清理孤立权限完成", "deleted", deleted)
+	logger.InfoContext(ctx, "清理孤立权限完成", "deleted", deleted)
 	return deleted, nil
 }
 

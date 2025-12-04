@@ -5,13 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"zera/ent"
 	"zera/ent/migrate"
 	"zera/ent/role"
 	"zera/ent/user"
 	"zera/internal/config"
+	"zera/internal/logger"
 
 	_ "github.com/lib/pq"
 )
@@ -47,11 +47,11 @@ func New(cfg *config.Config) (*Database, error) {
 // 仅在 dev_mode = true 时执行
 func (d *Database) AutoMigrate(ctx context.Context) error {
 	if !d.config.App.DevMode {
-		log.Println("Skipping auto migration (dev_mode is disabled)")
+		logger.InfoContext(ctx, "skipping auto migration (dev_mode is disabled)")
 		return nil
 	}
 
-	log.Println("Running auto migration in development mode...")
+	logger.InfoContext(ctx, "running auto migration in development mode")
 
 	// 使用 ent 的自动迁移功能
 	// WithDropIndex 和 WithDropColumn 允许在开发环境中删除索引和列
@@ -63,13 +63,13 @@ func (d *Database) AutoMigrate(ctx context.Context) error {
 		return fmt.Errorf("failed creating schema resources: %w", err)
 	}
 
-	log.Println("Auto migration completed successfully")
+	logger.InfoContext(ctx, "auto migration completed successfully")
 	return nil
 }
 
 // InitSystemRoles 初始化系统内置角色
 func (d *Database) InitSystemRoles(ctx context.Context) error {
-	log.Println("Initializing system roles...")
+	logger.InfoContext(ctx, "initializing system roles")
 
 	// 定义系统内置角色
 	systemRoles := []struct {
@@ -104,10 +104,10 @@ func (d *Database) InitSystemRoles(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to create role %s: %w", r.Code, err)
 		}
-		log.Printf("Created system role: %s", r.Code)
+		logger.InfoContext(ctx, "created system role", "code", r.Code)
 	}
 
-	log.Println("System roles initialized")
+	logger.InfoContext(ctx, "system roles initialized")
 	return nil
 }
 
@@ -133,7 +133,7 @@ func (d *Database) InitAdminUser(ctx context.Context) error {
 	}
 
 	if exists {
-		log.Println("Admin user already exists, skipping initialization")
+		logger.InfoContext(ctx, "admin user already exists, skipping initialization")
 		return nil
 	}
 
@@ -147,7 +147,7 @@ func (d *Database) InitAdminUser(ctx context.Context) error {
 
 	// 如果用户已存在，只需分配角色
 	if existingUser != nil {
-		log.Printf("User '%s' exists, adding admin role", adminCfg.Username)
+		logger.InfoContext(ctx, "user exists, adding admin role", "username", adminCfg.Username)
 		_, err = existingUser.Update().
 			AddRoles(adminRole).
 			Save(ctx)
@@ -158,7 +158,7 @@ func (d *Database) InitAdminUser(ctx context.Context) error {
 	}
 
 	// 创建管理员用户
-	log.Printf("Creating admin user: %s", adminCfg.Username)
+	logger.InfoContext(ctx, "creating admin user", "username", adminCfg.Username)
 
 	_, err = d.Client.User.Create().
 		SetUsername(adminCfg.Username).
@@ -172,7 +172,7 @@ func (d *Database) InitAdminUser(ctx context.Context) error {
 		return fmt.Errorf("failed to create admin user: %w", err)
 	}
 
-	log.Println("Admin user created successfully")
+	logger.InfoContext(ctx, "admin user created successfully")
 	return nil
 }
 

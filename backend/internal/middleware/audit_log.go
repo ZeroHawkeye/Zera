@@ -17,6 +17,9 @@ import (
 	"connectrpc.com/connect"
 )
 
+// 模块常量，用于日志记录
+const auditLogModule = "audit_log"
+
 // AuditLogInterceptor 审计日志拦截器
 // 自动记录所有 API 请求的审计日志
 type AuditLogInterceptor struct {
@@ -50,7 +53,11 @@ func (i *AuditLogInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFun
 			writeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			if writeErr := i.logger.Write(writeCtx, entry); writeErr != nil {
-				// 日志写入失败不影响请求
+				// 日志写入失败不影响请求，但记录到系统日志
+				logger.ErrorContext(ctx, "failed to write audit log",
+					"error", writeErr,
+					"procedure", procedure,
+				)
 			}
 		}()
 
@@ -83,7 +90,11 @@ func (i *AuditLogInterceptor) WrapStreamingHandler(next connect.StreamingHandler
 			writeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			if writeErr := i.logger.Write(writeCtx, entry); writeErr != nil {
-				// 日志写入失败不影响请求
+				// 日志写入失败不影响请求，但记录到系统日志
+				logger.ErrorContext(ctx, "failed to write audit log",
+					"error", writeErr,
+					"procedure", procedure,
+				)
 			}
 		}()
 

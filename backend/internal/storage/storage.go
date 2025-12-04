@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"zera/internal/config"
+	"zera/internal/logger"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -25,12 +26,12 @@ type Storage struct {
 }
 
 // New 创建存储客户端实例
-func New(cfg *config.StorageConfig, logger *slog.Logger) (*Storage, error) {
+func New(cfg *config.StorageConfig, slogger *slog.Logger) (*Storage, error) {
 	if !cfg.Enabled {
-		logger.Info("Storage service is disabled")
+		logger.Info("storage service is disabled")
 		return &Storage{
 			config: cfg,
-			logger: logger,
+			logger: slogger,
 		}, nil
 	}
 
@@ -70,7 +71,7 @@ func New(cfg *config.StorageConfig, logger *slog.Logger) (*Storage, error) {
 	storage := &Storage{
 		client: client,
 		config: cfg,
-		logger: logger,
+		logger: slogger,
 	}
 
 	// 验证连接
@@ -78,7 +79,7 @@ func New(cfg *config.StorageConfig, logger *slog.Logger) (*Storage, error) {
 		return nil, fmt.Errorf("failed to connect to storage: %w", err)
 	}
 
-	logger.Info("Storage service connected",
+	logger.Info("storage service connected",
 		"endpoint", cfg.Endpoint,
 		"bucket", cfg.Bucket,
 	)
@@ -278,6 +279,6 @@ type ObjectInfo struct {
 // Close 关闭存储客户端
 func (s *Storage) Close() error {
 	// S3 客户端不需要显式关闭
-	s.logger.Info("Storage service closed")
+	logger.Info("storage service closed")
 	return nil
 }

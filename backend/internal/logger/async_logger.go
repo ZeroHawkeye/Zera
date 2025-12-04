@@ -2,7 +2,6 @@ package logger
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
 )
@@ -14,7 +13,6 @@ type AsyncLogger struct {
 	reader    Reader
 	entryChan chan *Entry
 	wg        sync.WaitGroup
-	logger    *slog.Logger
 	closed    bool
 	mu        sync.RWMutex
 
@@ -41,7 +39,8 @@ var DefaultAsyncLoggerConfig = AsyncLoggerConfig{
 }
 
 // NewAsyncLogger 创建异步日志记录器
-func NewAsyncLogger(writer Writer, reader Reader, logger *slog.Logger, cfg *AsyncLoggerConfig) *AsyncLogger {
+// 注意: logger 参数已废弃，现在使用全局日志系统
+func NewAsyncLogger(writer Writer, reader Reader, _ interface{}, cfg *AsyncLoggerConfig) *AsyncLogger {
 	if cfg == nil {
 		cfg = &DefaultAsyncLoggerConfig
 	}
@@ -50,7 +49,6 @@ func NewAsyncLogger(writer Writer, reader Reader, logger *slog.Logger, cfg *Asyn
 		writer:        writer,
 		reader:        reader,
 		entryChan:     make(chan *Entry, cfg.BufferSize),
-		logger:        logger,
 		batchSize:     cfg.BatchSize,
 		flushInterval: cfg.FlushInterval,
 	}
@@ -76,7 +74,7 @@ func (l *AsyncLogger) Write(ctx context.Context, entry *Entry) error {
 		return nil
 	default:
 		// 通道已满，同步写入
-		l.logger.Warn("audit log buffer full, writing synchronously")
+		Warn("audit log buffer full, writing synchronously")
 		return l.writer.Write(ctx, entry)
 	}
 }
@@ -135,7 +133,7 @@ func (l *AsyncLogger) processEntries() {
 		defer cancel()
 
 		if err := l.writer.WriteBatch(ctx, batch); err != nil {
-			l.logger.Error("failed to write audit logs", "error", err, "count", len(batch))
+			Error("failed to write audit logs", "error", err, "count", len(batch))
 		}
 
 		batch = batch[:0]

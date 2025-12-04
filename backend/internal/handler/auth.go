@@ -3,12 +3,12 @@ package handler
 import (
 	"context"
 	"errors"
-	"log"
 	"strings"
 
 	"zera/gen/base"
 	"zera/gen/base/baseconnect"
 	"zera/internal/auth"
+	"zera/internal/logger"
 	"zera/internal/service"
 
 	"buf.build/go/protovalidate"
@@ -60,22 +60,24 @@ func (h *AuthHandler) Login(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	log.Printf("Login attempt for user: %s", req.Msg.Username)
+	logger.InfoContext(ctx, "login attempt", "username", req.Msg.Username)
 
 	// 调用服务层
 	resp, err := h.authService.Login(ctx, req.Msg.Username, req.Msg.Password)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidCredentials) {
+			logger.WarnContext(ctx, "login failed: invalid credentials", "username", req.Msg.Username)
 			return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("用户名或密码错误"))
 		}
 		if errors.Is(err, service.ErrUserInactive) {
+			logger.WarnContext(ctx, "login failed: user inactive", "username", req.Msg.Username)
 			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("用户已被禁用"))
 		}
-		log.Printf("Login error: %v", err)
+		logger.ErrorContext(ctx, "login error", "username", req.Msg.Username, "error", err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("登录失败"))
 	}
 
-	log.Printf("User %s logged in successfully", req.Msg.Username)
+	logger.InfoContext(ctx, "user logged in successfully", "username", req.Msg.Username)
 
 	return connect.NewResponse(resp), nil
 }
@@ -90,25 +92,27 @@ func (h *AuthHandler) Register(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	log.Printf("Registration attempt for user: %s", req.Msg.Username)
+	logger.InfoContext(ctx, "registration attempt", "username", req.Msg.Username)
 
 	// 调用服务层
 	resp, err := h.authService.Register(ctx, req.Msg)
 	if err != nil {
 		if errors.Is(err, service.ErrRegistrationDisabled) {
+			logger.WarnContext(ctx, "registration failed: disabled", "username", req.Msg.Username)
 			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("系统当前未开放注册"))
 		}
 		if errors.Is(err, service.ErrPasswordTooShort) ||
 			errors.Is(err, service.ErrPasswordNoUppercase) ||
 			errors.Is(err, service.ErrPasswordNoNumber) ||
 			errors.Is(err, service.ErrPasswordNoSpecialChar) {
+			logger.WarnContext(ctx, "registration failed: password policy", "username", req.Msg.Username, "error", err)
 			return nil, connect.NewError(connect.CodeInvalidArgument, err)
 		}
-		log.Printf("Registration error: %v", err)
+		logger.ErrorContext(ctx, "registration error", "username", req.Msg.Username, "error", err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	log.Printf("User %s registered successfully", req.Msg.Username)
+	logger.InfoContext(ctx, "user registered successfully", "username", req.Msg.Username)
 
 	return connect.NewResponse(resp), nil
 }

@@ -3,9 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
-	"log/slog"
-	"os"
 
 	"zera/gen/base/baseconnect"
 	"zera/internal/auth"
@@ -26,25 +23,47 @@ import (
 
 // Server HTTP 服务器
 type Server struct {
-	config      *config.Config
-	engine      *gin.Engine
-	db          *database.Database
-	storage     *storage.Storage
-	auditLogger *logger.AsyncLogger
+	config       *config.Config
+	engine       *gin.Engine
+	db           *database.Database
+	storage      *storage.Storage
+	auditLogger  *logger.AsyncLogger
+	globalLogger *logger.GlobalLogger
 }
 
 // New 创建服务器实例
 func New(cfg *config.Config) (*Server, error) {
-	// 创建日志器
-	slogger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
+	// 初始化全局日志系统
+	logCfg := &logger.LogConfig{
+		Level:          logger.LogLevel(cfg.Log.Level),
+		Format:         logger.LogFormat(cfg.Log.Format),
+		Output:         cfg.Log.Output,
+		AddSource:      cfg.Log.AddSource,
+		ServiceName:    cfg.Log.ServiceName,
+		ServiceVersion: cfg.Log.ServiceVersion,
+		Environment:    cfg.Log.Environment,
+	}
+	globalLogger, err := logger.NewGlobalLogger(logCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize logger: %w", err)
+	}
+
+	// 获取 slog.Logger 实例供内部组件使用
+	slogger := globalLogger.Logger()
+
+	logger.Info("initializing server",
+		"service", cfg.Log.ServiceName,
+		"version", cfg.Log.ServiceVersion,
+		"environment", cfg.Log.Environment,
+	)
 
 	// 初始化数据库连接
+	logger.Info("connecting to database", "host", cfg.Database.Host, "port", cfg.Database.Port)
 	db, err := database.New(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
+	logger.Info("database connected successfully")
 
 	// 开发模式下自动迁移
 	if err := db.AutoMigrate(context.Background()); err != nil {
@@ -132,13 +151,29 @@ func New(cfg *config.Config) (*Server, error) {
 	auditLogInterceptor := middleware.NewAuditLogInterceptor(asyncLogger)
 
 	// 创建 Gin 引擎
-	engine := gin.Default()
+	// 根据环境设置 Gin 模式
+	if cfg.Log.Environment == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	engine := gin.New()
 
 	// 注册中间件
+	// 1. 追踪中间件（最先执行，生成 TraceID）
+	engine.Use(middleware.TraceMiddleware())
+	// 2. CORS 中间件
 	engine.Use(middleware.CORS())
+	// 3. 恢复中间件
+	engine.Use(gin.Recovery())
+	// 注意：RPC 请求日志由 LoggingInterceptor 记录，避免重复
 
-	// 创建拦截器链：权限拦截器 -> 维护模式拦截器 -> 审计日志拦截器
-	interceptors := connect.WithInterceptors(permInterceptor, maintenanceInterceptor, auditLogInterceptor)
+	// 创建追踪拦截器
+	traceInterceptor := middleware.NewTraceInterceptor()
+
+	// 创建日志拦截器
+	loggingInterceptor := middleware.NewLoggingInterceptor()
+
+	// 创建拦截器链：追踪拦截器 -> 日志拦截器 -> 权限拦截器 -> 维护模式拦截器 -> 审计日志拦截器
+	interceptors := connect.WithInterceptors(traceInterceptor, loggingInterceptor, permInterceptor, maintenanceInterceptor, auditLogInterceptor)
 
 	// 注册认证服务路由
 	authPath, authH := baseconnect.NewAuthServiceHandler(
@@ -179,39 +214,56 @@ func New(cfg *config.Config) (*Server, error) {
 	// 开发环境下 dist 目录可能不存在或为空，会优雅降级
 	if frontendFS, err := static.GetFrontendFS(); err == nil {
 		if err := static.RegisterSPA(engine, "/", frontendFS); err != nil {
-			log.Printf("Warning: failed to register SPA: %v", err)
+			logger.Warn("failed to register SPA", "error", err)
 		}
 	}
 
+	logger.Info("server initialized successfully")
+
 	return &Server{
-		config:      cfg,
-		engine:      engine,
-		db:          db,
-		storage:     storageClient,
-		auditLogger: asyncLogger,
+		config:       cfg,
+		engine:       engine,
+		db:           db,
+		storage:      storageClient,
+		auditLogger:  asyncLogger,
+		globalLogger: globalLogger,
 	}, nil
 }
 
 // Run 启动服务器
 func (s *Server) Run() error {
 	addr := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
-	log.Printf("Server starting on %s", addr)
+	logger.Info("server starting",
+		"address", addr,
+		"host", s.config.Server.Host,
+		"port", s.config.Server.Port,
+	)
 	return s.engine.Run(addr)
 }
 
 // Close 关闭服务器资源
 func (s *Server) Close() error {
+	logger.Info("shutting down server")
+
 	// 关闭审计日志记录器
 	if s.auditLogger != nil {
 		if err := s.auditLogger.Close(); err != nil {
-			log.Printf("Warning: failed to close audit logger: %v", err)
+			logger.Warn("failed to close audit logger", "error", err)
 		}
 	}
 
 	// 关闭存储服务
 	if s.storage != nil {
 		if err := s.storage.Close(); err != nil {
-			log.Printf("Warning: failed to close storage: %v", err)
+			logger.Warn("failed to close storage", "error", err)
+		}
+	}
+
+	// 关闭全局日志
+	if s.globalLogger != nil {
+		if err := s.globalLogger.Close(); err != nil {
+			// 这里用 fmt 因为日志系统可能已经关闭
+			fmt.Printf("Warning: failed to close global logger: %v\n", err)
 		}
 	}
 

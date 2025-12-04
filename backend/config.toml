@@ -41,3 +41,20 @@ secret_key = "zera"
 bucket = "zera"
 region = "us-east-1"
 use_path_style = true
+
+[log]
+# 日志配置
+# 日志级别: debug, info, warn, error
+level = "info"
+# 日志格式: json (适合生产环境/日志平台), text (适合开发调试)
+format = "text"
+# 输出目标: stdout, stderr, 或文件路径
+output = "stdout"
+# 是否添加源代码位置（文件名和行号）
+add_source = true
+# 服务名称，用于日志标识（对接 SignOz/ES 时使用）
+service_name = "zera"
+# 服务版本
+service_version = "1.0.0"
+# 运行环境: development, staging, production
+environment = "development"

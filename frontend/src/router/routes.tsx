@@ -1,12 +1,6 @@
-import {
-  createRootRoute,
-  createRoute,
-  Outlet,
-  redirect,
-} from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import { AdminLayout } from '@/layouts'
+import { createRootRoute, createRoute, redirect } from '@tanstack/react-router'
 import { authGuard, guestGuard, waitForAuthInit } from './guards'
+import { RootComponent, AdminRouteComponent } from './components'
 
 // ============================================
 // 根路由
@@ -14,15 +8,6 @@ import { authGuard, guestGuard, waitForAuthInit } from './guards'
 export const rootRoute = createRootRoute({
   component: RootComponent,
 })
-
-function RootComponent() {
-  return (
-    <>
-      <Outlet />
-      <TanStackRouterDevtools position="bottom-right" />
-    </>
-  )
-}
 
 // ============================================
 // 公共路由
@@ -62,11 +47,7 @@ export const registerRoute = createRoute({
 export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
-  component: () => (
-    <AdminLayout>
-      <Outlet />
-    </AdminLayout>
-  ),
+  component: AdminRouteComponent,
   beforeLoad: async () => {
     await waitForAuthInit()
     authGuard()
@@ -118,6 +99,20 @@ export const roleDetailRoute = createRoute({
 }).lazy(() => import('@/pages/admin/roles/RoleDetail').then((m) => m.Route))
 
 // ============================================
+// 审计日志路由
+// ============================================
+
+export const logsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/logs',
+})
+
+export const logsIndexRoute = createRoute({
+  getParentRoute: () => logsRoute,
+  path: '/',
+}).lazy(() => import('@/pages/admin/logs/AuditLogList').then((m) => m.Route))
+
+// ============================================
 // 系统设置路由
 // ============================================
 
@@ -146,15 +141,6 @@ export const settingsIndexRoute = createRoute({
 })
 
 // ============================================
-// 日志管理路由
-// ============================================
-
-export const logsRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/logs',
-}).lazy(() => import('@/pages/admin/logs/LogList').then((m) => m.Route))
-
-// ============================================
 // 路由树
 // ============================================
 
@@ -173,11 +159,13 @@ export const routeTree = rootRoute.addChildren([
       rolesIndexRoute,
       roleDetailRoute,
     ]),
+    logsRoute.addChildren([
+      logsIndexRoute,
+    ]),
     settingsRoute.addChildren([
       settingsIndexRoute,
       generalSettingsRoute,
       securitySettingsRoute,
     ]),
-    logsRoute,
   ]),
 ])

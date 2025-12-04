@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"os"
 
 	"zera/internal/config"
 	"zera/internal/server"
@@ -14,11 +15,16 @@ func main() {
 	// 创建服务器
 	srv, err := server.New(cfg)
 	if err != nil {
-		log.Fatalf("failed to create server: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to create server: %v\n", err)
+		os.Exit(1)
 	}
+
+	// 确保服务器资源被正确关闭
+	defer srv.Close()
 
 	// 启动服务器
 	if err := srv.Run(); err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to start server: %v\n", err)
+		os.Exit(1)
 	}
 }

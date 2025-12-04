@@ -17,6 +17,25 @@ type Config struct {
 	Admin    AdminConfig    `toml:"admin"`
 	JWT      JWTConfig      `toml:"jwt"`
 	Storage  StorageConfig  `toml:"storage"`
+	Log      LogConfig      `toml:"log"`
+}
+
+// LogConfig 日志配置
+type LogConfig struct {
+	// Level 日志级别: debug, info, warn, error
+	Level string `toml:"level"`
+	// Format 日志格式: json, text
+	Format string `toml:"format"`
+	// Output 输出目标: stdout, stderr, 或文件路径
+	Output string `toml:"output"`
+	// AddSource 是否添加源代码位置（文件名和行号）
+	AddSource bool `toml:"add_source"`
+	// ServiceName 服务名称，用于日志标识
+	ServiceName string `toml:"service_name"`
+	// ServiceVersion 服务版本
+	ServiceVersion string `toml:"service_version"`
+	// Environment 运行环境: development, staging, production
+	Environment string `toml:"environment"`
 }
 
 // ServerConfig 服务器配置
@@ -109,6 +128,15 @@ func defaultConfig() *Config {
 			Bucket:       "zera",
 			Region:       "us-east-1",
 			UsePathStyle: true,
+		},
+		Log: LogConfig{
+			Level:          "info",
+			Format:         "text",
+			Output:         "stdout",
+			AddSource:      true,
+			ServiceName:    "zera",
+			ServiceVersion: "1.0.0",
+			Environment:    "development",
 		},
 	}
 }
@@ -259,6 +287,29 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if usePathStyle := os.Getenv("STORAGE_USE_PATH_STYLE"); usePathStyle != "" {
 		cfg.Storage.UsePathStyle = usePathStyle == "true" || usePathStyle == "1"
+	}
+
+	// Log 配置
+	if level := os.Getenv("LOG_LEVEL"); level != "" {
+		cfg.Log.Level = level
+	}
+	if format := os.Getenv("LOG_FORMAT"); format != "" {
+		cfg.Log.Format = format
+	}
+	if output := os.Getenv("LOG_OUTPUT"); output != "" {
+		cfg.Log.Output = output
+	}
+	if addSource := os.Getenv("LOG_ADD_SOURCE"); addSource != "" {
+		cfg.Log.AddSource = addSource == "true" || addSource == "1"
+	}
+	if serviceName := os.Getenv("LOG_SERVICE_NAME"); serviceName != "" {
+		cfg.Log.ServiceName = serviceName
+	}
+	if serviceVersion := os.Getenv("LOG_SERVICE_VERSION"); serviceVersion != "" {
+		cfg.Log.ServiceVersion = serviceVersion
+	}
+	if environment := os.Getenv("LOG_ENVIRONMENT"); environment != "" {
+		cfg.Log.Environment = environment
 	}
 }
 
