@@ -18,3 +18,4 @@ backend/ent/user/
 backend/ent/role/
 backend/ent/permission/
 .idea/
+*.exe

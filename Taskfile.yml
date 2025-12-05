@@ -173,6 +173,7 @@ tasks:
       - task: build:frontend
       - task: build:embed
       - task: build:backend
+      - task: build:cli
       - task: build:clean:static
       - echo "✅ 构建完成! 输出目录 {{.BUILD_OUTPUT}}/"
 
@@ -258,6 +259,16 @@ tasks:
       GOARCH: amd64
     cmds:
       - go build -ldflags="-s -w" -o ../{{.BUILD_OUTPUT}}/{{.BINARY_NAME}}-darwin-amd64 ./cmd/server
+
+  build:cli:
+    desc: "构建 zera CLI（输出到项目根目录）"
+    dir: backend
+    cmds:
+      - go build -ldflags="-s -w" -o ../zera.exe ./cmd/zera
+    sources:
+      - "**/*.go"
+    generates:
+      - ../zera.exe
 
   build:all:
     desc: "构建所有平台版本"
