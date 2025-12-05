@@ -3,6 +3,7 @@ services:
   postgres:
     image: postgres:18
     container_name: zera_db
+    restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-zera}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-012359Clown@}
@@ -19,6 +20,7 @@ services:
   rustfs:
     image: rustfs/rustfs:latest
     container_name: zera_rustfs
+    restart: always
     environment:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-zera}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-zera}
