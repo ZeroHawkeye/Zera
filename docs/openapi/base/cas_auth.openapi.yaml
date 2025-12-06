@@ -1,0 +1,590 @@
+openapi: 3.1.0
+info:
+  title: base
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: 本地开发服务器
+paths:
+  /base.CASAuthService/CASCallback:
+    post:
+      tags:
+        - base.CASAuthService
+      summary: CAS 回调处理 (公开) - 验证票据并登录
+      description: CAS 回调处理 (公开) - 验证票据并登录
+      operationId: base.CASAuthService.CASCallback
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.CASCallbackRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.CASCallbackResponse'
+  /base.CASAuthService/CASLogout:
+    post:
+      tags:
+        - base.CASAuthService
+      summary: CAS 登出
+      description: CAS 登出
+      operationId: base.CASAuthService.CASLogout
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.CASLogoutRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.CASLogoutResponse'
+  /base.CASAuthService/GetCASConfig:
+    post:
+      tags:
+        - base.CASAuthService
+      summary: 获取 CAS 配置 (需要管理权限)
+      description: 获取 CAS 配置 (需要管理权限)
+      operationId: base.CASAuthService.GetCASConfig
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetCASConfigRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetCASConfigResponse'
+  /base.CASAuthService/GetCASLoginURL:
+    post:
+      tags:
+        - base.CASAuthService
+      summary: 获取 CAS 登录 URL (公开)
+      description: 获取 CAS 登录 URL (公开)
+      operationId: base.CASAuthService.GetCASLoginURL
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetCASLoginURLRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetCASLoginURLResponse'
+  /base.CASAuthService/GetPublicCASSettings:
+    post:
+      tags:
+        - base.CASAuthService
+      summary: 获取公开 CAS 设置 (公开)
+      description: 获取公开 CAS 设置 (公开)
+      operationId: base.CASAuthService.GetPublicCASSettings
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.GetPublicCASSettingsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.GetPublicCASSettingsResponse'
+  /base.CASAuthService/TestCASConnection:
+    post:
+      tags:
+        - base.CASAuthService
+      summary: 测试 CAS 连接 (需要管理权限)
+      description: 测试 CAS 连接 (需要管理权限)
+      operationId: base.CASAuthService.TestCASConnection
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.TestCASConnectionRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.TestCASConnectionResponse'
+  /base.CASAuthService/UpdateCASConfig:
+    post:
+      tags:
+        - base.CASAuthService
+      summary: 更新 CAS 配置 (需要管理权限)
+      description: 更新 CAS 配置 (需要管理权限)
+      operationId: base.CASAuthService.UpdateCASConfig
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/base.UpdateCASConfigRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/base.UpdateCASConfigResponse'
+components:
+  schemas:
+    base.CASCallbackRequest:
+      type: object
+      properties:
+        ticket:
+          type: string
+          title: ticket
+          minLength: 1
+          description: CAS 服务票据
+        service:
+          type: string
+          title: service
+          description: 原始服务 URL (用于票据验证)
+      title: CASCallbackRequest
+      additionalProperties: false
+      description: CAS 回调请求
+    base.CASCallbackResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          title: access_token
+          description: 访问令牌
+        refreshToken:
+          type: string
+          title: refresh_token
+          description: 刷新令牌
+        expiresIn:
+          type:
+            - integer
+            - string
+          title: expires_in
+          format: int64
+          description: 令牌过期时间（秒）
+        user:
+          title: user
+          description: 用户信息
+          $ref: '#/components/schemas/base.UserInfo'
+        isNewUser:
+          type: boolean
+          title: is_new_user
+          description: 是否为新创建的用户
+      title: CASCallbackResponse
+      additionalProperties: false
+      description: CAS 回调响应 (复用 LoginResponse)
+    base.CASConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          title: enabled
+          description: 是否启用 CAS 认证
+        serverUrl:
+          type: string
+          title: server_url
+          description: CAS 服务器地址
+        organization:
+          type: string
+          title: organization
+          description: Casdoor 组织名
+        application:
+          type: string
+          title: application
+          description: Casdoor 应用名
+        serviceUrl:
+          type: string
+          title: service_url
+          description: 服务 URL (回调地址)
+        defaultRole:
+          type: string
+          title: default_role
+          description: CAS 用户默认角色
+        autoCreateUser:
+          type: boolean
+          title: auto_create_user
+          description: 是否自动创建用户
+      title: CASConfig
+      additionalProperties: false
+      description: CAS 配置
+    base.CASLogoutRequest:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          title: access_token
+          description: 访问令牌 (可选，用于清除本地会话)
+      title: CASLogoutRequest
+      additionalProperties: false
+      description: CAS 登出请求
+    base.CASLogoutResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+        logoutUrl:
+          type: string
+          title: logout_url
+          description: CAS 登出 URL (用于前端重定向)
+      title: CASLogoutResponse
+      additionalProperties: false
+      description: CAS 登出响应
+    base.GetCASConfigRequest:
+      type: object
+      title: GetCASConfigRequest
+      additionalProperties: false
+      description: 获取 CAS 配置请求
+    base.GetCASConfigResponse:
+      type: object
+      properties:
+        config:
+          title: config
+          description: CAS 配置
+          $ref: '#/components/schemas/base.CASConfig'
+      title: GetCASConfigResponse
+      additionalProperties: false
+      description: 获取 CAS 配置响应
+    base.GetCASLoginURLRequest:
+      type: object
+      properties:
+        redirectUrl:
+          type: string
+          title: redirect_url
+          description: 登录成功后的重定向地址 (可选)
+      title: GetCASLoginURLRequest
+      additionalProperties: false
+      description: 获取 CAS 登录 URL 请求
+    base.GetCASLoginURLResponse:
+      type: object
+      properties:
+        loginUrl:
+          type: string
+          title: login_url
+          description: CAS 登录 URL
+        casEnabled:
+          type: boolean
+          title: cas_enabled
+          description: 是否启用 CAS
+      title: GetCASLoginURLResponse
+      additionalProperties: false
+      description: 获取 CAS 登录 URL 响应
+    base.GetPublicCASSettingsRequest:
+      type: object
+      title: GetPublicCASSettingsRequest
+      additionalProperties: false
+      description: 获取公开 CAS 设置请求
+    base.GetPublicCASSettingsResponse:
+      type: object
+      properties:
+        casEnabled:
+          type: boolean
+          title: cas_enabled
+          description: 是否启用 CAS
+        loginButtonText:
+          type: string
+          title: login_button_text
+          description: CAS 登录按钮文本 (可选)
+      title: GetPublicCASSettingsResponse
+      additionalProperties: false
+      description: 获取公开 CAS 设置响应
+    base.TestCASConnectionRequest:
+      type: object
+      properties:
+        config:
+          title: config
+          description: '可选: 使用临时配置测试 (不保存)'
+          $ref: '#/components/schemas/base.CASConfig'
+      title: TestCASConnectionRequest
+      additionalProperties: false
+      description: 测试 CAS 连接请求
+    base.TestCASConnectionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否连接成功
+        errorMessage:
+          type: string
+          title: error_message
+          description: 错误信息 (如果失败)
+        serverVersion:
+          type: string
+          title: server_version
+          description: CAS 服务器版本 (如果成功)
+      title: TestCASConnectionResponse
+      additionalProperties: false
+      description: 测试 CAS 连接响应
+    base.UpdateCASConfigRequest:
+      type: object
+      properties:
+        config:
+          title: config
+          description: CAS 配置
+          $ref: '#/components/schemas/base.CASConfig'
+      title: UpdateCASConfigRequest
+      required:
+        - config
+      additionalProperties: false
+      description: 更新 CAS 配置请求
+    base.UpdateCASConfigResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+        config:
+          title: config
+          description: 更新后的配置
+          $ref: '#/components/schemas/base.CASConfig'
+      title: UpdateCASConfigResponse
+      additionalProperties: false
+      description: 更新 CAS 配置响应
+    base.UserInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: 用户ID
+        username:
+          type: string
+          title: username
+          description: 用户名
+        nickname:
+          type: string
+          title: nickname
+          description: 昵称
+        avatar:
+          type: string
+          title: avatar
+          description: 头像URL
+        email:
+          type: string
+          title: email
+          description: 邮箱
+        phone:
+          type: string
+          title: phone
+          description: 手机号
+        roles:
+          type: array
+          items:
+            type: string
+          title: roles
+          description: 角色列表
+        permissions:
+          type: array
+          items:
+            type: string
+          title: permissions
+          description: 权限列表
+      title: UserInfo
+      additionalProperties: false
+      description: 用户信息
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+security: []
+tags:
+  - name: base.CASAuthService

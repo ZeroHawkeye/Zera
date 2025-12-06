@@ -73,6 +73,57 @@ var Registry = []APIPermission{
 	},
 
 	// ============================================
+	// CAS 认证服务
+	// ============================================
+	{
+		Procedure:   baseconnect.CASAuthServiceGetCASLoginURLProcedure,
+		IsPublic:    true,
+		RequireAuth: false,
+	},
+	{
+		Procedure:   baseconnect.CASAuthServiceCASCallbackProcedure,
+		IsPublic:    true,
+		RequireAuth: false,
+	},
+	{
+		Procedure:   baseconnect.CASAuthServiceCASLogoutProcedure,
+		RequireAuth: true,
+		IsPublic:    false,
+	},
+	{
+		Procedure:   baseconnect.CASAuthServiceGetPublicCASSettingsProcedure,
+		IsPublic:    true,
+		RequireAuth: false,
+	},
+	{
+		Procedure:   baseconnect.CASAuthServiceGetCASConfigProcedure,
+		Code:        "system_setting:read",
+		Name:        "查看 CAS 配置",
+		Description: "获取 CAS 认证配置",
+		Resource:    "system_setting",
+		Action:      "read",
+		RequireAuth: true,
+	},
+	{
+		Procedure:   baseconnect.CASAuthServiceUpdateCASConfigProcedure,
+		Code:        "system_setting:update",
+		Name:        "更新 CAS 配置",
+		Description: "修改 CAS 认证配置",
+		Resource:    "system_setting",
+		Action:      "update",
+		RequireAuth: true,
+	},
+	{
+		Procedure:   baseconnect.CASAuthServiceTestCASConnectionProcedure,
+		Code:        "system_setting:update",
+		Name:        "测试 CAS 连接",
+		Description: "测试 CAS 服务器连接",
+		Resource:    "system_setting",
+		Action:      "update",
+		RequireAuth: true,
+	},
+
+	// ============================================
 	// 用户管理服务
 	// ============================================
 	{

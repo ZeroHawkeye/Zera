@@ -43,6 +43,15 @@ func (User) Fields() []ent.Field {
 			Values("active", "inactive", "banned").
 			Default("active").
 			Comment("用户状态"),
+		field.Enum("auth_provider").
+			Values("local", "cas").
+			Default("local").
+			Comment("认证来源: local(本地), cas(CAS单点登录)"),
+		field.String("external_id").
+			Optional().
+			Nillable().
+			MaxLen(255).
+			Comment("外部系统用户ID (CAS user id)"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
@@ -80,5 +89,8 @@ func (User) Indexes() []ent.Index {
 		index.Fields("email"),
 		index.Fields("status"),
 		index.Fields("created_at"),
+		index.Fields("auth_provider"),
+		index.Fields("external_id"),
+		index.Fields("auth_provider", "external_id").Unique(),
 	}
 }

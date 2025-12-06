@@ -1,6 +1,6 @@
 import { createLazyRoute, Outlet, Link, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { Settings, Shield } from 'lucide-react'
+import { Settings, Shield, Building2 } from 'lucide-react'
 import { Menu } from 'antd'
 import type { MenuProps } from 'antd'
 
@@ -49,6 +49,11 @@ function SettingsLayout() {
       key: '/admin/settings/security',
       icon: <Shield className="w-4 h-4" />,
       label: <Link to="/admin/settings/security">安全设置</Link>,
+    },
+    {
+      key: '/admin/settings/cas',
+      icon: <Building2 className="w-4 h-4" />,
+      label: <Link to="/admin/settings/cas">CAS 单点登录</Link>,
     },
     // TODO: 实现通知设置路由
     // {

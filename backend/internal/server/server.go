@@ -168,6 +168,7 @@ func New(cfg *config.Config) (*Server, error) {
 	roleService := service.NewRoleService(db.Client)
 	auditLogService := service.NewAuditLogService(asyncLogger)
 	systemSettingService := service.NewSystemSettingService(db.Client)
+	casAuthService := service.NewCASAuthService(db.Client, jwtManager)
 
 	// 初始化默认系统设置
 	if err := systemSettingService.InitDefaultSettings(context.Background()); err != nil {
@@ -182,6 +183,7 @@ func New(cfg *config.Config) (*Server, error) {
 	auditLogHandler := handler.NewAuditLogHandler(validator, auditLogService)
 	systemSettingHandler := handler.NewSystemSettingHandler(validator, systemSettingService)
 	uploadHandler := handler.NewUploadHandler(localStorage, &cfg.Static, jwtManager, permChecker, systemSettingService)
+	casAuthHandler := handler.NewCASAuthHandler(validator, casAuthService, jwtManager)
 
 	// 创建权限拦截器（替代原来的认证拦截器）
 	permInterceptor := middleware.NewPermissionInterceptor(jwtManager, permChecker)
@@ -275,6 +277,13 @@ func New(cfg *config.Config) (*Server, error) {
 		interceptors,
 	)
 	engine.Any(systemSettingPath+"*action", gin.WrapH(systemSettingH))
+
+	// 注册 CAS 认证服务路由
+	casAuthPath, casAuthH := baseconnect.NewCASAuthServiceHandler(
+		casAuthHandler,
+		interceptors,
+	)
+	engine.Any(casAuthPath+"*action", gin.WrapH(casAuthH))
 
 	// 注册本地静态资源路由 (用于 Logo 等上传文件)
 	engine.Static("/uploads/static", cfg.Static.UploadsDir)

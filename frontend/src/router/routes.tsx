@@ -39,6 +39,13 @@ export const registerRoute = createRoute({
   },
 }).lazy(() => import('@/pages/register').then((m) => m.Route))
 
+// CAS 回调路由
+export const casCallbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/cas/callback',
+  // CAS 回调不需要 guestGuard，因为用户可能已经登录
+}).lazy(() => import('@/pages/cas/Callback').then((m) => m.Route))
+
 // ============================================
 // 后台管理路由
 // ============================================
@@ -131,6 +138,12 @@ export const securitySettingsRoute = createRoute({
   path: '/security',
 }).lazy(() => import('@/pages/admin/settings/SecuritySettings').then((m) => m.Route))
 
+// CAS 设置路由
+export const casSettingsRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: '/cas',
+}).lazy(() => import('@/pages/admin/settings/CASSettings').then((m) => m.Route))
+
 // 设置首页重定向到基础设置
 export const settingsIndexRoute = createRoute({
   getParentRoute: () => settingsRoute,
@@ -149,6 +162,7 @@ export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   registerRoute,
+  casCallbackRoute,
   adminRoute.addChildren([
     adminIndexRoute,
     usersRoute.addChildren([
@@ -166,6 +180,7 @@ export const routeTree = rootRoute.addChildren([
       settingsIndexRoute,
       generalSettingsRoute,
       securitySettingsRoute,
+      casSettingsRoute,
     ]),
   ]),
 ])

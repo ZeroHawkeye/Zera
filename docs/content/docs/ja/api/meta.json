@@ -9,6 +9,8 @@
     "base.auditlogservice",
     "---認証サービス---",
     "base.authservice",
+    "---base.CASAuthService---",
+    "base.casauthservice",
     "---ロールサービス---",
     "base.roleservice",
     "---base.SystemSettingService---",

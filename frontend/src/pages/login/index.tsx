@@ -1,8 +1,10 @@
 import { createLazyRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Card, Form, Input, Button, Checkbox, message } from 'antd'
+import { useState, useEffect } from 'react'
+import { Card, Form, Input, Button, Checkbox, message, Divider } from 'antd'
 import { Mail, Lock, Sparkles } from 'lucide-react'
 import { useAuthStore, useSiteStore } from '@/stores'
+import { CASLoginButton } from '@/components/CASLoginButton'
+import { casAuthApi } from '@/api/cas_auth'
 
 export const Route = createLazyRoute('/login')({
   component: LoginPage,
@@ -15,10 +17,29 @@ export const Route = createLazyRoute('/login')({
 function LoginPage() {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
+  const [casEnabled, setCasEnabled] = useState(false)
+  const [casButtonText, setCasButtonText] = useState('使用企业账号登录')
   const navigate = useNavigate()
   const search = useSearch({ from: '/login' })
   const login = useAuthStore((state) => state.login)
   const siteName = useSiteStore((state) => state.siteName)
+
+  // 获取 CAS 公开设置
+  useEffect(() => {
+    const fetchCASSettings = async () => {
+      try {
+        const settings = await casAuthApi.getPublicSettings()
+        setCasEnabled(settings.casEnabled)
+        if (settings.loginButtonText) {
+          setCasButtonText(settings.loginButtonText)
+        }
+      } catch (error) {
+        // CAS 设置获取失败，静默处理，不影响本地登录
+        console.debug('Failed to fetch CAS settings:', error)
+      }
+    }
+    fetchCASSettings()
+  }, [])
 
   const handleLogin = async (values: { username: string; password: string; rememberMe?: boolean }) => {
     setLoading(true)
@@ -117,6 +138,17 @@ function LoginPage() {
             </Button>
           </Form.Item>
         </Form>
+
+        {/* CAS 登录按钮 */}
+        {casEnabled && (
+          <>
+            <Divider className="!text-gray-400 !text-sm">或</Divider>
+            <CASLoginButton
+              buttonText={casButtonText}
+              redirectUrl={(search as { redirect?: string }).redirect}
+            />
+          </>
+        )}
 
         {/* 提示信息 */}
         <div className="mt-6 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">

@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+package base;
+
+import "buf/validate/validate.proto";
+import "base/login.proto"; // 引用 UserInfo 定义
+
+// ============================================
+// CAS 认证消息定义
+// ============================================
+
+// CAS 配置
+message CASConfig {
+  // 是否启用 CAS 认证
+  bool enabled = 1;
+  // CAS 服务器地址
+  string server_url = 2;
+  // Casdoor 组织名
+  string organization = 3;
+  // Casdoor 应用名
+  string application = 4;
+  // 服务 URL (回调地址)
+  string service_url = 5;
+  // CAS 用户默认角色
+  string default_role = 6;
+  // 是否自动创建用户
+  bool auto_create_user = 7;
+}
+
+// ============================================
+// 获取 CAS 登录 URL
+// ============================================
+
+// 获取 CAS 登录 URL 请求
+message GetCASLoginURLRequest {
+  // 登录成功后的重定向地址 (可选)
+  string redirect_url = 1;
+}
+
+// 获取 CAS 登录 URL 响应
+message GetCASLoginURLResponse {
+  // CAS 登录 URL
+  string login_url = 1;
+  // 是否启用 CAS
+  bool cas_enabled = 2;
+}
+
+// ============================================
+// CAS 回调处理
+// ============================================
+
+// CAS 回调请求
+message CASCallbackRequest {
+  // CAS 服务票据
+  string ticket = 1 [(buf.validate.field).string.min_len = 1];
+  // 原始服务 URL (用于票据验证)
+  string service = 2;
+}
+
+// CAS 回调响应 (复用 LoginResponse)
+message CASCallbackResponse {
+  // 访问令牌
+  string access_token = 1;
+  // 刷新令牌
+  string refresh_token = 2;
+  // 令牌过期时间（秒）
+  int64 expires_in = 3;
+  // 用户信息
+  UserInfo user = 4;
+  // 是否为新创建的用户
+  bool is_new_user = 5;
+}
+
+// ============================================
+// CAS 登出
+// ============================================
+
+// CAS 登出请求
+message CASLogoutRequest {
+  // 访问令牌 (可选，用于清除本地会话)
+  string access_token = 1;
+}
+
+// CAS 登出响应
+message CASLogoutResponse {
+  // 是否成功
+  bool success = 1;
+  // CAS 登出 URL (用于前端重定向)
+  string logout_url = 2;
+}
+
+// ============================================
+// CAS 配置管理 (管理员)
+// ============================================
+
+// 获取 CAS 配置请求
+message GetCASConfigRequest {}
+
+// 获取 CAS 配置响应
+message GetCASConfigResponse {
+  // CAS 配置
+  CASConfig config = 1;
+}
+
+// 更新 CAS 配置请求
+message UpdateCASConfigRequest {
+  // CAS 配置
+  CASConfig config = 1 [(buf.validate.field).required = true];
+}
+
+// 更新 CAS 配置响应
+message UpdateCASConfigResponse {
+  // 是否成功
+  bool success = 1;
+  // 更新后的配置
+  CASConfig config = 2;
+}
+
+// 测试 CAS 连接请求
+message TestCASConnectionRequest {
+  // 可选: 使用临时配置测试 (不保存)
+  CASConfig config = 1;
+}
+
+// 测试 CAS 连接响应
+message TestCASConnectionResponse {
+  // 是否连接成功
+  bool success = 1;
+  // 错误信息 (如果失败)
+  string error_message = 2;
+  // CAS 服务器版本 (如果成功)
+  string server_version = 3;
+}
+
+// ============================================
+// 公开设置扩展
+// ============================================
+
+// 获取公开 CAS 设置请求
+message GetPublicCASSettingsRequest {}
+
+// 获取公开 CAS 设置响应
+message GetPublicCASSettingsResponse {
+  // 是否启用 CAS
+  bool cas_enabled = 1;
+  // CAS 登录按钮文本 (可选)
+  string login_button_text = 2;
+}
+
+// ============================================
+// CAS 认证服务
+// ============================================
+
+service CASAuthService {
+  // 获取 CAS 登录 URL (公开)
+  rpc GetCASLoginURL(GetCASLoginURLRequest) returns (GetCASLoginURLResponse) {}
+  
+  // CAS 回调处理 (公开) - 验证票据并登录
+  rpc CASCallback(CASCallbackRequest) returns (CASCallbackResponse) {}
+  
+  // CAS 登出
+  rpc CASLogout(CASLogoutRequest) returns (CASLogoutResponse) {}
+  
+  // 获取公开 CAS 设置 (公开)
+  rpc GetPublicCASSettings(GetPublicCASSettingsRequest) returns (GetPublicCASSettingsResponse) {}
+  
+  // 获取 CAS 配置 (需要管理权限)
+  rpc GetCASConfig(GetCASConfigRequest) returns (GetCASConfigResponse) {}
+  
+  // 更新 CAS 配置 (需要管理权限)
+  rpc UpdateCASConfig(UpdateCASConfigRequest) returns (UpdateCASConfigResponse) {}
+  
+  // 测试 CAS 连接 (需要管理权限)
+  rpc TestCASConnection(TestCASConnectionRequest) returns (TestCASConnectionResponse) {}
+}
