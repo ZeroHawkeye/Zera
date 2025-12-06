@@ -14,9 +14,9 @@ export interface SiteState {
   siteName: string
   /** 站点描述 */
   siteDescription: string
-  /** 站点 Logo URL - TODO: 后续从后台设置获取 */
+  /** 站点 Logo URL（从后台设置获取）*/
   siteLogo: string
-  /** 站点 Favicon URL - TODO: 后续从后台设置获取 */
+  /** 站点 Favicon URL */
   siteFavicon: string
   /** 是否启用注册 */
   enableRegistration: boolean
@@ -33,9 +33,9 @@ export interface SiteState {
   refresh: () => Promise<void>
   /** 更新文档标题 */
   updateDocumentTitle: (pageTitle?: string) => void
-  /** 设置站点 Logo - TODO: 后续接入后台设置 */
+  /** 设置站点 Logo */
   setSiteLogo: (url: string) => void
-  /** 设置站点 Favicon - TODO: 后续接入后台设置 */
+  /** 设置站点 Favicon */
   setSiteFavicon: (url: string) => void
 }
 
@@ -73,15 +73,12 @@ export const useSiteStore = create<SiteState>()((set, get) => ({
       
       const siteName = response.siteName || DEFAULT_SITE_NAME
       const siteDescription = response.siteDescription || DEFAULT_SITE_DESCRIPTION
-      // TODO: 后续从响应中获取 logo 和 favicon
-      // const siteLogo = response.siteLogo || ''
-      // const siteFavicon = response.siteFavicon || ''
+      const siteLogo = response.siteLogoUrl || ''
 
       set({
         siteName,
         siteDescription,
-        // siteLogo,
-        // siteFavicon,
+        siteLogo,
         enableRegistration: response.enableRegistration,
         maintenanceMode: response.maintenanceMode,
         isLoading: false,
@@ -118,10 +115,12 @@ export const useSiteStore = create<SiteState>()((set, get) => ({
       
       const siteName = response.siteName || DEFAULT_SITE_NAME
       const siteDescription = response.siteDescription || DEFAULT_SITE_DESCRIPTION
+      const siteLogo = response.siteLogoUrl || ''
 
       set({
         siteName,
         siteDescription,
+        siteLogo,
         enableRegistration: response.enableRegistration,
         maintenanceMode: response.maintenanceMode,
         isLoading: false,

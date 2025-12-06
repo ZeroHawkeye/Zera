@@ -3,8 +3,10 @@
  * 可配置的项目 Logo，支持自定义图片或默认 Sparkles 图标
  */
 
+import { useState, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import { useSiteStore } from '@/stores'
+import { config } from '@/config'
 
 interface LogoProps {
   /** 尺寸：small(24px), medium(36px), large(48px) 或自定义数字 */
@@ -47,27 +49,48 @@ function DefaultLogo({ size, iconSize }: { size: number; iconSize: number }) {
 }
 
 /**
+ * 获取完整的 Logo URL
+ */
+function getFullLogoUrl(url: string): string {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  return `${config.apiBaseUrl}${url}`
+}
+
+/**
  * Logo 组件
  * 支持自定义图片 URL（从后台设置获取）或使用默认 Sparkles 图标
  */
 export function Logo({ size = 'medium', className = '', iconOnly = false }: LogoProps) {
   const siteName = useSiteStore((state) => state.siteName)
-  // TODO: 后续从后台设置获取 logo URL
   const logoUrl = useSiteStore((state) => state.siteLogo)
+  const [imageError, setImageError] = useState(false)
   
   const sizeValue = typeof size === 'number' ? size : SIZE_MAP[size]
   const iconSizeValue = typeof size === 'number' ? Math.round(size * 0.55) : ICON_SIZE_MAP[size]
+
+  const fullLogoUrl = getFullLogoUrl(logoUrl)
+
+  // 当 logoUrl 变化时重置错误状态
+  useEffect(() => {
+    setImageError(false)
+  }, [logoUrl])
+
+  const showCustomLogo = fullLogoUrl && !imageError
   
-  if (logoUrl) {
+  if (showCustomLogo) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         <img
-          src={logoUrl}
+          src={fullLogoUrl}
           alt={siteName}
           width={sizeValue}
           height={sizeValue}
           className="rounded-xl object-contain"
           style={{ width: sizeValue, height: sizeValue }}
+          onError={() => setImageError(true)}
         />
         {!iconOnly && (
           <span className="text-xl font-bold text-gray-900 dark:text-white">

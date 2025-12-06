@@ -6,6 +6,7 @@ import { systemSettingApi, type UpdateSettingsParams } from '@/api/system_settin
 import { roleApi } from '@/api/role'
 import { useSiteStore } from '@/stores'
 import { useState, useEffect } from 'react'
+import { LogoUpload } from '@/components'
 
 export const Route = createLazyRoute('/admin/settings/general')({
   component: GeneralSettings,
@@ -17,6 +18,8 @@ export const Route = createLazyRoute('/admin/settings/general')({
 interface FormValues {
   siteName: string
   siteDescription: string
+  siteLogoUrl: string
+  siteLogoType: string
   enableRegistration: boolean
   maintenanceMode: boolean
   defaultRegisterRole: string
@@ -31,6 +34,10 @@ function GeneralSettings() {
   const { token } = theme.useToken()
   const [hasChanges, setHasChanges] = useState(false)
   const refreshSiteSettings = useSiteStore((state) => state.refresh)
+
+  // 监听表单中 Logo 相关字段的变化
+  const siteLogoUrl = Form.useWatch('siteLogoUrl', form)
+  const siteLogoType = Form.useWatch('siteLogoType', form)
 
   // 获取系统设置
   const { data, isLoading, error, refetch } = useQuery({
@@ -66,6 +73,8 @@ function GeneralSettings() {
       form.setFieldsValue({
         siteName: data.settings.general?.siteName ?? 'Zera',
         siteDescription: data.settings.general?.siteDescription ?? '',
+        siteLogoUrl: data.settings.general?.siteLogoUrl ?? '',
+        siteLogoType: data.settings.general?.siteLogoType ?? 'default',
         enableRegistration: data.settings.features?.enableRegistration ?? true,
         maintenanceMode: data.settings.features?.maintenanceMode ?? false,
         defaultRegisterRole: data.settings.features?.defaultRegisterRole ?? 'user',
@@ -99,12 +108,27 @@ function GeneralSettings() {
       form.setFieldsValue({
         siteName: data.settings.general?.siteName ?? 'Zera',
         siteDescription: data.settings.general?.siteDescription ?? '',
+        siteLogoUrl: data.settings.general?.siteLogoUrl ?? '',
+        siteLogoType: data.settings.general?.siteLogoType ?? 'default',
         enableRegistration: data.settings.features?.enableRegistration ?? true,
         maintenanceMode: data.settings.features?.maintenanceMode ?? false,
         defaultRegisterRole: data.settings.features?.defaultRegisterRole ?? 'user',
       })
       setHasChanges(false)
     }
+  }
+
+  // 处理 Logo 变化
+  const handleLogoChange = async (url: string, type: string) => {
+    form.setFieldsValue({
+      siteLogoUrl: url,
+      siteLogoType: type,
+    })
+    setHasChanges(true)
+    // Logo 上传后刷新缓存和全局站点设置
+    queryClient.invalidateQueries({ queryKey: ['systemSettings'] })
+    queryClient.invalidateQueries({ queryKey: ['publicSettings'] })
+    await refreshSiteSettings()
   }
 
   // 角色选项
@@ -168,13 +192,26 @@ function GeneralSettings() {
                 name="siteDescription"
                 label="站点描述"
                 extra="用于 SEO 和站点介绍"
-                className="mb-0"
               >
                 <Input.TextArea
                   rows={3}
                   placeholder="请输入站点描述"
                   maxLength={500}
                   showCount
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="站点 Logo"
+                extra="自定义站点 Logo，将显示在导航栏和侧边栏"
+                className="mb-0"
+              >
+                <Form.Item name="siteLogoUrl" hidden><Input /></Form.Item>
+                <Form.Item name="siteLogoType" hidden><Input /></Form.Item>
+                <LogoUpload
+                  value={siteLogoUrl}
+                  logoType={siteLogoType}
+                  onChange={handleLogoChange}
                 />
               </Form.Item>
             </>

@@ -31,7 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+| Principle | Checkpoint | Status |
+|-----------|------------|--------|
+| I. Protocol-First | Proto 定义是否已完成？API 契约是否明确？ | ⬜ |
+| II. Type Safety | 是否避免了 `any` 类型？类型定义是否完整？ | ⬜ |
+| III. Schema Alignment | Proto/Ent/Handler/Frontend 是否同步？权限是否注册？ | ⬜ |
+| IV. Low Coupling | 是否遵循依赖注入？是否存在循环依赖？ | ⬜ |
+| V. Modern UI/UX | UI 是否支持双主题？是否适配移动端？ | ⬜ |
 
 ## Project Structure
 

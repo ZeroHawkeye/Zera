@@ -17,6 +17,7 @@ type Config struct {
 	Admin     AdminConfig     `toml:"admin"`
 	JWT       JWTConfig       `toml:"jwt"`
 	Storage   StorageConfig   `toml:"storage"`
+	Static    StaticConfig    `toml:"static"`
 	Log       LogConfig       `toml:"log"`
 	Telemetry TelemetryConfig `toml:"telemetry"`
 }
@@ -117,6 +118,12 @@ type StorageConfig struct {
 	UsePathStyle bool   `toml:"use_path_style"` // 是否使用路径样式（非虚拟主机样式）
 }
 
+// StaticConfig 本地静态资源配置
+type StaticConfig struct {
+	UploadsDir    string `toml:"uploads_dir"`     // 上传目录路径
+	MaxUploadSize int64  `toml:"max_upload_size"` // 最大上传大小（字节）
+}
+
 // DSN 返回 PostgreSQL 连接字符串
 func (d *DatabaseConfig) DSN() string {
 	return fmt.Sprintf(
@@ -161,6 +168,10 @@ func defaultConfig() *Config {
 			Bucket:       "zera",
 			Region:       "us-east-1",
 			UsePathStyle: true,
+		},
+		Static: StaticConfig{
+			UploadsDir:    "./uploads/static",
+			MaxUploadSize: 2097152, // 2MB
 		},
 		Log: LogConfig{
 			Level:          "info",
@@ -335,6 +346,14 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if usePathStyle := os.Getenv("STORAGE_USE_PATH_STYLE"); usePathStyle != "" {
 		cfg.Storage.UsePathStyle = usePathStyle == "true" || usePathStyle == "1"
+	}
+
+	// Static 配置
+	if uploadsDir := os.Getenv("STATIC_UPLOADS_DIR"); uploadsDir != "" {
+		cfg.Static.UploadsDir = uploadsDir
+	}
+	if maxUploadSize := getEnvInt64("STATIC_MAX_UPLOAD_SIZE"); maxUploadSize != 0 {
+		cfg.Static.MaxUploadSize = maxUploadSize
 	}
 
 	// Log 配置

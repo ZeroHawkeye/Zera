@@ -24,14 +24,15 @@ import (
 
 // Server HTTP 服务器
 type Server struct {
-	config         *config.Config
-	engine         *gin.Engine
-	db             *database.Database
-	storage        *storage.Storage
-	auditLogger    *logger.AsyncLogger
-	globalLogger   *logger.GlobalLogger
-	otelProvider   *telemetry.Provider
-	otelLoggerSet  *telemetry.LoggerSet
+	config        *config.Config
+	engine        *gin.Engine
+	db            *database.Database
+	storage       *storage.Storage
+	localStorage  *static.LocalStorage
+	auditLogger   *logger.AsyncLogger
+	globalLogger  *logger.GlobalLogger
+	otelProvider  *telemetry.Provider
+	otelLoggerSet *telemetry.LoggerSet
 }
 
 // New 创建服务器实例
@@ -131,6 +132,19 @@ func New(cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to ensure storage bucket: %w", err)
 	}
 
+	// 初始化本地静态资源存储
+	localStorage, err := static.NewLocalStorage(&cfg.Static)
+	if err != nil {
+		db.Close()
+		storageClient.Close()
+		return nil, fmt.Errorf("failed to init local storage: %w", err)
+	}
+
+	// 确保 Logo 目录存在
+	if err := localStorage.EnsureLogoDir(); err != nil {
+		logger.Warn("failed to ensure logo directory", "error", err)
+	}
+
 	// 创建验证器
 	validator, err := protovalidate.New()
 	if err != nil {
@@ -167,6 +181,7 @@ func New(cfg *config.Config) (*Server, error) {
 	roleHandler := handler.NewRoleHandler(validator, roleService)
 	auditLogHandler := handler.NewAuditLogHandler(validator, auditLogService)
 	systemSettingHandler := handler.NewSystemSettingHandler(validator, systemSettingService)
+	uploadHandler := handler.NewUploadHandler(localStorage, &cfg.Static, jwtManager, permChecker, systemSettingService)
 
 	// 创建权限拦截器（替代原来的认证拦截器）
 	permInterceptor := middleware.NewPermissionInterceptor(jwtManager, permChecker)
@@ -261,6 +276,14 @@ func New(cfg *config.Config) (*Server, error) {
 	)
 	engine.Any(systemSettingPath+"*action", gin.WrapH(systemSettingH))
 
+	// 注册本地静态资源路由 (用于 Logo 等上传文件)
+	engine.Static("/uploads/static", cfg.Static.UploadsDir)
+
+	// 注册上传 API 路由
+	api := engine.Group("/api")
+	api.POST("/upload/logo", uploadHandler.UploadLogo)
+	api.DELETE("/upload/logo", uploadHandler.DeleteLogo)
+
 	// 注册 SPA 静态资源（生产环境）
 	// 开发环境下 dist 目录可能不存在或为空，会优雅降级
 	if frontendFS, err := static.GetFrontendFS(); err == nil {
@@ -272,14 +295,15 @@ func New(cfg *config.Config) (*Server, error) {
 	logger.Info("server initialized successfully")
 
 	return &Server{
-		config:         cfg,
-		engine:         engine,
-		db:             db,
-		storage:        storageClient,
-		auditLogger:    asyncLogger,
-		globalLogger:   globalLogger,
-		otelProvider:   otelProvider,
-		otelLoggerSet:  otelLoggerSet,
+		config:        cfg,
+		engine:        engine,
+		db:            db,
+		storage:       storageClient,
+		localStorage:  localStorage,
+		auditLogger:   asyncLogger,
+		globalLogger:  globalLogger,
+		otelProvider:  otelProvider,
+		otelLoggerSet: otelLoggerSet,
 	}, nil
 }
 

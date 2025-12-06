@@ -21,3 +21,4 @@ backend/ent/permission/
 *.exe
 Docker/signoz
 github/
+specs/

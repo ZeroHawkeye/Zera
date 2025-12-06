@@ -15,6 +15,8 @@ const (
 	// 通用设置
 	SettingKeySiteName        = "site_name"
 	SettingKeySiteDescription = "site_description"
+	SettingKeySiteLogoType    = "site_logo_type" // Logo 类型: "default" | "custom"
+	SettingKeySiteLogoPath    = "site_logo_path" // 自定义 Logo 相对路径
 
 	// 功能开关
 	SettingKeyEnableRegistration  = "enable_registration"
@@ -47,6 +49,8 @@ var defaultSettings = map[string]struct {
 }{
 	SettingKeySiteName:            {"Zera", "string", SettingGroupGeneral, "站点名称"},
 	SettingKeySiteDescription:     {"Zera 管理系统", "string", SettingGroupGeneral, "站点描述"},
+	SettingKeySiteLogoType:        {"default", "string", SettingGroupGeneral, "Logo 类型: default 或 custom"},
+	SettingKeySiteLogoPath:        {"", "string", SettingGroupGeneral, "自定义 Logo 相对路径"},
 	SettingKeyEnableRegistration:  {"true", "bool", SettingGroupFeature, "允许新用户自行注册账号"},
 	SettingKeyMaintenanceMode:     {"false", "bool", SettingGroupFeature, "开启后普通用户将无法访问系统"},
 	SettingKeyDefaultRegisterRole: {"user", "string", SettingGroupFeature, "新注册用户的默认角色"},
@@ -125,11 +129,21 @@ func (s *SystemSettingService) GetAllSettings(ctx context.Context) (*base.GetSys
 		})
 	}
 
+	// 构建 Logo URL
+	logoType := getOrDefault(settingsMap, SettingKeySiteLogoType, "default")
+	logoPath := getOrDefault(settingsMap, SettingKeySiteLogoPath, "")
+	logoURL := ""
+	if logoType == "custom" && logoPath != "" {
+		logoURL = "/uploads/static/" + logoPath
+	}
+
 	return &base.GetSystemSettingsResponse{
 		Settings: &base.SystemSettings{
 			General: &base.GeneralSettings{
 				SiteName:        getOrDefault(settingsMap, SettingKeySiteName, "Zera"),
 				SiteDescription: getOrDefault(settingsMap, SettingKeySiteDescription, "Zera 管理系统"),
+				SiteLogoType:    logoType,
+				SiteLogoUrl:     logoURL,
 			},
 			Features: &base.FeatureSettings{
 				EnableRegistration:  parseBool(getOrDefault(settingsMap, SettingKeyEnableRegistration, "true")),
@@ -236,11 +250,20 @@ func (s *SystemSettingService) GetPublicSettings(ctx context.Context) (*base.Get
 		settingsMap[setting.Key] = setting.Value
 	}
 
+	// 构建 Logo URL
+	logoType := getOrDefault(settingsMap, SettingKeySiteLogoType, "default")
+	logoPath := getOrDefault(settingsMap, SettingKeySiteLogoPath, "")
+	logoURL := ""
+	if logoType == "custom" && logoPath != "" {
+		logoURL = "/uploads/static/" + logoPath
+	}
+
 	return &base.GetPublicSettingsResponse{
 		SiteName:           getOrDefault(settingsMap, SettingKeySiteName, "Zera"),
 		SiteDescription:    getOrDefault(settingsMap, SettingKeySiteDescription, "Zera 管理系统"),
 		EnableRegistration: parseBool(getOrDefault(settingsMap, SettingKeyEnableRegistration, "true")),
 		MaintenanceMode:    parseBool(getOrDefault(settingsMap, SettingKeyMaintenanceMode, "false")),
+		SiteLogoUrl:        logoURL,
 	}, nil
 }
 
@@ -298,6 +321,49 @@ func (s *SystemSettingService) GetDefaultRegisterRole(ctx context.Context) (stri
 		return "", err
 	}
 	return setting.Value, nil
+}
+
+// UpdateLogoSettings 更新 Logo 设置
+func (s *SystemSettingService) UpdateLogoSettings(ctx context.Context, logoType, logoPath string) error {
+	// 更新 Logo 类型
+	if err := s.updateSetting(ctx, SettingKeySiteLogoType, logoType, "string", SettingGroupGeneral); err != nil {
+		return err
+	}
+
+	// 更新 Logo 路径
+	if err := s.updateSetting(ctx, SettingKeySiteLogoPath, logoPath, "string", SettingGroupGeneral); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetLogoSettings 获取 Logo 设置
+func (s *SystemSettingService) GetLogoSettings(ctx context.Context) (logoType, logoPath string, err error) {
+	settings, err := s.client.SystemSetting.Query().
+		Where(
+			systemsetting.KeyIn(SettingKeySiteLogoType, SettingKeySiteLogoPath),
+		).
+		All(ctx)
+	if err != nil {
+		return "", "", err
+	}
+
+	for _, setting := range settings {
+		switch setting.Key {
+		case SettingKeySiteLogoType:
+			logoType = setting.Value
+		case SettingKeySiteLogoPath:
+			logoPath = setting.Value
+		}
+	}
+
+	// 默认值
+	if logoType == "" {
+		logoType = "default"
+	}
+
+	return logoType, logoPath, nil
 }
 
 // updateSetting 更新单个设置

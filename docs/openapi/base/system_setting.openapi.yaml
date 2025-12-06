@@ -145,6 +145,14 @@ components:
           type: string
           title: site_description
           description: 站点描述
+        siteLogoType:
+          type: string
+          title: site_logo_type
+          description: 'Logo 类型: "default" | "custom"'
+        siteLogoUrl:
+          type: string
+          title: site_logo_url
+          description: Logo 访问 URL（完整路径）
       title: GeneralSettings
       additionalProperties: false
       description: 通用设置
@@ -172,6 +180,10 @@ components:
           type: boolean
           title: maintenance_mode
           description: 是否处于维护模式
+        siteLogoUrl:
+          type: string
+          title: site_logo_url
+          description: Logo 访问 URL
       title: GetPublicSettingsResponse
       additionalProperties: false
       description: 获取公开设置响应

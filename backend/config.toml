@@ -42,6 +42,13 @@ bucket = "zera"
 region = "us-east-1"
 use_path_style = true
 
+[static]
+# 本地静态资源配置（独立于对象存储）
+# 上传目录路径（相对于工作目录）
+uploads_dir = "./uploads/static"
+# 最大上传文件大小（字节），默认 2MB
+max_upload_size = 2097152
+
 [log]
 # 日志配置
 # 日志级别: debug, info, warn, error

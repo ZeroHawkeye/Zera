@@ -6,6 +6,7 @@
 
 import { useEffect, useCallback } from 'react'
 import { useSiteStore } from '@/stores'
+import { config } from '@/config'
 
 /** 默认 Favicon - 使用 Sparkles 图标样式 */
 const DEFAULT_FAVICON_SVG = `
@@ -31,13 +32,13 @@ function svgToDataUrl(svg: string): string {
 function updateFavicon(url: string): void {
   // 获取或创建 link 元素
   let link = document.querySelector<HTMLLinkElement>("link[rel*='icon']")
-  
+
   if (!link) {
     link = document.createElement('link')
     link.rel = 'icon'
     document.head.appendChild(link)
   }
-  
+
   link.type = url.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/x-icon'
   link.href = url
 }
@@ -55,18 +56,24 @@ function updateFavicon(url: string): void {
  * ```
  */
 export function useFavicon(): void {
-  // TODO: 后续从后台设置获取 favicon URL
+  // 优先使用 siteFavicon，如果没有则使用 siteLogo
   const faviconUrl = useSiteStore((state) => state.siteFavicon)
-  
+  const logoUrl = useSiteStore((state) => state.siteLogo)
+
   useEffect(() => {
-    if (faviconUrl) {
-      // 使用自定义 favicon
-      updateFavicon(faviconUrl)
+    const iconUrl = faviconUrl || logoUrl
+    if (iconUrl) {
+      // 使用自定义 favicon/logo
+      // 如果是相对路径，需要添加 API 基础地址
+      const fullUrl = iconUrl.startsWith('http')
+        ? iconUrl
+        : `${config.apiBaseUrl}${iconUrl}`
+      updateFavicon(fullUrl)
     } else {
       // 使用默认 SVG favicon
       updateFavicon(svgToDataUrl(DEFAULT_FAVICON_SVG))
     }
-  }, [faviconUrl])
+  }, [faviconUrl, logoUrl])
 }
 
 /**
@@ -90,11 +97,11 @@ export function useFaviconActions() {
   const setFavicon = useCallback((url: string) => {
     updateFavicon(url)
   }, [])
-  
+
   const resetFavicon = useCallback(() => {
     updateFavicon(svgToDataUrl(DEFAULT_FAVICON_SVG))
   }, [])
-  
+
   return {
     /** 设置自定义 favicon URL */
     setFavicon,

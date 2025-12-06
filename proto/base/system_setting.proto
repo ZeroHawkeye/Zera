@@ -30,6 +30,10 @@ message GeneralSettings {
   string site_name = 1;
   // 站点描述
   string site_description = 2;
+  // Logo 类型: "default" | "custom"
+  string site_logo_type = 3;
+  // Logo 访问 URL（完整路径）
+  string site_logo_url = 4;
 }
 
 // 功能开关设置
@@ -123,6 +127,8 @@ message GetPublicSettingsResponse {
   bool enable_registration = 3;
   // 是否处于维护模式
   bool maintenance_mode = 4;
+  // Logo 访问 URL
+  string site_logo_url = 5;
 }
 
 // ============================================
