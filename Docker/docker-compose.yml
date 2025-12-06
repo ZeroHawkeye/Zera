@@ -1,5 +1,78 @@
+# ========== 通用配置 ==========
+x-common: &common
+  networks:
+    - zera_network
+  restart: unless-stopped
+  logging:
+    options:
+      max-size: 50m
+      max-file: "3"
+
+x-clickhouse-defaults: &clickhouse-defaults
+  <<: *common
+  image: clickhouse/clickhouse-server:25.5.6
+  tty: true
+  profiles:
+    - observability
+  labels:
+    signoz.io/scrape: "true"
+    signoz.io/port: "9363"
+    signoz.io/path: "/metrics"
+  depends_on:
+    signoz-init-clickhouse:
+      condition: service_completed_successfully
+    signoz-zookeeper:
+      condition: service_healthy
+  healthcheck:
+    test:
+      - CMD
+      - wget
+      - --spider
+      - -q
+      - 0.0.0.0:8123/ping
+    interval: 30s
+    timeout: 5s
+    retries: 3
+  ulimits:
+    nproc: 65535
+    nofile:
+      soft: 262144
+      hard: 262144
+  environment:
+    - CLICKHOUSE_SKIP_USER_SETUP=1
+
+x-zookeeper-defaults: &zookeeper-defaults
+  <<: *common
+  image: signoz/zookeeper:3.7.1
+  user: root
+  profiles:
+    - observability
+  labels:
+    signoz.io/scrape: "true"
+    signoz.io/port: "9141"
+    signoz.io/path: "/metrics"
+  healthcheck:
+    test:
+      - CMD-SHELL
+      - curl -s -m 2 http://localhost:8080/commands/ruok | grep error | grep null
+    interval: 30s
+    timeout: 5s
+    retries: 3
+
+x-db-depend: &db-depend
+  <<: *common
+  profiles:
+    - observability
+  depends_on:
+    signoz-clickhouse:
+      condition: service_healthy
+    signoz-schema-migrator-sync:
+      condition: service_completed_successfully
+
 services:
-  # pg数据库
+  # ========== 基础服务 ==========
+
+  # PostgreSQL 数据库
   postgres:
     image: postgres:18
     container_name: zera_db
@@ -16,7 +89,7 @@ services:
     networks:
       - zera_network
 
-  # rustfs对象存储
+  # RustFS 对象存储 (S3 兼容)
   rustfs:
     image: rustfs/rustfs:latest
     container_name: zera_rustfs
@@ -25,13 +98,11 @@ services:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-zera}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-zera}
       RUSTFS_CONSOLE_ENABLE: true
-      # RUSTFS_SERVER_DOMAINS: ${RUSTFS_SERVER_DOMAINS:-example.com}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console
     volumes:
       - ./data/rustfs:/data
-    # --server-domains ${RUSTFS_SERVER_DOMAINS:-example.com}
     command: >
       --address :9000
       --console-enable
@@ -40,7 +111,155 @@ services:
     networks:
       - zera_network
 
+  # ========== SigNoz 可观测性平台 (可选) ==========
+  # 启用方式: docker compose --profile observability up -d
+  # 版本: SigNoz v0.104.0, OTEL Collector v0.129.12, ClickHouse 25.5.6
+
+  # ClickHouse 初始化 (下载 histogramQuantile 二进制)
+  signoz-init-clickhouse:
+    <<: *common
+    image: clickhouse/clickhouse-server:25.5.6
+    container_name: zera_signoz_init_clickhouse
+    profiles:
+      - observability
+    command:
+      - bash
+      - -c
+      - |
+        version="v0.0.1"
+        node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
+        node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
+        echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
+        cd /tmp
+        wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
+        tar -xvzf histogram-quantile.tar.gz
+        mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
+    restart: on-failure
+    volumes:
+      - ./signoz/deploy/common/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+
+  # Zookeeper (ClickHouse 分布式协调)
+  signoz-zookeeper:
+    <<: *zookeeper-defaults
+    container_name: zera_signoz_zookeeper
+    volumes:
+      - signoz-zookeeper:/bitnami/zookeeper
+    environment:
+      - ZOO_SERVER_ID=1
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_AUTOPURGE_INTERVAL=1
+      - ZOO_ENABLE_PROMETHEUS_METRICS=yes
+      - ZOO_PROMETHEUS_METRICS_PORT_NUMBER=9141
+
+  # ClickHouse 数据存储
+  signoz-clickhouse:
+    <<: *clickhouse-defaults
+    container_name: zera_signoz_clickhouse
+    ports:
+      - "9100:9000"   # Native protocol (避免与 RustFS 9000 端口冲突)
+      - "8123:8123"   # HTTP interface
+    volumes:
+      - ./signoz/deploy/common/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      - ./signoz/deploy/common/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      - ./signoz/deploy/common/clickhouse/custom-function.xml:/etc/clickhouse-server/custom-function.xml
+      - ./signoz/deploy/common/clickhouse/user_scripts:/var/lib/clickhouse/user_scripts/
+      - ./signoz/deploy/common/clickhouse/cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+      - signoz-clickhouse:/var/lib/clickhouse/
+
+  # SigNoz 主服务 (包含 Query Service + Frontend + Alertmanager)
+  signoz:
+    <<: *db-depend
+    image: signoz/signoz:${SIGNOZ_VERSION:-v0.104.0}
+    container_name: zera_signoz
+    command:
+      - --config=/root/config/prometheus.yml
+    ports:
+      - "8080:8080"   # SigNoz UI + API
+    volumes:
+      - ./signoz/deploy/common/signoz/prometheus.yml:/root/config/prometheus.yml
+      - ./signoz/deploy/common/dashboards:/root/config/dashboards
+      - signoz-sqlite:/var/lib/signoz/
+    environment:
+      - SIGNOZ_ALERTMANAGER_PROVIDER=signoz
+      - SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN=tcp://signoz-clickhouse:9000
+      - SIGNOZ_SQLSTORE_SQLITE_PATH=/var/lib/signoz/signoz.db
+      - DASHBOARDS_PATH=/root/config/dashboards
+      - STORAGE=clickhouse
+      - GODEBUG=netdns=go
+      - TELEMETRY_ENABLED=true
+      - DEPLOYMENT_TYPE=docker-standalone-amd
+      - DOT_METRICS_ENABLED=true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - localhost:8080/api/v1/health
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # SigNoz OpenTelemetry Collector
+  signoz-otel-collector:
+    <<: *db-depend
+    image: signoz/signoz-otel-collector:${SIGNOZ_OTELCOL_VERSION:-v0.129.12}
+    container_name: zera_signoz_otel_collector
+    command:
+      - --config=/etc/otel-collector-config.yaml
+      - --manager-config=/etc/manager-config.yaml
+      - --copy-path=/var/tmp/collector-config.yaml
+      - --feature-gates=-pkg.translator.prometheus.NormalizeName
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./signoz/deploy/common/signoz/otel-collector-opamp-config.yaml:/etc/manager-config.yaml
+    environment:
+      - OTEL_RESOURCE_ATTRIBUTES=host.name=signoz-host,os.type=linux
+      - LOW_CARDINAL_EXCEPTION_GROUPING=false
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    depends_on:
+      signoz:
+        condition: service_healthy
+
+  # Schema Migrator (同步迁移)
+  signoz-schema-migrator-sync:
+    <<: *common
+    image: signoz/signoz-schema-migrator:${SIGNOZ_OTELCOL_VERSION:-v0.129.12}
+    container_name: zera_signoz_schema_migrator_sync
+    profiles:
+      - observability
+    command:
+      - sync
+      - --dsn=tcp://signoz-clickhouse:9000
+      - --up=
+    depends_on:
+      signoz-clickhouse:
+        condition: service_healthy
+    restart: on-failure
+
+  # Schema Migrator (异步迁移)
+  signoz-schema-migrator-async:
+    <<: *db-depend
+    image: signoz/signoz-schema-migrator:${SIGNOZ_OTELCOL_VERSION:-v0.129.12}
+    container_name: zera_signoz_schema_migrator_async
+    command:
+      - async
+      - --dsn=tcp://signoz-clickhouse:9000
+      - --up=
+    restart: on-failure
+
 # 网络
 networks:
   zera_network:
     driver: bridge
+
+# 数据卷
+volumes:
+  signoz-clickhouse:
+    name: zera_signoz_clickhouse
+  signoz-sqlite:
+    name: zera_signoz_sqlite
+  signoz-zookeeper:
+    name: zera_signoz_zookeeper

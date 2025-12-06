@@ -13,6 +13,7 @@
 ### Docker 服务 (`Docker/docker-compose.yml`)
 - **PostgreSQL 数据库**: 端口 5432，用户/密码/数据库名通过环境变量配置
 - **RustFS 对象存储**: S3 兼容协议，API 端口 9000，控制台端口 9001
+- **SigNoz 可观测性平台** (可选): 日志、追踪、指标收集
 
 ### RustFS 对象存储
 - **控制台地址**: http://localhost:9001/
@@ -31,6 +32,82 @@
 - **存储客户端**: `frontend/src/api/storage.ts`
 - **使用方式**: `import { storage } from '@/api/storage'`
 - **环境变量**: `VITE_STORAGE_ENDPOINT`, `VITE_STORAGE_ACCESS_KEY`, `VITE_STORAGE_SECRET_KEY`, `VITE_STORAGE_BUCKET`, `VITE_STORAGE_REGION`
+
+### SigNoz 可观测性平台 (可选)
+SigNoz 是一个开源的 APM 和可观测性平台，提供日志、追踪和指标的统一视图。
+
+#### 启用方式
+```bash
+# 启动所有服务（包含 SigNoz）
+docker compose --profile observability up -d
+
+# 仅启动基础服务（不含 SigNoz）
+docker compose up -d
+
+# 停止 SigNoz 相关服务
+docker compose --profile observability down
+```
+
+#### 服务端口
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| SigNoz UI + API | 8080 | Web 界面和查询 API |
+| OTLP gRPC | 4317 | OpenTelemetry gRPC 接收器 |
+| OTLP HTTP | 4318 | OpenTelemetry HTTP 接收器 |
+| ClickHouse Native | 9100 | 数据库原生协议 (映射，避免与 RustFS 冲突) |
+| ClickHouse HTTP | 8123 | 数据库 HTTP 接口 |
+
+#### 镜像版本 (更新于 2025-12-06)
+| 镜像 | 版本 | 说明 |
+|------|------|------|
+| signoz/signoz | v0.104.0 | 统一服务 (query + frontend + alertmanager) |
+| signoz/signoz-otel-collector | v0.129.12 | OpenTelemetry 收集器 |
+| signoz/signoz-schema-migrator | v0.129.12 | 数据库 Schema 迁移工具 |
+| signoz/zookeeper | 3.7.1 | ClickHouse 分布式协调 |
+| clickhouse/clickhouse-server | 25.5.6 | 时序数据库 |
+
+#### 环境变量
+- `SIGNOZ_VERSION`: SigNoz 主服务版本 (默认: `v0.104.0`)
+- `SIGNOZ_OTELCOL_VERSION`: OTEL Collector 版本 (默认: `v0.129.12`)
+
+#### 服务架构
+```
+┌──────────────────────────────────────────────────────────────┐
+│                       用户应用                                │
+│              (发送 OTLP 数据到 4317/4318)                     │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│              signoz-otel-collector (4317/4318)               │
+│                   OpenTelemetry Collector                     │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│                 signoz-clickhouse (9100/8123)                │
+│                      ClickHouse 存储                          │
+│                    (依赖 signoz-zookeeper)                    │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│                      signoz (8080)                           │
+│              Query Service + Frontend + Alertmanager          │
+└──────────────────────────────────────────────────────────────┘
+```
+
+#### 应用集成
+后端服务可通过 OpenTelemetry SDK 发送数据到 SigNoz：
+- **gRPC 端点**: `localhost:4317`
+- **HTTP 端点**: `localhost:4318`
+- **SigNoz UI**: `http://localhost:8080`
+
+示例环境变量配置：
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+OTEL_SERVICE_NAME=zera-backend
+```
 
 ## 前端开发规则
 - 使用`bun add|remove <package>`进行依赖的添加与管理
