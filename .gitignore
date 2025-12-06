@@ -19,3 +19,4 @@ backend/ent/role/
 backend/ent/permission/
 .idea/
 *.exe
+Docker/signoz
