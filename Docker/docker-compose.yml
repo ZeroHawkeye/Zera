@@ -174,7 +174,7 @@ services:
     command:
       - --config=/root/config/prometheus.yml
     ports:
-      - "8080:8080"   # SigNoz UI + API
+      - "${SIGNOZ_UI_PORT:-18080}:8080"   # SigNoz UI + API (默认 18080)
     volumes:
       - ./signoz/deploy/common/signoz/prometheus.yml:/root/config/prometheus.yml
       - ./signoz/deploy/common/dashboards:/root/config/dashboards

@@ -51,11 +51,15 @@ docker compose --profile observability down
 #### 服务端口
 | 服务 | 端口 | 说明 |
 |------|------|------|
-| SigNoz UI + API | 8080 | Web 界面和查询 API |
+| SigNoz UI + API | 18080 (可配置) | Web 界面和查询 API |
 | OTLP gRPC | 4317 | OpenTelemetry gRPC 接收器 |
 | OTLP HTTP | 4318 | OpenTelemetry HTTP 接收器 |
 | ClickHouse Native | 9100 | 数据库原生协议 (映射，避免与 RustFS 冲突) |
 | ClickHouse HTTP | 8123 | 数据库 HTTP 接口 |
+
+#### 用户凭证
+- **用户名**: `166997982@qq.com`
+- **密码**: `012359Clown@`
 
 #### 镜像版本 (更新于 2025-12-06)
 | 镜像 | 版本 | 说明 |
@@ -69,6 +73,7 @@ docker compose --profile observability down
 #### 环境变量
 - `SIGNOZ_VERSION`: SigNoz 主服务版本 (默认: `v0.104.0`)
 - `SIGNOZ_OTELCOL_VERSION`: OTEL Collector 版本 (默认: `v0.129.12`)
+- `SIGNOZ_UI_PORT`: SigNoz UI 端口 (默认: `18080`)
 
 #### 服务架构
 ```
@@ -92,7 +97,7 @@ docker compose --profile observability down
                               │
                               ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                      signoz (8080)                           │
+│                     signoz (18080)                           │
 │              Query Service + Frontend + Alertmanager          │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -101,7 +106,7 @@ docker compose --profile observability down
 后端服务可通过 OpenTelemetry SDK 发送数据到 SigNoz：
 - **gRPC 端点**: `localhost:4317`
 - **HTTP 端点**: `localhost:4318`
-- **SigNoz UI**: `http://localhost:8080`
+- **SigNoz UI**: `http://localhost:18080` (可通过 `SIGNOZ_UI_PORT` 环境变量修改)
 
 示例环境变量配置：
 ```bash
