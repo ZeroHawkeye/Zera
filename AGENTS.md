@@ -114,6 +114,55 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 OTEL_SERVICE_NAME=zera-backend
 ```
 
+#### 内网/离线部署 (Air-gapped Deployment)
+SigNoz 默认会加载一些外部资源，内网部署需要以下准备工作：
+
+**1. 预下载 Docker 镜像**
+```bash
+# 在有网络的机器上拉取镜像
+docker pull signoz/signoz:v0.104.0
+docker pull signoz/signoz-otel-collector:v0.129.12
+docker pull signoz/signoz-schema-migrator:v0.129.12
+docker pull signoz/zookeeper:3.7.1
+docker pull clickhouse/clickhouse-server:25.5.6
+
+# 导出镜像
+docker save signoz/signoz:v0.104.0 -o signoz.tar
+# ... 其他镜像同理
+
+# 在内网机器上导入
+docker load -i signoz.tar
+```
+
+**2. 预下载 histogramQuantile 二进制文件**
+```bash
+# 下载地址 (根据架构选择):
+# AMD64: https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2Fv0.0.1/histogram-quantile_linux_amd64.tar.gz
+# ARM64: https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2Fv0.0.1/histogram-quantile_linux_arm64.tar.gz
+
+# 解压并放置到指定目录
+tar -xvzf histogram-quantile_linux_amd64.tar.gz
+mv histogram-quantile Docker/signoz/deploy/common/clickhouse/user_scripts/histogramQuantile
+chmod +x Docker/signoz/deploy/common/clickhouse/user_scripts/histogramQuantile
+```
+
+**3. 环境变量配置 (已在 docker-compose.yml 中配置)**
+```yaml
+environment:
+  # 禁用遥测数据上报
+  - TELEMETRY_ENABLED=false
+  # 禁用 Monaco Editor CDN (使用内置资源)
+  - NEXT_PUBLIC_MONACO_CDN=
+  # 禁用用户引导和客服等外部服务
+  - NEXT_PUBLIC_APPCUES_ACCOUNT_ID=
+  - NEXT_PUBLIC_PYLON_APP_ID=
+```
+
+**4. 已知限制**
+- 日志详情页面的 "body" 展示区域可能显示 "Loading..."，这是 Monaco Editor 的 CDN 加载问题
+- 实际日志数据完整，可在 Attributes 面板查看所有字段
+- JSON 视图可能为空，这不影响日志功能
+
 ## 前端开发规则
 - 使用`bun add|remove <package>`进行依赖的添加与管理
 - 禁止运行`bun run dev`

@@ -115,7 +115,13 @@ services:
   # 启用方式: docker compose --profile observability up -d
   # 版本: SigNoz v0.104.0, OTEL Collector v0.129.12, ClickHouse 25.5.6
 
-  # ClickHouse 初始化 (下载 histogramQuantile 二进制)
+  # ClickHouse 初始化 (histogramQuantile 二进制)
+  # 内网部署说明：
+  # 1. 预先下载 histogramQuantile 二进制文件到 ./signoz/deploy/common/clickhouse/user_scripts/
+  #    下载地址 (根据架构选择):
+  #    - amd64: https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2Fv0.0.1/histogram-quantile_linux_amd64.tar.gz
+  #    - arm64: https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2Fv0.0.1/histogram-quantile_linux_arm64.tar.gz
+  # 2. 解压后将 histogram-quantile 重命名为 histogramQuantile 放入目录
   signoz-init-clickhouse:
     <<: *common
     image: clickhouse/clickhouse-server:25.5.6
@@ -126,12 +132,22 @@ services:
       - bash
       - -c
       - |
+        # 检查是否已预先下载 histogramQuantile
+        if [ -f /var/lib/clickhouse/user_scripts/histogramQuantile ]; then
+          echo "histogramQuantile already exists, skipping download"
+          chmod +x /var/lib/clickhouse/user_scripts/histogramQuantile
+          exit 0
+        fi
+        # 如果不存在且有网络，尝试下载
         version="v0.0.1"
         node_os=$$(uname -s | tr '[:upper:]' '[:lower:]')
         node_arch=$$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
         echo "Fetching histogram-binary for $${node_os}/$${node_arch}"
         cd /tmp
-        wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz"
+        wget -O histogram-quantile.tar.gz "https://github.com/SigNoz/signoz/releases/download/histogram-quantile%2F$${version}/histogram-quantile_$${node_os}_$${node_arch}.tar.gz" || {
+          echo "ERROR: Failed to download histogramQuantile. For air-gapped deployment, please manually download and place in ./signoz/deploy/common/clickhouse/user_scripts/"
+          exit 1
+        }
         tar -xvzf histogram-quantile.tar.gz
         mv histogram-quantile /var/lib/clickhouse/user_scripts/histogramQuantile
     restart: on-failure
@@ -186,9 +202,15 @@ services:
       - DASHBOARDS_PATH=/root/config/dashboards
       - STORAGE=clickhouse
       - GODEBUG=netdns=go
-      - TELEMETRY_ENABLED=true
+      # 内网部署优化：禁用遥测和外部资源
+      - TELEMETRY_ENABLED=false
       - DEPLOYMENT_TYPE=docker-standalone-amd
       - DOT_METRICS_ENABLED=true
+      # 禁用 Monaco Editor CDN，使用内置资源
+      - NEXT_PUBLIC_MONACO_CDN=
+      # 禁用 Appcues (用户引导) 和 Pylon (客服) 等外部服务
+      - NEXT_PUBLIC_APPCUES_ACCOUNT_ID=
+      - NEXT_PUBLIC_PYLON_APP_ID=
     healthcheck:
       test:
         - CMD

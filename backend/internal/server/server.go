@@ -15,6 +15,7 @@ import (
 	"zera/internal/service"
 	"zera/internal/static"
 	"zera/internal/storage"
+	"zera/internal/telemetry"
 
 	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
@@ -23,12 +24,14 @@ import (
 
 // Server HTTP 服务器
 type Server struct {
-	config       *config.Config
-	engine       *gin.Engine
-	db           *database.Database
-	storage      *storage.Storage
-	auditLogger  *logger.AsyncLogger
-	globalLogger *logger.GlobalLogger
+	config         *config.Config
+	engine         *gin.Engine
+	db             *database.Database
+	storage        *storage.Storage
+	auditLogger    *logger.AsyncLogger
+	globalLogger   *logger.GlobalLogger
+	otelProvider   *telemetry.Provider
+	otelLoggerSet  *telemetry.LoggerSet
 }
 
 // New 创建服务器实例
@@ -56,6 +59,30 @@ func New(cfg *config.Config) (*Server, error) {
 		"version", cfg.Log.ServiceVersion,
 		"environment", cfg.Log.Environment,
 	)
+
+	// 初始化 OpenTelemetry 提供者
+	var otelProvider *telemetry.Provider
+	var otelLoggerSet *telemetry.LoggerSet
+	if cfg.Telemetry.Enabled {
+		logger.Info("initializing OpenTelemetry",
+			"endpoint", cfg.Telemetry.Endpoint,
+			"protocol", cfg.Telemetry.Protocol,
+		)
+		otelProvider, err = telemetry.NewProvider(&cfg.Telemetry, &cfg.Log)
+		if err != nil {
+			globalLogger.Close()
+			return nil, fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
+		}
+		otelLoggerSet = telemetry.NewLoggerSet(otelProvider)
+		telemetry.InitGlobalLoggerSet(otelProvider)
+		logger.Info("OpenTelemetry initialized successfully",
+			"api_logs", cfg.Telemetry.Logs.APIEnabled,
+			"app_logs", cfg.Telemetry.Logs.AppEnabled,
+			"db_logs", cfg.Telemetry.Logs.DBEnabled,
+		)
+	} else {
+		logger.Info("OpenTelemetry is disabled")
+	}
 
 	// 初始化数据库连接
 	logger.Info("connecting to database", "host", cfg.Database.Host, "port", cfg.Database.Port)
@@ -158,22 +185,46 @@ func New(cfg *config.Config) (*Server, error) {
 	engine := gin.New()
 
 	// 注册中间件
-	// 1. 追踪中间件（最先执行，生成 TraceID）
+	// 1. OpenTelemetry 追踪中间件（如果启用）
+	if otelProvider != nil && otelProvider.IsEnabled() {
+		engine.Use(telemetry.OtelGinMiddleware(otelProvider, otelLoggerSet))
+	}
+	// 2. 追踪中间件（生成 TraceID，保持向后兼容）
 	engine.Use(middleware.TraceMiddleware())
-	// 2. CORS 中间件
+	// 3. CORS 中间件
 	engine.Use(middleware.CORS())
-	// 3. 恢复中间件
+	// 4. 恢复中间件
 	engine.Use(gin.Recovery())
 	// 注意：RPC 请求日志由 LoggingInterceptor 记录，避免重复
 
-	// 创建追踪拦截器
+	// 创建拦截器列表
+	var interceptorList []connect.Interceptor
+
+	// 1. OpenTelemetry 追踪拦截器（如果启用）
+	if otelProvider != nil && otelProvider.IsEnabled() {
+		otelTraceInterceptor := telemetry.NewOtelTraceInterceptor(otelProvider, otelLoggerSet)
+		interceptorList = append(interceptorList, otelTraceInterceptor)
+	}
+
+	// 2. 追踪拦截器（保持向后兼容）
 	traceInterceptor := middleware.NewTraceInterceptor()
+	interceptorList = append(interceptorList, traceInterceptor)
 
-	// 创建日志拦截器
+	// 3. 日志拦截器
 	loggingInterceptor := middleware.NewLoggingInterceptor()
+	interceptorList = append(interceptorList, loggingInterceptor)
 
-	// 创建拦截器链：追踪拦截器 -> 日志拦截器 -> 权限拦截器 -> 维护模式拦截器 -> 审计日志拦截器
-	interceptors := connect.WithInterceptors(traceInterceptor, loggingInterceptor, permInterceptor, maintenanceInterceptor, auditLogInterceptor)
+	// 4. 权限拦截器
+	interceptorList = append(interceptorList, permInterceptor)
+
+	// 5. 维护模式拦截器
+	interceptorList = append(interceptorList, maintenanceInterceptor)
+
+	// 6. 审计日志拦截器
+	interceptorList = append(interceptorList, auditLogInterceptor)
+
+	// 创建拦截器链
+	interceptors := connect.WithInterceptors(interceptorList...)
 
 	// 注册认证服务路由
 	authPath, authH := baseconnect.NewAuthServiceHandler(
@@ -221,12 +272,14 @@ func New(cfg *config.Config) (*Server, error) {
 	logger.Info("server initialized successfully")
 
 	return &Server{
-		config:       cfg,
-		engine:       engine,
-		db:           db,
-		storage:      storageClient,
-		auditLogger:  asyncLogger,
-		globalLogger: globalLogger,
+		config:         cfg,
+		engine:         engine,
+		db:             db,
+		storage:        storageClient,
+		auditLogger:    asyncLogger,
+		globalLogger:   globalLogger,
+		otelProvider:   otelProvider,
+		otelLoggerSet:  otelLoggerSet,
 	}, nil
 }
 
@@ -244,6 +297,14 @@ func (s *Server) Run() error {
 // Close 关闭服务器资源
 func (s *Server) Close() error {
 	logger.Info("shutting down server")
+
+	// 关闭 OpenTelemetry 提供者
+	if s.otelProvider != nil {
+		ctx := context.Background()
+		if err := s.otelProvider.Shutdown(ctx); err != nil {
+			logger.Warn("failed to shutdown OpenTelemetry", "error", err)
+		}
+	}
 
 	// 关闭审计日志记录器
 	if s.auditLogger != nil {

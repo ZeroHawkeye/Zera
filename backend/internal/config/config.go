@@ -11,13 +11,46 @@ import (
 
 // Config 应用配置
 type Config struct {
-	Server   ServerConfig   `toml:"server"`
-	Database DatabaseConfig `toml:"database"`
-	App      AppConfig      `toml:"app"`
-	Admin    AdminConfig    `toml:"admin"`
-	JWT      JWTConfig      `toml:"jwt"`
-	Storage  StorageConfig  `toml:"storage"`
-	Log      LogConfig      `toml:"log"`
+	Server    ServerConfig    `toml:"server"`
+	Database  DatabaseConfig  `toml:"database"`
+	App       AppConfig       `toml:"app"`
+	Admin     AdminConfig     `toml:"admin"`
+	JWT       JWTConfig       `toml:"jwt"`
+	Storage   StorageConfig   `toml:"storage"`
+	Log       LogConfig       `toml:"log"`
+	Telemetry TelemetryConfig `toml:"telemetry"`
+}
+
+// TelemetryConfig OpenTelemetry 遥测配置
+type TelemetryConfig struct {
+	// Enabled 是否启用遥测功能
+	Enabled bool `toml:"enabled"`
+	// Endpoint OTLP 导出端点
+	Endpoint string `toml:"endpoint"`
+	// Protocol 协议: grpc, http
+	Protocol string `toml:"protocol"`
+	// Insecure 是否使用不安全连接
+	Insecure bool `toml:"insecure"`
+	// TraceSampleRate 追踪采样率 (0.0 - 1.0)
+	TraceSampleRate float64 `toml:"trace_sample_rate"`
+	// LogBatchInterval 日志批量导出间隔（秒）
+	LogBatchInterval int `toml:"log_batch_interval"`
+	// LogBatchSize 日志批量导出大小
+	LogBatchSize int `toml:"log_batch_size"`
+	// Logs 分类日志配置
+	Logs TelemetryLogsConfig `toml:"logs"`
+}
+
+// TelemetryLogsConfig 分类日志配置
+type TelemetryLogsConfig struct {
+	// APIEnabled API 请求日志
+	APIEnabled bool `toml:"api_enabled"`
+	// AppEnabled 应用程序日志
+	AppEnabled bool `toml:"app_enabled"`
+	// DBEnabled 数据库查询日志
+	DBEnabled bool `toml:"db_enabled"`
+	// DBSlowQueryThresholdMs 数据库慢查询阈值（毫秒）
+	DBSlowQueryThresholdMs int64 `toml:"db_slow_query_threshold_ms"`
 }
 
 // LogConfig 日志配置
@@ -137,6 +170,21 @@ func defaultConfig() *Config {
 			ServiceName:    "zera",
 			ServiceVersion: "1.0.0",
 			Environment:    "development",
+		},
+		Telemetry: TelemetryConfig{
+			Enabled:          false,
+			Endpoint:         "localhost:4317",
+			Protocol:         "grpc",
+			Insecure:         true,
+			TraceSampleRate:  1.0,
+			LogBatchInterval: 5,
+			LogBatchSize:     512,
+			Logs: TelemetryLogsConfig{
+				APIEnabled:             true,
+				AppEnabled:             true,
+				DBEnabled:              true,
+				DBSlowQueryThresholdMs: 100,
+			},
 		},
 	}
 }
@@ -310,6 +358,37 @@ func applyEnvOverrides(cfg *Config) {
 	}
 	if environment := os.Getenv("LOG_ENVIRONMENT"); environment != "" {
 		cfg.Log.Environment = environment
+	}
+
+	// Telemetry 配置
+	if enabled := os.Getenv("OTEL_ENABLED"); enabled != "" {
+		cfg.Telemetry.Enabled = enabled == "true" || enabled == "1"
+	}
+	if endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); endpoint != "" {
+		cfg.Telemetry.Endpoint = endpoint
+	}
+	if protocol := os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL"); protocol != "" {
+		cfg.Telemetry.Protocol = protocol
+	}
+	if insecure := os.Getenv("OTEL_EXPORTER_OTLP_INSECURE"); insecure != "" {
+		cfg.Telemetry.Insecure = insecure == "true" || insecure == "1"
+	}
+	if sampleRate := os.Getenv("OTEL_TRACE_SAMPLE_RATE"); sampleRate != "" {
+		if rate, err := strconv.ParseFloat(sampleRate, 64); err == nil {
+			cfg.Telemetry.TraceSampleRate = rate
+		}
+	}
+	if apiEnabled := os.Getenv("OTEL_LOGS_API_ENABLED"); apiEnabled != "" {
+		cfg.Telemetry.Logs.APIEnabled = apiEnabled == "true" || apiEnabled == "1"
+	}
+	if appEnabled := os.Getenv("OTEL_LOGS_APP_ENABLED"); appEnabled != "" {
+		cfg.Telemetry.Logs.AppEnabled = appEnabled == "true" || appEnabled == "1"
+	}
+	if dbEnabled := os.Getenv("OTEL_LOGS_DB_ENABLED"); dbEnabled != "" {
+		cfg.Telemetry.Logs.DBEnabled = dbEnabled == "true" || dbEnabled == "1"
+	}
+	if threshold := getEnvInt64("OTEL_LOGS_DB_SLOW_QUERY_THRESHOLD_MS"); threshold != 0 {
+		cfg.Telemetry.Logs.DBSlowQueryThresholdMs = threshold
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"zera/ent/user"
 	"zera/internal/config"
 	"zera/internal/logger"
+	"zera/internal/telemetry"
 
 	_ "github.com/lib/pq"
 )
@@ -24,8 +25,9 @@ const (
 
 // Database 数据库连接管理
 type Database struct {
-	Client *ent.Client
-	config *config.Config
+	Client        *ent.Client
+	config        *config.Config
+	dbHook        *telemetry.DBHook
 }
 
 // New 创建数据库连接
@@ -38,6 +40,19 @@ func New(cfg *config.Config) (*Database, error) {
 	db := &Database{
 		Client: client,
 		config: cfg,
+	}
+
+	// 如果启用了遥测，添加数据库日志钩子
+	if cfg.Telemetry.Enabled && cfg.Telemetry.Logs.DBEnabled {
+		loggerSet := telemetry.GetLoggerSet()
+		if loggerSet != nil {
+			db.dbHook = telemetry.NewDBHook(loggerSet, cfg.Telemetry.Logs.DBSlowQueryThresholdMs)
+			// 为所有实体类型添加钩子
+			db.Client.Use(db.dbHook.Hook())
+			logger.Info("database query logging enabled",
+				"slow_query_threshold_ms", cfg.Telemetry.Logs.DBSlowQueryThresholdMs,
+			)
+		}
 	}
 
 	return db, nil
