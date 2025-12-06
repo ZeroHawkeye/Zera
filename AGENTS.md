@@ -12,8 +12,42 @@
 
 ### Docker 服务 (`Docker/docker-compose.yml`)
 - **PostgreSQL 数据库**: 端口 5432，用户/密码/数据库名通过环境变量配置
+- **Casdoor 身份认证**: 端口 8000，开源 IAM/SSO 平台
 - **RustFS 对象存储**: S3 兼容协议，API 端口 9000，控制台端口 9001
 - **SigNoz 可观测性平台** (可选): 日志、追踪、指标收集
+
+### Casdoor 身份认证服务
+Casdoor 是一个开源的 UI-first 身份认证和访问管理 (IAM) / 单点登录 (SSO) 平台。
+
+- **官方文档**: https://casdoor.org/zh/docs/basic/try-with-docker
+- **控制台地址**: http://localhost:8000/
+- **默认账户**: `built-in/admin`
+- **默认密码**: `123`
+
+#### 环境变量
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `CASDOOR_PORT` | 8000 | Casdoor 服务端口 |
+| `CASDOOR_RUNMODE` | dev | 运行模式 (dev/prod) |
+| `CASDOOR_ORIGIN` | http://localhost:8000 | Casdoor 访问地址 (用于 OAuth 回调) |
+
+#### 配置文件
+- **配置目录**: `Docker/casdoor/conf/`
+- **主配置文件**: `Docker/casdoor/conf/app.conf`
+
+#### 支持的功能
+- OAuth 2.0, OIDC, SAML, CAS, LDAP 等多种协议
+- 多租户、组织管理
+- 多因素认证 (MFA)
+- 社交登录集成 (GitHub, Google, 微信等)
+- WebAuthn 支持
+- 用户管理和权限控制
+
+#### 生产环境注意事项
+1. 修改默认管理员密码
+2. 设置 `CASDOOR_RUNMODE=prod`
+3. 配置正确的 `CASDOOR_ORIGIN` 地址
+4. 考虑启用 HTTPS
 
 ### RustFS 对象存储
 - **控制台地址**: http://localhost:9001/

@@ -86,6 +86,38 @@ services:
       - "5432:5432"
     volumes:
       - ./data/pgdata:/var/lib/postgresql/data
+      # 初始化脚本 (首次启动时执行，创建 Casdoor 数据库等)
+      - ./postgres/initdb.d:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-zera} -d ${DB_NAME:-zera}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zera_network
+
+  # Casdoor 身份认证服务
+  # 文档: https://casdoor.org/zh/docs/basic/try-with-docker
+  # 默认登录: built-in/admin, 密码: 123
+  casdoor:
+    image: casbin/casdoor:v2.179.0
+    container_name: zera_casdoor
+    restart: always
+    environment:
+      # 数据库配置 (使用现有 PostgreSQL)
+      driverName: postgres
+      dataSourceName: "user=${DB_USER:-zera} password=${DB_PASSWORD:-012359Clown@} host=postgres port=5432 dbname=casdoor sslmode=disable"
+      # 运行模式: dev 或 prod
+      runmode: ${CASDOOR_RUNMODE:-dev}
+      # Casdoor 访问地址 (根据实际部署修改)
+      origin: ${CASDOOR_ORIGIN:-http://localhost:8000}
+    ports:
+      - "${CASDOOR_PORT:-8000}:8000"
+    volumes:
+      - ./casdoor/conf:/conf
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - zera_network
 
