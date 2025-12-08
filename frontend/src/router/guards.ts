@@ -7,6 +7,7 @@
 
 import { redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores'
+import { getCasLoginUrl } from '@/api/cas_auth'
 
 /**
  * 获取认证状态（非 hook 方式，用于路由守卫）
@@ -66,13 +67,27 @@ export function hasAllPermissions(permissions: string[]): boolean {
 /**
  * 认证守卫
  * 用于保护需要登录的路由
+ * 未登录时优先跳转到 Casdoor 统一登录页面
  */
-export function authGuard() {
+export async function authGuard() {
   if (!isAuthenticated()) {
+    const currentPath = window.location.pathname
+    
+    // 尝试获取 CAS 登录 URL
+    const casLoginUrl = await getCasLoginUrl(currentPath)
+    
+    if (casLoginUrl) {
+      // CAS 已启用，直接跳转到 Casdoor 登录页面
+      window.location.href = casLoginUrl
+      // 抛出错误阻止后续路由加载
+      throw new Error('Redirecting to CAS login')
+    }
+    
+    // CAS 未启用，回退到前端登录页面
     throw redirect({
       to: '/login',
       search: {
-        redirect: window.location.pathname,
+        redirect: currentPath,
       },
     })
   }
@@ -82,8 +97,8 @@ export function authGuard() {
  * 权限守卫
  * 用于保护需要特定权限的路由
  */
-export function permissionGuard(permission: string) {
-  authGuard()
+export async function permissionGuard(permission: string) {
+  await authGuard()
   
   if (!hasPermission(permission)) {
     throw redirect({
@@ -96,8 +111,8 @@ export function permissionGuard(permission: string) {
  * 角色守卫
  * 用于保护需要特定角色的路由
  */
-export function roleGuard(role: string) {
-  authGuard()
+export async function roleGuard(role: string) {
+  await authGuard()
   
   if (!hasRole(role)) {
     throw redirect({

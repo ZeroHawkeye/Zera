@@ -160,6 +160,81 @@ export const casAuthApi = {
   },
 }
 
+// ============================================
+// CAS 登录 URL 辅助函数（用于路由守卫）
+// ============================================
+
+/** CAS 启用状态缓存 */
+let cachedCasEnabled: boolean | null = null
+
+/**
+ * 清除 CAS 状态缓存
+ * 用于配置更新后强制重新获取
+ */
+export function clearCasCache() {
+  cachedCasEnabled = null
+}
+
+/**
+ * 获取 CAS 登录 URL
+ * 用于路由守卫中未登录时直接跳转 Casdoor
+ * @param redirectPath 登录成功后重定向的路径
+ * @returns CAS 登录 URL，如果 CAS 未启用则返回 null
+ */
+export async function getCasLoginUrl(redirectPath: string): Promise<string | null> {
+  // 如果已缓存且 CAS 未启用，直接返回 null
+  if (cachedCasEnabled === false) {
+    return null
+  }
+
+  try {
+    // 获取 CAS 公开设置
+    const settings = await casAuthApi.getPublicSettings()
+    cachedCasEnabled = settings.casEnabled
+
+    if (!settings.casEnabled) {
+      return null
+    }
+
+    // 获取 CAS 登录 URL
+    const response = await casAuthApi.getLoginURL(redirectPath)
+    return response.loginUrl || null
+  } catch {
+    // 发生错误时返回 null，回退到普通登录
+    return null
+  }
+}
+
+/**
+ * 获取 CAS 退出登录后的重定向 URL
+ * 用于退出登录后跳转到 Casdoor 登录页面
+ * @param redirectPath 重新登录后重定向的路径，默认为 /admin
+ * @returns CAS 登录 URL，如果 CAS 未启用则返回 null
+ */
+export async function getCasLogoutRedirectUrl(redirectPath: string = '/admin'): Promise<string | null> {
+  // 如果已缓存且 CAS 未启用，直接返回 null
+  if (cachedCasEnabled === false) {
+    return null
+  }
+
+  try {
+    // 获取 CAS 公开设置
+    const settings = await casAuthApi.getPublicSettings()
+    cachedCasEnabled = settings.casEnabled
+
+    if (!settings.casEnabled) {
+      return null
+    }
+
+    // 获取 CAS 登录 URL
+    const response = await casAuthApi.getLoginURL(redirectPath)
+    return response.loginUrl || null
+  } catch {
+    // 发生错误时返回 null，回退到普通登录页面
+    return null
+  }
+}
+
 export type {
   GetCASLoginURLResponse,
   CASCallbackResponse,

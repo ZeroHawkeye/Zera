@@ -57,7 +57,7 @@ export const adminRoute = createRoute({
   component: AdminRouteComponent,
   beforeLoad: async () => {
     await waitForAuthInit()
-    authGuard()
+    await authGuard()
   },
 })
 

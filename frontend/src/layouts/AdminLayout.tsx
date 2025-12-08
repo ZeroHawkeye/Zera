@@ -18,6 +18,7 @@ import { MenuRenderer } from '@/components/menu'
 import { GlobalSearchTrigger } from '@/components/GlobalSearch'
 import { initAdminMenus, generateBreadcrumbs } from '@/config/menu'
 import { Logo, LogoIcon } from '@/components'
+import { getCasLogoutRedirectUrl } from '@/api/cas_auth'
 
 interface AdminLayoutProps {
   children?: ReactNode
@@ -69,10 +70,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   // 获取菜单项
   const menuItems = useMemo(() => getMenuItems(), [getMenuItems])
 
-  // 用户菜单项
+  // 用户菜单项 - 退出登录后优先跳转到 Casdoor
   const handleLogout = async () => {
     await logout()
-    navigate({ to: '/login' })
+    
+    // 尝试获取 CAS 登录 URL 并跳转
+    const casLoginUrl = await getCasLogoutRedirectUrl('/admin')
+    if (casLoginUrl) {
+      window.location.href = casLoginUrl
+    } else {
+      // CAS 未启用，回退到前端登录页面
+      navigate({ to: '/login' })
+    }
   }
 
   const userMenuItems: MenuProps['items'] = [
