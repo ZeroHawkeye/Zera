@@ -1,8 +1,9 @@
-import { createLazyRoute, useNavigate, Link } from '@tanstack/react-router'
-import { useState } from 'react'
-import { User, Lock, ArrowRight, AlertCircle } from 'lucide-react'
+import { createLazyRoute, useNavigate, Link, useSearch } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { User, Lock, ArrowRight, AlertCircle, Building2 } from 'lucide-react'
 import { ConnectError } from '@connectrpc/connect'
 import { authApi } from '@/api/auth'
+import { casAuthApi } from '@/api/cas_auth'
 import { useSiteStore } from '@/stores'
 
 export const Route = createLazyRoute('/login')({
@@ -11,17 +12,36 @@ export const Route = createLazyRoute('/login')({
 
 function LoginPage() {
   const navigate = useNavigate()
+  const search = useSearch({ from: '/login' }) as { redirect?: string }
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
+  
+  // CAS 相关状态
+  const [casEnabled, setCasEnabled] = useState(false)
+  const [casLoading, setCasLoading] = useState(false)
 
   // 从全局 store 获取站点设置
   const siteName = useSiteStore((state) => state.siteName)
   const registrationEnabled = useSiteStore((state) => state.enableRegistration)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 获取 CAS 公开设置
+  useEffect(() => {
+    const fetchCasSettings = async () => {
+      try {
+        const response = await casAuthApi.getPublicSettings()
+        setCasEnabled(response.casEnabled)
+      } catch {
+        // 如果获取失败，默认不显示 CAS 登录入口
+        setCasEnabled(false)
+      }
+    }
+    fetchCasSettings()
+  }, [])
+
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -37,12 +57,36 @@ function LoginPage() {
         password: password,
         rememberMe,
       })
-      navigate({ to: '/' })
+      // 登录成功后跳转到重定向地址或首页
+      const redirectTo = search.redirect || '/'
+      navigate({ to: redirectTo })
     } catch (err) {
       const connectErr = ConnectError.from(err)
       setError(connectErr.message || '登录失败，请检查用户名和密码')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 处理 CAS 登录
+  const handleCasLogin = async () => {
+    setCasLoading(true)
+    setError('')
+    try {
+      // 获取 CAS 登录 URL，传递当前页面的重定向参数
+      const redirectUrl = search.redirect || '/admin'
+      const response = await casAuthApi.getLoginURL(redirectUrl)
+      
+      if (response.loginUrl) {
+        // 跳转到 CAS 登录页面
+        window.location.href = response.loginUrl
+      } else {
+        setError('获取 CAS 登录地址失败')
+      }
+    } catch (err) {
+      const connectErr = ConnectError.from(err)
+      setError(connectErr.message || 'CAS 登录失败')
+      setCasLoading(false)
     }
   }
 
@@ -194,6 +238,43 @@ function LoginPage() {
             <span className="text-xs text-gray-400">或</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
+
+          {/* CAS 单点登录按钮 */}
+          {casEnabled && (
+            <button
+              type="button"
+              onClick={handleCasLogin}
+              disabled={casLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-4"
+            >
+              {casLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  正在跳转...
+                </span>
+              ) : (
+                <>
+                  <Building2 className="w-4 h-4" />
+                  使用企业账号登录
+                </>
+              )}
+            </button>
+          )}
 
           {/* 注册提示 */}
           {registrationEnabled && (

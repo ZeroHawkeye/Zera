@@ -46,8 +46,17 @@ func (i *TraceInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 		resp, err := next(ctx, req)
 
 		// 将追踪ID添加到响应头
+		// 注意: 当发生错误时，resp 对象可能不为 nil，但其内部 header 可能为 nil
+		// 需要使用 recover 避免 panic
 		if resp != nil {
-			i.addTraceHeaders(ctx, resp.Header())
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						// 忽略 nil header panic，响应头添加失败不影响主流程
+					}
+				}()
+				i.addTraceHeaders(ctx, resp.Header())
+			}()
 		}
 
 		return resp, err

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"zera/ent"
@@ -209,10 +210,13 @@ func (s *CASAuthService) GetCASLoginURL(ctx context.Context, redirectURL string)
 		}
 	}
 
+	// 去除 ServerURL 末尾的斜杠，避免生成双斜杠 URL
+	serverURL := strings.TrimSuffix(config.ServerURL, "/")
+
 	// 构建 CAS 登录 URL
 	// 格式: {serverUrl}/cas/{organization}/{application}/login?service={serviceUrl}
 	loginURL := fmt.Sprintf("%s/cas/%s/%s/login?service=%s",
-		config.ServerURL,
+		serverURL,
 		config.Organization,
 		config.Application,
 		url.QueryEscape(serviceURL),
@@ -235,9 +239,12 @@ func (s *CASAuthService) ValidateTicket(ctx context.Context, ticket, service str
 		return nil, ErrCASNotEnabled
 	}
 
+	// 去除 ServerURL 末尾的斜杠
+	serverURL := strings.TrimSuffix(config.ServerURL, "/")
+
 	// 构建验证 URL (使用 CAS 3.0 的 p3/serviceValidate 端点)
 	validateURL := fmt.Sprintf("%s/cas/%s/%s/p3/serviceValidate?ticket=%s&service=%s",
-		config.ServerURL,
+		serverURL,
 		config.Organization,
 		config.Application,
 		url.QueryEscape(ticket),
@@ -423,13 +430,19 @@ func (s *CASAuthService) CreateOrUpdateUser(ctx context.Context, casUser *CASUse
 		Where(user.Username(username)).
 		Only(ctx)
 	if err == nil {
-		// 用户名已存在
-		if existingUser.AuthProvider == user.AuthProviderLocal {
-			// 本地用户已使用该用户名，拒绝创建
-			return nil, false, errors.New("username already exists, please contact administrator")
+		// 用户名已存在，添加 CAS 前缀和外部 ID 后缀以区分
+		// 无论是本地用户还是其他 CAS 用户，都使用唯一用户名
+		externalIDSuffix := casUser.ExternalID
+		if len(externalIDSuffix) > 8 {
+			externalIDSuffix = externalIDSuffix[:8]
 		}
-		// 其他 CAS 用户已使用该用户名，添加后缀
-		username = fmt.Sprintf("%s_%s", casUser.Username, casUser.ExternalID[:8])
+		if existingUser.AuthProvider == user.AuthProviderLocal {
+			// 本地用户已使用该用户名，为 CAS 用户添加前缀
+			username = fmt.Sprintf("cas_%s_%s", casUser.Username, externalIDSuffix)
+		} else {
+			// 其他 CAS 用户已使用该用户名，添加后缀
+			username = fmt.Sprintf("%s_%s", casUser.Username, externalIDSuffix)
+		}
 	} else if !ent.IsNotFound(err) {
 		return nil, false, err
 	}
@@ -510,9 +523,11 @@ func (s *CASAuthService) CASLogout(ctx context.Context, accessToken string) (*ba
 	// 构建 CAS 登出 URL
 	logoutURL := ""
 	if config.Enabled {
+		// 去除 ServerURL 末尾的斜杠
+		serverURL := strings.TrimSuffix(config.ServerURL, "/")
 		// CAS 登出后重定向回服务首页
 		logoutURL = fmt.Sprintf("%s/cas/%s/%s/logout?service=%s",
-			config.ServerURL,
+			serverURL,
 			config.Organization,
 			config.Application,
 			url.QueryEscape(config.ServiceURL),
@@ -542,9 +557,12 @@ func (s *CASAuthService) TestCASConnection(ctx context.Context, config *CASConfi
 		}, nil
 	}
 
+	// 去除 ServerURL 末尾的斜杠
+	serverURL := strings.TrimSuffix(config.ServerURL, "/")
+
 	// 尝试访问 CAS 服务器
 	testURL := fmt.Sprintf("%s/cas/%s/%s/login",
-		config.ServerURL,
+		serverURL,
 		config.Organization,
 		config.Application,
 	)

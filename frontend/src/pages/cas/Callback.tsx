@@ -19,7 +19,6 @@ function CASCallbackPage() {
   const navigate = useNavigate()
   const search = useSearch({ from: '/cas/callback' }) as { ticket?: string; redirect?: string }
   const siteName = useSiteStore((state) => state.siteName)
-  const setUser = useAuthStore((state) => state.setUser)
   
   const [status, setStatus] = useState<CallbackStatus>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -44,10 +43,14 @@ function CASCallbackPage() {
         // 调用后端验证票据
         const response = await casAuthApi.callback(ticket, serviceUrl)
 
-        // 设置用户信息到 store
-        if (response.user) {
-          setUser(response.user)
-        }
+        // 设置完整的认证状态到 store (包括 tokens 和用户信息)
+        // casAuthApi.callback 已经将 tokens 保存到 localStorage
+        // 但 store 中也需要更新，以便 isAuthenticated() 返回 true
+        useAuthStore.setState({
+          user: response.user ?? null,
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+        })
 
         setIsNewUser(response.isNewUser)
         setStatus('success')
@@ -79,7 +82,7 @@ function CASCallbackPage() {
     }
 
     handleCallback()
-  }, [search, navigate, setUser])
+  }, [search, navigate])
 
   const handleRetry = () => {
     navigate({ to: '/login' })
