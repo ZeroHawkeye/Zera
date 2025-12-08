@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package base;
 
-import "buf/validate/validate.proto";
 import "base/login.proto"; // 引用 UserInfo 定义
+import "buf/validate/validate.proto";
 
 // ============================================
 // CAS 认证消息定义
@@ -25,6 +25,14 @@ message CASConfig {
   string default_role = 6;
   // 是否自动创建用户
   bool auto_create_user = 7;
+  // Casdoor 应用 Client ID (用于 SDK 调用)
+  string client_id = 8;
+  // Casdoor 应用 Client Secret (用于 SDK 调用)
+  string client_secret = 9;
+  // Casdoor 应用 JWT 公钥证书 (用于验证 token)
+  string jwt_public_key = 10;
+  // 是否启用同步到 Casdoor
+  bool sync_to_casdoor = 11;
 }
 
 // ============================================
@@ -154,22 +162,22 @@ message GetPublicCASSettingsResponse {
 service CASAuthService {
   // 获取 CAS 登录 URL (公开)
   rpc GetCASLoginURL(GetCASLoginURLRequest) returns (GetCASLoginURLResponse) {}
-  
+
   // CAS 回调处理 (公开) - 验证票据并登录
   rpc CASCallback(CASCallbackRequest) returns (CASCallbackResponse) {}
-  
+
   // CAS 登出
   rpc CASLogout(CASLogoutRequest) returns (CASLogoutResponse) {}
-  
+
   // 获取公开 CAS 设置 (公开)
   rpc GetPublicCASSettings(GetPublicCASSettingsRequest) returns (GetPublicCASSettingsResponse) {}
-  
+
   // 获取 CAS 配置 (需要管理权限)
   rpc GetCASConfig(GetCASConfigRequest) returns (GetCASConfigResponse) {}
-  
+
   // 更新 CAS 配置 (需要管理权限)
   rpc UpdateCASConfig(UpdateCASConfigRequest) returns (UpdateCASConfigResponse) {}
-  
+
   // 测试 CAS 连接 (需要管理权限)
   rpc TestCASConnection(TestCASConnectionRequest) returns (TestCASConnectionResponse) {}
 }

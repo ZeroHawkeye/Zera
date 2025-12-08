@@ -19,6 +19,8 @@ import (
 	"zera/ent/user"
 	"zera/gen/base"
 	"zera/internal/auth"
+	"zera/internal/casdoor"
+	"zera/internal/logger"
 	"zera/internal/permission"
 )
 
@@ -45,6 +47,10 @@ type CASConfig struct {
 	ServiceURL     string `json:"serviceUrl"`
 	DefaultRole    string `json:"defaultRole"`
 	AutoCreateUser bool   `json:"autoCreateUser"`
+	ClientID       string `json:"clientId"`      // Casdoor 应用 Client ID
+	ClientSecret   string `json:"clientSecret"`  // Casdoor 应用 Client Secret
+	JwtPublicKey   string `json:"jwtPublicKey"`  // Casdoor 应用 JWT 公钥证书
+	SyncToCasdoor  bool   `json:"syncToCasdoor"` // 是否启用同步到 Casdoor
 }
 
 // CAS XML 响应结构体 (CAS 3.0 协议)
@@ -90,6 +96,7 @@ type CASAuthService struct {
 	jwtManager        *auth.JWTManager
 	permissionChecker *permission.Checker
 	httpClient        *http.Client
+	casdoorClient     *casdoor.Client
 }
 
 // NewCASAuthService 创建 CAS 认证服务
@@ -101,7 +108,83 @@ func NewCASAuthService(client *ent.Client, jwtManager *auth.JWTManager) *CASAuth
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		casdoorClient: casdoor.NewClient(),
 	}
+}
+
+// NewCASAuthServiceWithCasdoor 创建带有 Casdoor 客户端的 CAS 认证服务
+func NewCASAuthServiceWithCasdoor(client *ent.Client, jwtManager *auth.JWTManager, casdoorClient *casdoor.Client) *CASAuthService {
+	return &CASAuthService{
+		client:            client,
+		jwtManager:        jwtManager,
+		permissionChecker: permission.NewChecker(client),
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+		casdoorClient: casdoorClient,
+	}
+}
+
+// InitCasdoorClient 初始化 Casdoor 客户端 (应在配置更新后调用)
+func (s *CASAuthService) InitCasdoorClient(ctx context.Context) error {
+	config, err := s.GetCASConfig(ctx)
+	if err != nil {
+		logger.Warn("failed to get CAS config for casdoor client", "error", err)
+		return nil
+	}
+
+	casdoorConfig := &casdoor.Config{
+		ServerURL:    config.ServerURL,
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		JwtPublicKey: config.JwtPublicKey,
+		Organization: config.Organization,
+		Application:  config.Application,
+		SyncEnabled:  config.SyncToCasdoor,
+	}
+
+	if err := s.casdoorClient.Init(casdoorConfig); err != nil {
+		logger.Error("failed to initialize casdoor client in CASAuthService", "error", err)
+		return err
+	}
+
+	logger.Debug("CASAuthService casdoor client initialized",
+		"syncEnabled", s.casdoorClient.IsSyncEnabled(),
+		"isInitialized", s.casdoorClient.IsInitialized(),
+	)
+
+	return nil
+}
+
+// verifyCasdoorUser 验证用户是否存在于 Casdoor
+// 返回 true 表示用户存在于 Casdoor
+func (s *CASAuthService) verifyCasdoorUser(ctx context.Context, username string) bool {
+	if s.casdoorClient == nil || !s.casdoorClient.IsInitialized() {
+		logger.Debug("casdoor client not available for user verification",
+			"username", username,
+		)
+		return false
+	}
+
+	_, err := s.casdoorClient.GetUser(ctx, username)
+	if err != nil {
+		if errors.Is(err, casdoor.ErrUserNotFound) {
+			logger.Debug("user not found in casdoor",
+				"username", username,
+			)
+		} else {
+			logger.Warn("failed to verify user in casdoor",
+				"username", username,
+				"error", err,
+			)
+		}
+		return false
+	}
+
+	logger.Debug("user verified in casdoor",
+		"username", username,
+	)
+	return true
 }
 
 // ============================================
@@ -364,6 +447,14 @@ func (s *CASAuthService) CASCallback(ctx context.Context, ticket, service string
 
 // CreateOrUpdateUser 根据 CAS 用户信息创建或更新本地用户
 func (s *CASAuthService) CreateOrUpdateUser(ctx context.Context, casUser *CASUserInfo) (*ent.User, bool, error) {
+	// 入口日志：记录 CAS 用户信息
+	logger.Info("CreateOrUpdateUser called",
+		"casUsername", casUser.Username,
+		"casExternalID", casUser.ExternalID,
+		"casEmail", casUser.Email,
+		"casDisplayName", casUser.DisplayName,
+	)
+
 	config, err := s.GetCASConfig(ctx)
 	if err != nil {
 		return nil, false, err
@@ -381,6 +472,11 @@ func (s *CASAuthService) CreateOrUpdateUser(ctx context.Context, casUser *CASUse
 		Only(ctx)
 
 	if err == nil {
+		logger.Info("found existing CAS user by external_id",
+			"userID", u.ID,
+			"username", u.Username,
+			"externalID", casUser.ExternalID,
+		)
 		// 用户已存在，更新信息
 		update := u.Update()
 		if casUser.Email != "" && casUser.Email != u.Email {
@@ -419,6 +515,11 @@ func (s *CASAuthService) CreateOrUpdateUser(ctx context.Context, casUser *CASUse
 		return nil, false, err
 	}
 
+	logger.Debug("no CAS user found by external_id, checking username",
+		"casExternalID", casUser.ExternalID,
+		"casUsername", casUser.Username,
+	)
+
 	// 用户不存在，检查是否允许自动创建
 	if !config.AutoCreateUser {
 		return nil, false, errors.New("user does not exist and auto-creation is disabled")
@@ -430,17 +531,123 @@ func (s *CASAuthService) CreateOrUpdateUser(ctx context.Context, casUser *CASUse
 		Where(user.Username(username)).
 		Only(ctx)
 	if err == nil {
-		// 用户名已存在，添加 CAS 前缀和外部 ID 后缀以区分
-		// 无论是本地用户还是其他 CAS 用户，都使用唯一用户名
-		externalIDSuffix := casUser.ExternalID
-		if len(externalIDSuffix) > 8 {
-			externalIDSuffix = externalIDSuffix[:8]
-		}
+		logger.Info("found existing user by username",
+			"userID", existingUser.ID,
+			"username", existingUser.Username,
+			"authProvider", existingUser.AuthProvider,
+			"existingExternalID", existingUser.ExternalID,
+			"casExternalID", casUser.ExternalID,
+		)
+
+		// 用户名已存在，检查是否是同步到 Casdoor 的本地用户
 		if existingUser.AuthProvider == user.AuthProviderLocal {
-			// 本地用户已使用该用户名，为 CAS 用户添加前缀
+			// 检查该本地用户是否已经关联到相同的 Casdoor 用户（通过 external_id）
+			if existingUser.ExternalID != nil && *existingUser.ExternalID == casUser.ExternalID {
+				// 这是同步过去的本地用户，升级为 CAS 用户
+				logger.Info("found synced local user (external_id match), upgrading to CAS user",
+					"userID", existingUser.ID,
+					"username", existingUser.Username,
+					"externalID", casUser.ExternalID,
+				)
+				update := existingUser.Update().
+					SetAuthProvider(user.AuthProviderCas)
+				if casUser.DisplayName != "" {
+					update = update.SetNickname(casUser.DisplayName)
+				}
+				u, err = update.Save(ctx)
+				if err != nil {
+					return nil, false, err
+				}
+
+				// 重新加载用户（带角色和权限）
+				u, err = s.client.User.Query().
+					Where(user.ID(u.ID)).
+					WithRoles(func(q *ent.RoleQuery) {
+						q.WithPermissions()
+					}).
+					Only(ctx)
+				if err != nil {
+					return nil, false, err
+				}
+
+				return u, false, nil
+			}
+
+			// 本地用户的 external_id 不匹配，但如果启用了 Casdoor 同步，
+			// 需要通过 Casdoor API 验证用户是否确实存在于 Casdoor 中
+			if config.SyncToCasdoor {
+				// 确保 Casdoor 客户端已初始化
+				if s.casdoorClient == nil || !s.casdoorClient.IsInitialized() {
+					if err := s.InitCasdoorClient(ctx); err != nil {
+						logger.Warn("failed to init casdoor client for user verification", "error", err)
+					}
+				}
+
+				// 验证用户是否存在于 Casdoor
+				if s.verifyCasdoorUser(ctx, casUser.Username) {
+					// 用户存在于 Casdoor，这说明是同步过去的本地用户
+					// 升级为 CAS 用户并更新 external_id
+					logger.Info("local user verified in Casdoor, upgrading to CAS user",
+						"userID", existingUser.ID,
+						"username", existingUser.Username,
+						"oldExternalID", existingUser.ExternalID,
+						"newExternalID", casUser.ExternalID,
+					)
+					update := existingUser.Update().
+						SetAuthProvider(user.AuthProviderCas).
+						SetExternalID(casUser.ExternalID)
+					if casUser.DisplayName != "" {
+						update = update.SetNickname(casUser.DisplayName)
+					}
+					u, err = update.Save(ctx)
+					if err != nil {
+						return nil, false, err
+					}
+
+					// 重新加载用户（带角色和权限）
+					u, err = s.client.User.Query().
+						Where(user.ID(u.ID)).
+						WithRoles(func(q *ent.RoleQuery) {
+							q.WithPermissions()
+						}).
+						Only(ctx)
+					if err != nil {
+						return nil, false, err
+					}
+
+					return u, false, nil
+				}
+
+				logger.Info("local user not found in Casdoor, creating new CAS user with prefix",
+					"existingUserID", existingUser.ID,
+					"existingUsername", existingUser.Username,
+					"casUsername", casUser.Username,
+				)
+			} else {
+				logger.Info("Casdoor sync not enabled, creating new CAS user with prefix",
+					"existingUserID", existingUser.ID,
+					"existingUsername", existingUser.Username,
+					"casUsername", casUser.Username,
+				)
+			}
+
+			// 本地用户未关联或关联到不同的 Casdoor 用户，添加 CAS 前缀
+			externalIDSuffix := casUser.ExternalID
+			if len(externalIDSuffix) > 8 {
+				externalIDSuffix = externalIDSuffix[:8]
+			}
 			username = fmt.Sprintf("cas_%s_%s", casUser.Username, externalIDSuffix)
 		} else {
 			// 其他 CAS 用户已使用该用户名，添加后缀
+			logger.Info("username conflict with existing CAS user, adding suffix",
+				"existingUserID", existingUser.ID,
+				"existingUsername", existingUser.Username,
+				"casUsername", casUser.Username,
+			)
+			externalIDSuffix := casUser.ExternalID
+			if len(externalIDSuffix) > 8 {
+				externalIDSuffix = externalIDSuffix[:8]
+			}
 			username = fmt.Sprintf("%s_%s", casUser.Username, externalIDSuffix)
 		}
 	} else if !ent.IsNotFound(err) {
@@ -457,7 +664,11 @@ func (s *CASAuthService) CreateOrUpdateUser(ctx context.Context, casUser *CASUse
 			Exist(ctx)
 		if exists {
 			// 邮箱已被使用，生成一个唯一的邮箱
-			email = fmt.Sprintf("%s_%s@cas.local", username, casUser.ExternalID[:8])
+			externalIDSuffix := casUser.ExternalID
+			if len(externalIDSuffix) > 8 {
+				externalIDSuffix = externalIDSuffix[:8]
+			}
+			email = fmt.Sprintf("%s_%s@cas.local", username, externalIDSuffix)
 		}
 	}
 
@@ -684,6 +895,10 @@ func ConvertToCASConfigProto(config *CASConfig) *base.CASConfig {
 		ServiceUrl:     config.ServiceURL,
 		DefaultRole:    config.DefaultRole,
 		AutoCreateUser: config.AutoCreateUser,
+		ClientId:       config.ClientID,
+		ClientSecret:   config.ClientSecret,
+		JwtPublicKey:   config.JwtPublicKey,
+		SyncToCasdoor:  config.SyncToCasdoor,
 	}
 }
 
@@ -697,5 +912,9 @@ func ConvertFromCASConfigProto(proto *base.CASConfig) *CASConfig {
 		ServiceURL:     proto.ServiceUrl,
 		DefaultRole:    proto.DefaultRole,
 		AutoCreateUser: proto.AutoCreateUser,
+		ClientID:       proto.ClientId,
+		ClientSecret:   proto.ClientSecret,
+		JwtPublicKey:   proto.JwtPublicKey,
+		SyncToCasdoor:  proto.SyncToCasdoor,
 	}
 }

@@ -45,6 +45,10 @@ export interface CASConfigParams {
   serviceUrl: string
   defaultRole: string
   autoCreateUser: boolean
+  clientId?: string
+  clientSecret?: string
+  jwtPublicKey?: string
+  syncToCasdoor?: boolean
 }
 
 /**
@@ -126,6 +130,10 @@ export const casAuthApi = {
       serviceUrl: params.serviceUrl,
       defaultRole: params.defaultRole,
       autoCreateUser: params.autoCreateUser,
+      clientId: params.clientId || '',
+      clientSecret: params.clientSecret || '',
+      jwtPublicKey: params.jwtPublicKey || '',
+      syncToCasdoor: params.syncToCasdoor || false,
     })
 
     const request = create(UpdateCASConfigRequestSchema, {
@@ -149,6 +157,10 @@ export const casAuthApi = {
         serviceUrl: params.serviceUrl,
         defaultRole: params.defaultRole,
         autoCreateUser: params.autoCreateUser,
+        clientId: params.clientId || '',
+        clientSecret: params.clientSecret || '',
+        jwtPublicKey: params.jwtPublicKey || '',
+        syncToCasdoor: params.syncToCasdoor || false,
       })
     }
 

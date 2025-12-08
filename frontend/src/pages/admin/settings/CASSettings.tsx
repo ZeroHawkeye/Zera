@@ -21,6 +21,10 @@ interface CASFormValues {
   serviceUrl: string
   defaultRole: string
   autoCreateUser: boolean
+  clientId: string
+  clientSecret: string
+  jwtPublicKey: string
+  syncToCasdoor: boolean
 }
 
 /**
@@ -97,6 +101,10 @@ function CASSettings() {
         serviceUrl: data.config.serviceUrl || '',
         defaultRole: data.config.defaultRole || 'user',
         autoCreateUser: data.config.autoCreateUser ?? true,
+        clientId: data.config.clientId || '',
+        clientSecret: data.config.clientSecret || '',
+        jwtPublicKey: data.config.jwtPublicKey || '',
+        syncToCasdoor: data.config.syncToCasdoor || false,
       })
     }
   }, [data, form])
@@ -117,6 +125,10 @@ function CASSettings() {
       serviceUrl: values.serviceUrl,
       defaultRole: values.defaultRole,
       autoCreateUser: values.autoCreateUser,
+      clientId: values.clientId,
+      clientSecret: values.clientSecret,
+      jwtPublicKey: values.jwtPublicKey,
+      syncToCasdoor: values.syncToCasdoor,
     })
   }
 
@@ -131,6 +143,10 @@ function CASSettings() {
       serviceUrl: values.serviceUrl,
       defaultRole: values.defaultRole,
       autoCreateUser: values.autoCreateUser,
+      clientId: values.clientId,
+      clientSecret: values.clientSecret,
+      jwtPublicKey: values.jwtPublicKey,
+      syncToCasdoor: values.syncToCasdoor,
     })
   }
 
@@ -145,6 +161,10 @@ function CASSettings() {
         serviceUrl: data.config.serviceUrl || '',
         defaultRole: data.config.defaultRole || 'user',
         autoCreateUser: data.config.autoCreateUser ?? true,
+        clientId: data.config.clientId || '',
+        clientSecret: data.config.clientSecret || '',
+        jwtPublicKey: data.config.jwtPublicKey || '',
+        syncToCasdoor: data.config.syncToCasdoor || false,
       })
       setHasChanges(false)
       setTestResult(null)
@@ -320,6 +340,80 @@ function CASSettings() {
                     </Select.Option>
                   ))}
                 </Select>
+              </Form.Item>
+            </>
+          )}
+        </Card>
+
+        {/* Casdoor SDK 配置 (用于双向同步) */}
+        <Card title="Casdoor SDK 配置" className="overflow-hidden">
+          {isLoading ? (
+            <Skeleton active paragraph={{ rows: 4 }} />
+          ) : (
+            <>
+              <Alert
+                message="双向同步配置"
+                description="配置 Casdoor SDK 凭证以启用将本地创建的用户同步到 Casdoor。这些凭证可在 Casdoor 应用设置中获取。"
+                type="info"
+                showIcon
+                className="mb-4"
+              />
+
+              <div
+                className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row p-3 rounded-lg transition-colors mb-4"
+                style={{ backgroundColor: token.colorBgTextHover }}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium" style={{ color: token.colorText }}>
+                    同步到 Casdoor
+                  </div>
+                  <div className="text-sm" style={{ color: token.colorTextSecondary }}>
+                    启用后，本地创建的用户将自动同步到 Casdoor
+                  </div>
+                </div>
+                <Form.Item name="syncToCasdoor" valuePropName="checked" className="mb-0">
+                  <Switch className="flex-shrink-0" />
+                </Form.Item>
+              </div>
+
+              <Form.Item
+                name="clientId"
+                label="Client ID"
+                tooltip="Casdoor 应用的 Client ID"
+                rules={[
+                  {
+                    required: form.getFieldValue('syncToCasdoor'),
+                    message: '启用同步时必须填写 Client ID',
+                  },
+                ]}
+              >
+                <Input placeholder="请输入 Casdoor 应用 Client ID" />
+              </Form.Item>
+
+              <Form.Item
+                name="clientSecret"
+                label="Client Secret"
+                tooltip="Casdoor 应用的 Client Secret"
+                rules={[
+                  {
+                    required: form.getFieldValue('syncToCasdoor'),
+                    message: '启用同步时必须填写 Client Secret',
+                  },
+                ]}
+              >
+                <Input.Password placeholder="请输入 Casdoor 应用 Client Secret" />
+              </Form.Item>
+
+              <Form.Item
+                name="jwtPublicKey"
+                label="JWT 公钥证书"
+                tooltip="Casdoor 应用的 JWT 公钥证书，用于验证 Token"
+                className="mb-0"
+              >
+                <Input.TextArea
+                  rows={4}
+                  placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"
+                />
               </Form.Item>
             </>
           )}

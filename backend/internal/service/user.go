@@ -10,6 +10,8 @@ import (
 	"zera/ent/role"
 	"zera/ent/user"
 	"zera/gen/base"
+	"zera/internal/casdoor"
+	"zera/internal/logger"
 )
 
 var (
@@ -19,13 +21,244 @@ var (
 
 // UserService 用户管理服务
 type UserService struct {
-	client *ent.Client
+	client        *ent.Client
+	casdoorClient *casdoor.Client
 }
 
 // NewUserService 创建用户管理服务
 func NewUserService(client *ent.Client) *UserService {
 	return &UserService{
-		client: client,
+		client:        client,
+		casdoorClient: casdoor.NewClient(),
+	}
+}
+
+// NewUserServiceWithCasdoor 创建带有 Casdoor 客户端的用户管理服务
+func NewUserServiceWithCasdoor(client *ent.Client, casdoorClient *casdoor.Client) *UserService {
+	return &UserService{
+		client:        client,
+		casdoorClient: casdoorClient,
+	}
+}
+
+// InitCasdoorClient 初始化 Casdoor 客户端 (应在配置更新后调用)
+func (s *UserService) InitCasdoorClient(ctx context.Context) error {
+	logger.Debug("InitCasdoorClient called")
+
+	casAuthService := NewCASAuthService(s.client, nil)
+	config, err := casAuthService.GetCASConfig(ctx)
+	if err != nil {
+		logger.Warn("failed to get CAS config for casdoor sync", "error", err)
+		return nil
+	}
+
+	logger.Debug("CAS config loaded for casdoor client",
+		"syncToCasdoor", config.SyncToCasdoor,
+		"hasServerURL", config.ServerURL != "",
+		"hasClientID", config.ClientID != "",
+		"hasClientSecret", config.ClientSecret != "",
+		"organization", config.Organization,
+		"application", config.Application,
+	)
+
+	casdoorConfig := &casdoor.Config{
+		ServerURL:    config.ServerURL,
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		JwtPublicKey: config.JwtPublicKey,
+		Organization: config.Organization,
+		Application:  config.Application,
+		SyncEnabled:  config.SyncToCasdoor,
+	}
+
+	if err := s.casdoorClient.Init(casdoorConfig); err != nil {
+		logger.Error("failed to initialize casdoor client", "error", err)
+		return err
+	}
+
+	logger.Info("casdoor client initialization completed",
+		"syncEnabled", s.casdoorClient.IsSyncEnabled(),
+		"isInitialized", s.casdoorClient.IsInitialized(),
+	)
+
+	return nil
+}
+
+// shouldSyncToCasdoor 检查是否应该同步到 Casdoor
+func (s *UserService) shouldSyncToCasdoor(ctx context.Context, u *ent.User) bool {
+	// 仅同步本地用户 (auth_provider = local)
+	if u.AuthProvider != user.AuthProviderLocal {
+		logger.Debug("skipping casdoor sync: user is not local",
+			"userID", u.ID,
+			"username", u.Username,
+			"authProvider", u.AuthProvider,
+		)
+		return false
+	}
+
+	// 检查 Casdoor 客户端是否启用
+	if s.casdoorClient == nil {
+		logger.Debug("skipping casdoor sync: casdoor client is nil",
+			"userID", u.ID,
+			"username", u.Username,
+		)
+		return false
+	}
+
+	if !s.casdoorClient.IsSyncEnabled() {
+		logger.Debug("skipping casdoor sync: sync is not enabled",
+			"userID", u.ID,
+			"username", u.Username,
+			"isInitialized", s.casdoorClient.IsInitialized(),
+		)
+		return false
+	}
+
+	logger.Debug("casdoor sync check passed",
+		"userID", u.ID,
+		"username", u.Username,
+	)
+	return true
+}
+
+// syncUserToCasdoor 同步用户到 Casdoor
+// 同步成功后会更新本地用户的 external_id，以便 CAS 登录时能正确关联用户
+func (s *UserService) syncUserToCasdoor(ctx context.Context, u *ent.User, password string) {
+	logger.Debug("syncUserToCasdoor called",
+		"userID", u.ID,
+		"username", u.Username,
+	)
+
+	if !s.shouldSyncToCasdoor(ctx, u) {
+		return
+	}
+
+	casdoorUser := &casdoor.User{
+		Username:    u.Username,
+		Email:       u.Email,
+		DisplayName: u.Nickname,
+		Password:    password,
+		Avatar:      u.Avatar,
+	}
+
+	logger.Debug("syncing user to casdoor",
+		"username", u.Username,
+		"email", u.Email,
+		"hasPassword", password != "",
+	)
+
+	casdoorID, err := s.casdoorClient.AddUserAndGetID(ctx, casdoorUser)
+	if err != nil {
+		if errors.Is(err, casdoor.ErrUserAlreadyExists) {
+			// 用户已存在于 Casdoor，尝试更新本地用户的 external_id
+			if casdoorID != "" && (u.ExternalID == nil || *u.ExternalID == "") {
+				logger.Info("user already exists in casdoor, updating local external_id",
+					"userID", u.ID,
+					"username", u.Username,
+					"casdoorID", casdoorID,
+				)
+				s.updateUserExternalID(ctx, u.ID, casdoorID)
+			} else {
+				logger.Info("user already exists in casdoor, skipping sync",
+					"userID", u.ID,
+					"username", u.Username,
+				)
+			}
+		} else {
+			logger.Error("failed to sync user to casdoor",
+				"userID", u.ID,
+				"username", u.Username,
+				"error", err,
+			)
+		}
+		return
+	}
+
+	// 同步成功，更新本地用户的 external_id
+	if casdoorID != "" {
+		s.updateUserExternalID(ctx, u.ID, casdoorID)
+		logger.Info("user synced to casdoor successfully",
+			"userID", u.ID,
+			"username", u.Username,
+			"casdoorID", casdoorID,
+		)
+	} else {
+		logger.Warn("user synced to casdoor but failed to get casdoor ID",
+			"userID", u.ID,
+			"username", u.Username,
+		)
+	}
+}
+
+// updateUserExternalID 更新用户的 external_id
+func (s *UserService) updateUserExternalID(ctx context.Context, userID int, externalID string) {
+	err := s.client.User.UpdateOneID(userID).
+		SetExternalID(externalID).
+		Exec(ctx)
+	if err != nil {
+		logger.Error("failed to update user external_id",
+			"userID", userID,
+			"externalID", externalID,
+			"error", err,
+		)
+	} else {
+		logger.Debug("user external_id updated",
+			"userID", userID,
+			"externalID", externalID,
+		)
+	}
+}
+
+// syncUserUpdateToCasdoor 同步用户更新到 Casdoor
+func (s *UserService) syncUserUpdateToCasdoor(ctx context.Context, u *ent.User, password string) {
+	if !s.shouldSyncToCasdoor(ctx, u) {
+		return
+	}
+
+	casdoorUser := &casdoor.User{
+		Username:    u.Username,
+		Email:       u.Email,
+		DisplayName: u.Nickname,
+		Password:    password,
+		Avatar:      u.Avatar,
+	}
+
+	if err := s.casdoorClient.UpdateUser(ctx, casdoorUser); err != nil {
+		if errors.Is(err, casdoor.ErrUserNotFound) {
+			// 用户在 Casdoor 中不存在，尝试创建
+			logger.Info("user not found in casdoor, attempting to create",
+				"userID", u.ID,
+				"username", u.Username,
+			)
+			s.syncUserToCasdoor(ctx, u, password)
+		} else {
+			logger.Error("failed to sync user update to casdoor",
+				"userID", u.ID,
+				"username", u.Username,
+				"error", err,
+			)
+		}
+	}
+}
+
+// syncUserDeleteToCasdoor 同步用户删除到 Casdoor
+func (s *UserService) syncUserDeleteToCasdoor(ctx context.Context, u *ent.User) {
+	// 检查是否为本地用户
+	if u.AuthProvider != user.AuthProviderLocal {
+		return
+	}
+
+	// 检查 Casdoor 客户端是否启用
+	if s.casdoorClient == nil || !s.casdoorClient.IsSyncEnabled() {
+		return
+	}
+
+	if err := s.casdoorClient.DeleteUser(ctx, u.Username); err != nil {
+		logger.Error("failed to sync user deletion to casdoor",
+			"userID", u.ID,
+			"username", u.Username,
+			"error", err,
+		)
 	}
 }
 
@@ -166,13 +399,14 @@ func (s *UserService) CreateUser(ctx context.Context, req *base.CreateUserReques
 		return nil, ErrUserExists
 	}
 
-	// 创建用户
+	// 创建用户 (本地用户默认 auth_provider = local)
 	create := s.client.User.Create().
 		SetUsername(req.Username).
 		SetEmail(req.Email).
 		SetPasswordHash(hashPassword(req.Password)).
 		SetNickname(req.Nickname).
-		SetAvatar(req.Avatar)
+		SetAvatar(req.Avatar).
+		SetAuthProvider(user.AuthProviderLocal)
 
 	// 设置状态
 	if req.Status != base.UserStatus_USER_STATUS_UNSPECIFIED {
@@ -209,6 +443,9 @@ func (s *UserService) CreateUser(ctx context.Context, req *base.CreateUserReques
 	if err != nil {
 		return nil, err
 	}
+
+	// 同步用户到 Casdoor (异步，不影响本地操作)
+	go s.syncUserToCasdoor(ctx, u, req.Password)
 
 	return &base.CreateUserResponse{
 		User: s.toUserDetail(u),
@@ -287,6 +524,9 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *base.UpdateUs
 		return nil, err
 	}
 
+	// 同步用户更新到 Casdoor (异步，不影响本地操作)
+	go s.syncUserUpdateToCasdoor(ctx, u, "")
+
 	return &base.UpdateUserResponse{
 		User: s.toUserDetail(u),
 	}, nil
@@ -294,13 +534,27 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *base.UpdateUs
 
 // DeleteUser 删除用户
 func (s *UserService) DeleteUser(ctx context.Context, id int) error {
-	err := s.client.User.DeleteOneID(id).Exec(ctx)
+	// 先查询用户信息 (用于同步删除到 Casdoor)
+	u, err := s.client.User.Query().Where(user.ID(id)).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrUserNotFound
 		}
 		return err
 	}
+
+	// 删除用户
+	err = s.client.User.DeleteOneID(id).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrUserNotFound
+		}
+		return err
+	}
+
+	// 同步用户删除到 Casdoor (异步，不影响本地操作)
+	go s.syncUserDeleteToCasdoor(ctx, u)
+
 	return nil
 }
 
@@ -316,6 +570,15 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 		return err
 	}
 
+	// 先查询用户信息 (用于同步密码到 Casdoor)
+	u, err := s.client.User.Query().Where(user.ID(id)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrUserNotFound
+		}
+		return err
+	}
+
 	err = s.client.User.UpdateOneID(id).
 		SetPasswordHash(hashPassword(newPassword)).
 		SetLoginAttempts(0).
@@ -327,7 +590,39 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 		}
 		return err
 	}
+
+	// 同步密码到 Casdoor (异步，不影响本地操作)
+	go s.syncPasswordToCasdoor(ctx, u, newPassword)
+
 	return nil
+}
+
+// syncPasswordToCasdoor 同步密码到 Casdoor
+func (s *UserService) syncPasswordToCasdoor(ctx context.Context, u *ent.User, newPassword string) {
+	// 检查是否为本地用户
+	if u.AuthProvider != user.AuthProviderLocal {
+		return
+	}
+
+	// 检查 Casdoor 客户端是否启用
+	if s.casdoorClient == nil || !s.casdoorClient.IsSyncEnabled() {
+		return
+	}
+
+	if err := s.casdoorClient.UpdatePassword(ctx, u.Username, newPassword); err != nil {
+		if errors.Is(err, casdoor.ErrUserNotFound) {
+			logger.Info("user not found in casdoor, password sync skipped",
+				"userID", u.ID,
+				"username", u.Username,
+			)
+		} else {
+			logger.Error("failed to sync password to casdoor",
+				"userID", u.ID,
+				"username", u.Username,
+				"error", err,
+			)
+		}
+	}
 }
 
 // BatchDeleteUsers 批量删除用户

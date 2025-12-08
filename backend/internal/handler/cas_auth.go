@@ -19,6 +19,7 @@ type CASAuthHandler struct {
 	baseconnect.UnimplementedCASAuthServiceHandler
 	validator      protovalidate.Validator
 	casAuthService *service.CASAuthService
+	userService    *service.UserService
 	jwtManager     *auth.JWTManager
 }
 
@@ -26,11 +27,13 @@ type CASAuthHandler struct {
 func NewCASAuthHandler(
 	validator protovalidate.Validator,
 	casAuthService *service.CASAuthService,
+	userService *service.UserService,
 	jwtManager *auth.JWTManager,
 ) *CASAuthHandler {
 	return &CASAuthHandler{
 		validator:      validator,
 		casAuthService: casAuthService,
+		userService:    userService,
 		jwtManager:     jwtManager,
 	}
 }
@@ -153,6 +156,16 @@ func (h *CASAuthHandler) UpdateCASConfig(
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to update CAS config", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("更新 CAS 配置失败"))
+	}
+
+	// 重新初始化 Casdoor 客户端以应用新配置
+	if h.userService != nil {
+		if err := h.userService.InitCasdoorClient(ctx); err != nil {
+			logger.WarnContext(ctx, "failed to reinitialize casdoor client after config update", "error", err)
+		} else {
+			logger.InfoContext(ctx, "casdoor client reinitialized after config update",
+				"sync_enabled", config.SyncToCasdoor)
+		}
 	}
 
 	// 获取更新后的配置

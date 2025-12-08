@@ -170,6 +170,11 @@ func New(cfg *config.Config) (*Server, error) {
 	systemSettingService := service.NewSystemSettingService(db.Client)
 	casAuthService := service.NewCASAuthService(db.Client, jwtManager)
 
+	// 初始化 Casdoor 客户端（用于用户同步）
+	if err := userService.InitCasdoorClient(context.Background()); err != nil {
+		slogger.Warn("failed to initialize casdoor client for user sync", "error", err)
+	}
+
 	// 初始化默认系统设置
 	if err := systemSettingService.InitDefaultSettings(context.Background()); err != nil {
 		db.Close()
@@ -183,7 +188,7 @@ func New(cfg *config.Config) (*Server, error) {
 	auditLogHandler := handler.NewAuditLogHandler(validator, auditLogService)
 	systemSettingHandler := handler.NewSystemSettingHandler(validator, systemSettingService)
 	uploadHandler := handler.NewUploadHandler(localStorage, &cfg.Static, jwtManager, permChecker, systemSettingService)
-	casAuthHandler := handler.NewCASAuthHandler(validator, casAuthService, jwtManager)
+	casAuthHandler := handler.NewCASAuthHandler(validator, casAuthService, userService, jwtManager)
 
 	// 创建权限拦截器（替代原来的认证拦截器）
 	permInterceptor := middleware.NewPermissionInterceptor(jwtManager, permChecker)
