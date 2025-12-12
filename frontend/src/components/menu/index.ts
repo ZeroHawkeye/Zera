@@ -3,3 +3,4 @@
  */
 
 export { MenuRenderer } from './MenuRenderer'
+export { TopNavMenu } from './TopNavMenu'

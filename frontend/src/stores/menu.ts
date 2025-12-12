@@ -25,14 +25,16 @@ export interface MenuState {
   collapsed: boolean
   /** 移动端菜单是否打开 */
   mobileMenuOpen: boolean
-  
+  /** 当前激活的顶级菜单 key（用于 TopNavLayout） */
+  activeTopMenuKey: MenuKey | null
+
   /** 获取处理后的菜单项（已过滤权限） */
   getFilteredMenuItems: (context: MenuPermissionContext) => MenuItem[]
   /** 获取原始菜单项 */
   getMenuItems: () => MenuItem[]
   /** 获取面包屑数据 */
   getBreadcrumbs: (path: string) => Array<{ key: MenuKey; label: string; path?: string }>
-  
+
   /** 设置展开的菜单 keys */
   setOpenKeys: (keys: MenuKey[]) => void
   /** 切换菜单展开状态 */
@@ -47,6 +49,8 @@ export interface MenuState {
   toggleCollapsed: () => void
   /** 设置移动端菜单状态 */
   setMobileMenuOpen: (open: boolean) => void
+  /** 设置激活的顶级菜单 key */
+  setActiveTopMenuKey: (key: MenuKey | null) => void
   /** 展开所有菜单 */
   expandAll: () => void
   /** 折叠所有菜单 */
@@ -65,6 +69,7 @@ export const useMenuStore = create<MenuState>()(
       activeKey: null,
       collapsed: false,
       mobileMenuOpen: false,
+      activeTopMenuKey: null,
 
       getFilteredMenuItems: (context: MenuPermissionContext) => {
         return menuRegistry.getMergedMenuItems(context)
@@ -124,6 +129,10 @@ export const useMenuStore = create<MenuState>()(
 
       setMobileMenuOpen: (open: boolean) => {
         set({ mobileMenuOpen: open })
+      },
+
+      setActiveTopMenuKey: (key: MenuKey | null) => {
+        set({ activeTopMenuKey: key })
       },
 
       expandAll: () => {

@@ -17,6 +17,7 @@ import { useAuthStore, useMenuStore } from "@/stores";
 import { MenuRenderer } from "@/components/menu";
 import { GlobalSearchTrigger } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LayoutToggle } from "@/components/LayoutToggle";
 import { initAdminMenus, generateBreadcrumbs } from "@/config/menu";
 import { Logo, LogoIcon } from "@/components";
 import { getCasLogoutRedirectUrl } from "@/api/cas_auth";
@@ -244,6 +245,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-1 md:gap-2">
             {/* 搜索按钮 */}
             <GlobalSearchTrigger />
+
+            {/* 布局切换 - 仅桌面端显示 */}
+            <div className="hidden md:block">
+              <LayoutToggle />
+            </div>
 
             {/* 主题切换 */}
             <ThemeToggle />
