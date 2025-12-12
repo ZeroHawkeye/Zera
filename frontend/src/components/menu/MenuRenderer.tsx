@@ -3,10 +3,10 @@
  * 支持最多5层嵌套，递归渲染菜单项
  */
 
-import { useCallback, useMemo, type ReactNode, isValidElement } from "react";
+import { useCallback, useMemo, useState, type ReactNode, isValidElement } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { ChevronDown, ExternalLink } from "lucide-react";
-import { Badge, Tooltip } from "antd";
+import { ChevronDown, ExternalLink, ChevronRight } from "lucide-react";
+import { Badge, Tooltip, Popover } from "antd";
 import {
   type MenuItem,
   type MenuPermissionContext,
@@ -176,6 +176,7 @@ export function MenuRenderer({
 
 /**
  * 渲染菜单图标
+ * 支持 React 组件（包括 ForwardRef）和 ReactNode
  */
 function renderIcon(
   icon: MenuIcon | undefined,
@@ -183,15 +184,30 @@ function renderIcon(
 ): ReactNode {
   if (!icon) return null;
 
-  // 如果是 React 元素，直接返回
+  // 如果是 React 元素（已实例化），直接返回
   if (isValidElement(icon)) {
     return icon;
   }
 
-  // 如果是组件，渲染它
+  // 如果是函数组件
   if (typeof icon === "function") {
     const IconComponent = icon;
     return <IconComponent className={className} />;
+  }
+
+  // 如果是对象（可能是 ForwardRef 组件，如 Lucide 图标）
+  // ForwardRef 组件有 $$typeof 属性，且可以作为 JSX 组件使用
+  if (typeof icon === "object" && icon !== null) {
+    // 检查是否是 React 组件（ForwardRef 或其他）
+    // ForwardRef 有 $$typeof = Symbol(react.forward_ref)
+    const iconAsAny = icon as { $$typeof?: symbol; render?: unknown };
+    if (
+      iconAsAny.$$typeof ||
+      typeof iconAsAny.render === "function"
+    ) {
+      const IconComponent = icon as unknown as React.ComponentType<{ className?: string }>;
+      return <IconComponent className={className} />;
+    }
   }
 
   return null;
@@ -221,6 +237,7 @@ function MenuGroupItem({
   hasActiveChild,
   onToggle,
 }: MenuGroupItemProps) {
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const label = isMenuGroup(item)
     ? item.label
     : (item as { label: string }).label;
@@ -245,7 +262,67 @@ function MenuGroupItem({
     return hoverBgClasses[Math.min(lvl, hoverBgClasses.length - 1)];
   };
 
-  // 可展开/收起的 SubMenu
+  // 折叠模式下的按钮（用于触发 Popover）
+  const collapsedButton = (
+    <button
+      className={`
+        w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative group cursor-pointer
+        ${
+          hasActiveChild
+            ? `${getLevelBgClass(level, true)}`
+            : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
+        }
+      `}
+      style={{
+        paddingLeft: `${12 + level * 12}px`,
+        ...(hasActiveChild ? MENU_ACTIVE_BG_STYLE : {}),
+      }}
+    >
+      {/* 激活指示条 */}
+      <div
+        className={`
+          absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full transition-opacity duration-200
+          ${hasActiveChild ? "opacity-60" : "opacity-0"}
+        `}
+        style={MENU_ACTIVE_BAR_STYLE}
+      />
+
+      {/* 图标 */}
+      <span className="flex-shrink-0">{renderIcon(icon)}</span>
+    </button>
+  );
+
+  // 折叠模式下的弹出菜单内容
+  const popoverContent = (
+    <div className="min-w-[160px] py-1">
+      <div className="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 mb-1">
+        {label}
+      </div>
+      {children && (
+        <CollapsedSubMenuRenderer items={children} onClose={() => setPopoverOpen(false)} />
+      )}
+    </div>
+  );
+
+  // 折叠模式下使用 Popover 显示子菜单
+  if (collapsed) {
+    return (
+      <Popover
+        content={popoverContent}
+        placement="rightTop"
+        trigger="click"
+        open={popoverOpen}
+        onOpenChange={setPopoverOpen}
+        arrow={false}
+        overlayClassName="collapsed-menu-popover"
+        overlayInnerStyle={{ padding: 0, borderRadius: '12px' }}
+      >
+        {collapsedButton}
+      </Popover>
+    );
+  }
+
+  // 展开模式下的完整内容
   const content = (
     <div>
       <button
@@ -317,16 +394,147 @@ function MenuGroupItem({
     </div>
   );
 
-  // 折叠模式下显示 Tooltip
-  if (collapsed) {
-    return (
-      <Tooltip title={label} placement="right">
-        {content}
-      </Tooltip>
-    );
-  }
-
   return content;
+}
+
+/**
+ * 折叠模式下的子菜单渲染器
+ * 用于在 Popover 中渲染子菜单项
+ */
+function CollapsedSubMenuRenderer({ 
+  items, 
+  onClose 
+}: { 
+  items: MenuItem[]; 
+  onClose: () => void;
+}) {
+  const location = useLocation();
+  
+  // 检查菜单项是否激活
+  const isActive = useCallback(
+    (item: MenuItem): boolean => {
+      if (!isMenuNavItem(item) || !item.path) return false;
+      if (location.pathname === item.path) return true;
+      if (item.path === "/admin") {
+        return location.pathname === "/admin" || location.pathname === "/admin/";
+      }
+      return location.pathname.startsWith(item.path + "/");
+    },
+    [location.pathname],
+  );
+
+  return (
+    <div className="space-y-0.5">
+      {items.map((subItem) => {
+        if (isMenuDivider(subItem)) {
+          return <div key={subItem.key} className="my-1 border-t border-gray-100" />;
+        }
+
+        if (hasChildren(subItem)) {
+          // 嵌套子菜单 - 使用嵌套 Popover
+          return (
+            <CollapsedNestedSubMenu 
+              key={subItem.key} 
+              item={subItem} 
+              isActive={isActive}
+              onClose={onClose}
+            />
+          );
+        }
+
+        if (isMenuNavItem(subItem) && subItem.path) {
+          const active = isActive(subItem);
+          return (
+            <Link
+              key={subItem.key}
+              to={subItem.path}
+              onClick={onClose}
+              className={`
+                flex items-center gap-2 px-3 py-2 mx-1 rounded-lg text-sm transition-colors
+                ${active 
+                  ? 'text-primary bg-primary/10 font-medium' 
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }
+              `}
+              style={active ? { color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)' } : {}}
+            >
+              <span className="flex-shrink-0">{renderIcon(subItem.icon, "w-4 h-4")}</span>
+              <span>{subItem.label}</span>
+            </Link>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  );
+}
+
+/**
+ * 折叠模式下的嵌套子菜单（三级及以上）
+ */
+function CollapsedNestedSubMenu({ 
+  item, 
+  isActive,
+  onClose 
+}: { 
+  item: MenuItem;
+  isActive: (item: MenuItem) => boolean;
+  onClose: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const label = isMenuGroup(item) ? item.label : (item as { label: string }).label;
+  const icon = "icon" in item ? item.icon : undefined;
+  const children = isMenuGroup(item)
+    ? item.children
+    : (item as { children?: MenuItem[] }).children;
+
+  // 检查是否有激活的子项
+  const hasActiveChild = children?.some(child => {
+    if (isActive(child)) return true;
+    if (hasChildren(child)) {
+      const subChildren = isMenuGroup(child) ? child.children : (child as { children?: MenuItem[] }).children;
+      return subChildren?.some(c => isActive(c));
+    }
+    return false;
+  }) ?? false;
+
+  const nestedContent = (
+    <div className="min-w-[140px] py-1">
+      {children && (
+        <CollapsedSubMenuRenderer items={children} onClose={onClose} />
+      )}
+    </div>
+  );
+
+  return (
+    <Popover
+      content={nestedContent}
+      placement="rightTop"
+      trigger="hover"
+      open={open}
+      onOpenChange={setOpen}
+      arrow={false}
+      overlayInnerStyle={{ padding: 0, borderRadius: '8px' }}
+    >
+      <div
+        className={`
+          flex items-center justify-between gap-2 px-3 py-2 mx-1 rounded-lg text-sm cursor-pointer transition-colors
+          ${hasActiveChild 
+            ? 'text-primary font-medium' 
+            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          }
+        `}
+        style={hasActiveChild ? { color: 'var(--color-primary)' } : {}}
+      >
+        <div className="flex items-center gap-2">
+          <span className="flex-shrink-0">{renderIcon(icon, "w-4 h-4")}</span>
+          <span>{label}</span>
+        </div>
+        <ChevronRight className="w-3 h-3 text-gray-400" />
+      </div>
+    </Popover>
+  );
 }
 
 /**
