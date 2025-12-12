@@ -1,9 +1,9 @@
-import { Outlet, Link } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
-import { useSiteStore } from '@/stores'
+import { Outlet, Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import { useSiteStore } from "@/stores";
 
 interface AuthLayoutProps {
-  children?: ReactNode
+  children?: ReactNode;
 }
 
 /**
@@ -12,12 +12,17 @@ interface AuthLayoutProps {
  * 提供统一的认证页面风格
  */
 export function AuthLayout({ children }: AuthLayoutProps) {
-  const siteName = useSiteStore((state) => state.siteName)
+  const siteName = useSiteStore((state) => state.siteName);
 
   return (
     <div className="min-h-screen flex">
       {/* 左侧品牌区域 */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700">
+      <div
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, var(--auth-gradient-from), var(--auth-gradient-via), var(--auth-gradient-to))`,
+        }}
+      >
         {/* 装饰元素 */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
@@ -29,7 +34,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <div>
             <Link to="/" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">{siteName.charAt(0)}</span>
+                <span className="text-white font-bold text-xl">
+                  {siteName.charAt(0)}
+                </span>
               </div>
               <span className="text-2xl font-bold">{siteName}</span>
             </Link>
@@ -40,8 +47,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               欢迎使用 {siteName} 管理系统
             </h1>
             <p className="text-white/80 text-lg leading-relaxed">
-              一个现代化、高效率的企业级管理平台，
-              助力您的业务数字化转型。
+              一个现代化、高效率的企业级管理平台， 助力您的业务数字化转型。
             </p>
           </div>
 
@@ -62,10 +68,19 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           {/* 移动端 Logo */}
           <div className="lg:hidden mb-8 text-center">
             <Link to="/" className="inline-flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">{siteName.charAt(0)}</span>
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(135deg, var(--auth-gradient-from), var(--auth-gradient-to))`,
+                }}
+              >
+                <span className="text-white font-bold">
+                  {siteName.charAt(0)}
+                </span>
               </div>
-              <span className="text-xl font-bold text-gray-900">{siteName}</span>
+              <span className="text-xl font-bold text-gray-900">
+                {siteName}
+              </span>
             </Link>
           </div>
 
@@ -81,5 +96,5 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

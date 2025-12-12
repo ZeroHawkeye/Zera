@@ -4,30 +4,46 @@
  * 支持拼音、拼音首字母、中文搜索
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { Modal, Input, Empty } from 'antd'
-import type { InputRef } from 'antd'
-import { Search, Command, CornerDownLeft } from 'lucide-react'
-import { pinyin, match } from 'pinyin-pro'
-import { useMenuStore } from '@/stores'
-import type { MenuItem, MenuNavItem } from '@/config/menu'
-import { isMenuNavItem, isMenuGroup } from '@/config/menu/types'
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { Modal, Input, Empty } from "antd";
+import type { InputRef } from "antd";
+import { Search, Command, CornerDownLeft } from "lucide-react";
+import { pinyin, match } from "pinyin-pro";
+import { useMenuStore } from "@/stores";
+import type { MenuItem, MenuNavItem } from "@/config/menu";
+import { isMenuNavItem, isMenuGroup } from "@/config/menu/types";
+
+const ACTIVE_BG_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--color-primary-light)",
+};
+const ACTIVE_BAR_STYLE: React.CSSProperties = {
+  borderLeftColor: "var(--color-primary)",
+};
+const ACTIVE_ICON_STYLE: React.CSSProperties = {
+  color: "var(--color-primary)",
+};
+const ACTIVE_ICON_BG_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--color-primary-light)",
+};
+const ACTIVE_TEXT_STYLE: React.CSSProperties = {
+  color: "var(--color-primary)",
+};
 
 /**
  * 扁平化后的搜索项
  */
 interface SearchItem {
   /** 唯一标识 */
-  key: string
+  key: string;
   /** 显示标签 */
-  label: string
+  label: string;
   /** 路由路径 */
-  path: string
+  path: string;
   /** 面包屑路径（用于显示层级） */
-  breadcrumb: string[]
+  breadcrumb: string[];
   /** 图标组件 */
-  icon?: React.ComponentType<{ className?: string }>
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 /**
@@ -35,14 +51,14 @@ interface SearchItem {
  */
 function flattenMenuForSearch(
   items: MenuItem[],
-  breadcrumb: string[] = []
+  breadcrumb: string[] = [],
 ): SearchItem[] {
-  const result: SearchItem[] = []
+  const result: SearchItem[] = [];
 
   for (const item of items) {
     if (isMenuNavItem(item)) {
-      const navItem = item as MenuNavItem
-      const currentBreadcrumb = [...breadcrumb, navItem.label]
+      const navItem = item as MenuNavItem;
+      const currentBreadcrumb = [...breadcrumb, navItem.label];
 
       // 有路径的菜单项添加到搜索结果
       if (navItem.path && !navItem.hidden) {
@@ -51,22 +67,24 @@ function flattenMenuForSearch(
           label: navItem.label,
           path: navItem.path,
           breadcrumb: currentBreadcrumb,
-          icon: typeof navItem.icon === 'function' ? navItem.icon : undefined,
-        })
+          icon: typeof navItem.icon === "function" ? navItem.icon : undefined,
+        });
       }
 
       // 递归处理子菜单
       if (navItem.children && navItem.children.length > 0) {
-        result.push(...flattenMenuForSearch(navItem.children, currentBreadcrumb))
+        result.push(
+          ...flattenMenuForSearch(navItem.children, currentBreadcrumb),
+        );
       }
     } else if (isMenuGroup(item)) {
       // 分组菜单只处理子项
-      const currentBreadcrumb = [...breadcrumb, item.label]
-      result.push(...flattenMenuForSearch(item.children, currentBreadcrumb))
+      const currentBreadcrumb = [...breadcrumb, item.label];
+      result.push(...flattenMenuForSearch(item.children, currentBreadcrumb));
     }
   }
 
-  return result
+  return result;
 }
 
 /**
@@ -77,40 +95,50 @@ function SearchResultItem({
   isActive,
   onClick,
 }: {
-  item: SearchItem
-  isActive: boolean
-  onClick: () => void
+  item: SearchItem;
+  isActive: boolean;
+  onClick: () => void;
 }) {
-  const Icon = item.icon
+  const Icon = item.icon;
 
   return (
     <div
       onClick={onClick}
       className={`
         flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150
-        ${isActive
-          ? 'bg-blue-50 border-l-2 border-blue-500'
-          : 'hover:bg-gray-50 border-l-2 border-transparent'
+        ${
+          isActive
+            ? "border-l-2"
+            : "hover:bg-gray-50 border-l-2 border-transparent"
         }
       `}
+      style={isActive ? { ...ACTIVE_BG_STYLE, ...ACTIVE_BAR_STYLE } : undefined}
     >
       {/* 图标 */}
       <div
         className={`
           flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
-          ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}
+          ${isActive ? "" : "bg-gray-100 text-gray-500"}
         `}
+        style={
+          isActive
+            ? { ...ACTIVE_ICON_BG_STYLE, ...ACTIVE_ICON_STYLE }
+            : undefined
+        }
       >
         {Icon ? <Icon className="w-4 h-4" /> : <Search className="w-4 h-4" />}
       </div>
 
       {/* 内容 */}
       <div className="flex-1 min-w-0">
-        <div className={`font-medium ${isActive ? 'text-blue-700' : 'text-gray-900'}`}>
+        <div
+          className={`font-medium ${isActive ? "" : "text-gray-900"}`}
+          style={isActive ? ACTIVE_TEXT_STYLE : undefined}
+        >
           {item.label}
         </div>
         <div className="text-xs text-gray-400 truncate">
-          {item.breadcrumb.join(' / ')}
+          {item.breadcrumb.join(" / ")}
         </div>
       </div>
 
@@ -122,7 +150,7 @@ function SearchResultItem({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -132,20 +160,20 @@ export function GlobalSearch({
   open,
   onClose,
 }: {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }) {
-  const navigate = useNavigate()
-  const { getMenuItems } = useMenuStore()
-  const [searchValue, setSearchValue] = useState('')
-  const [activeIndex, setActiveIndex] = useState(0)
-  const inputRef = useRef<InputRef>(null)
+  const navigate = useNavigate();
+  const { getMenuItems } = useMenuStore();
+  const [searchValue, setSearchValue] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const inputRef = useRef<InputRef>(null);
 
   // 获取所有菜单项并扁平化
   const allSearchItems = useMemo(() => {
-    const menuItems = getMenuItems()
-    return flattenMenuForSearch(menuItems)
-  }, [getMenuItems])
+    const menuItems = getMenuItems();
+    return flattenMenuForSearch(menuItems);
+  }, [getMenuItems]);
 
   /**
    * 检查文本是否匹配搜索词（支持拼音、首字母、中文）
@@ -154,117 +182,123 @@ export function GlobalSearch({
    * @returns 是否匹配
    */
   const matchText = useCallback((text: string, search: string): boolean => {
-    const lowerText = text.toLowerCase()
+    const lowerText = text.toLowerCase();
 
     // 1. 直接匹配（中英文）
     if (lowerText.includes(search)) {
-      return true
+      return true;
     }
 
     // 2. 使用 pinyin-pro 的 match 函数进行拼音匹配
     // match 函数会自动处理全拼、首字母、混合匹配
-    const matchResult = match(text, search)
+    const matchResult = match(text, search);
     if (matchResult) {
-      return true
+      return true;
     }
 
     // 3. 获取完整拼音进行匹配
-    const fullPinyin = pinyin(text, { toneType: 'none', type: 'array' }).join('')
+    const fullPinyin = pinyin(text, { toneType: "none", type: "array" }).join(
+      "",
+    );
     if (fullPinyin.includes(search)) {
-      return true
+      return true;
     }
 
     // 4. 获取拼音首字母进行匹配
-    const firstLetters = pinyin(text, { pattern: 'first', toneType: 'none', type: 'array' }).join('')
+    const firstLetters = pinyin(text, {
+      pattern: "first",
+      toneType: "none",
+      type: "array",
+    }).join("");
     if (firstLetters.includes(search)) {
-      return true
+      return true;
     }
 
-    return false
-  }, [])
+    return false;
+  }, []);
 
   // 根据搜索词过滤结果
   const filteredItems = useMemo(() => {
     if (!searchValue.trim()) {
-      return allSearchItems
+      return allSearchItems;
     }
 
-    const lowerSearch = searchValue.toLowerCase()
+    const lowerSearch = searchValue.toLowerCase();
     return allSearchItems.filter((item) => {
       // 匹配标签（支持拼音）
       if (matchText(item.label, lowerSearch)) {
-        return true
+        return true;
       }
       // 匹配面包屑路径（支持拼音）
       if (item.breadcrumb.some((b) => matchText(b, lowerSearch))) {
-        return true
+        return true;
       }
       // 匹配路由路径（只匹配英文）
       if (item.path.toLowerCase().includes(lowerSearch)) {
-        return true
+        return true;
       }
-      return false
-    })
-  }, [allSearchItems, searchValue, matchText])
+      return false;
+    });
+  }, [allSearchItems, searchValue, matchText]);
 
   // 重置选中项
   useEffect(() => {
-    setActiveIndex(0)
-  }, [searchValue])
+    setActiveIndex(0);
+  }, [searchValue]);
 
   // 打开时聚焦输入框，关闭时重置状态
   useEffect(() => {
     if (open) {
       // 使用 setTimeout 确保 Modal 动画完成后再聚焦
       const timer = setTimeout(() => {
-        inputRef.current?.focus()
-      }, 100)
-      return () => clearTimeout(timer)
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
     } else {
-      setSearchValue('')
-      setActiveIndex(0)
+      setSearchValue("");
+      setActiveIndex(0);
     }
-  }, [open])
+  }, [open]);
 
   // 处理导航
   const handleNavigate = useCallback(
     (item: SearchItem) => {
-      navigate({ to: item.path })
-      onClose()
+      navigate({ to: item.path });
+      onClose();
     },
-    [navigate, onClose]
-  )
+    [navigate, onClose],
+  );
 
   // 处理键盘事件
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
+        case "ArrowDown":
+          e.preventDefault();
           setActiveIndex((prev) =>
-            prev < filteredItems.length - 1 ? prev + 1 : 0
-          )
-          break
-        case 'ArrowUp':
-          e.preventDefault()
+            prev < filteredItems.length - 1 ? prev + 1 : 0,
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
           setActiveIndex((prev) =>
-            prev > 0 ? prev - 1 : filteredItems.length - 1
-          )
-          break
-        case 'Enter':
-          e.preventDefault()
+            prev > 0 ? prev - 1 : filteredItems.length - 1,
+          );
+          break;
+        case "Enter":
+          e.preventDefault();
           if (filteredItems[activeIndex]) {
-            handleNavigate(filteredItems[activeIndex])
+            handleNavigate(filteredItems[activeIndex]);
           }
-          break
-        case 'Escape':
-          e.preventDefault()
-          onClose()
-          break
+          break;
+        case "Escape":
+          e.preventDefault();
+          onClose();
+          break;
       }
     },
-    [filteredItems, activeIndex, handleNavigate, onClose]
-  )
+    [filteredItems, activeIndex, handleNavigate, onClose],
+  );
 
   return (
     <Modal
@@ -277,7 +311,7 @@ export function GlobalSearch({
       className="global-search-modal"
       styles={{
         body: { padding: 0 },
-        mask: { backdropFilter: 'blur(4px)' },
+        mask: { backdropFilter: "blur(4px)" },
       }}
     >
       {/* 搜索输入框 */}
@@ -320,28 +354,38 @@ export function GlobalSearch({
       <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-400">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">↑</kbd>
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">↓</kbd>
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+              ↑
+            </kbd>
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+              ↓
+            </kbd>
             <span className="ml-1">选择</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">↵</kbd>
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+              ↵
+            </kbd>
             <span className="ml-1">确认</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">esc</kbd>
+            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+              esc
+            </kbd>
             <span className="ml-1">关闭</span>
           </span>
         </div>
         <div className="flex items-center gap-1">
           <Command className="w-3 h-3" />
           <span>+</span>
-          <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">K</kbd>
+          <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+            K
+          </kbd>
           <span className="ml-1">打开搜索</span>
         </div>
       </div>
     </Modal>
-  )
+  );
 }
 
 /**
@@ -349,20 +393,20 @@ export function GlobalSearch({
  * 包含快捷键监听
  */
 export function GlobalSearchTrigger() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   // 监听全局快捷键 Ctrl+K / Cmd+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault()
-        setOpen(true)
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setOpen(true);
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <>
@@ -382,7 +426,7 @@ export function GlobalSearchTrigger() {
       {/* 搜索弹窗 */}
       <GlobalSearch open={open} onClose={() => setOpen(false)} />
     </>
-  )
+  );
 }
 
-export default GlobalSearchTrigger
+export default GlobalSearchTrigger;

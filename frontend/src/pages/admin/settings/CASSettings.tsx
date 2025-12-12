@@ -1,67 +1,88 @@
-import { createLazyRoute } from '@tanstack/react-router'
-import { Card, Form, Input, Button, Switch, Skeleton, message, Alert, theme, Select } from 'antd'
-import { Save, Building2, RefreshCw, Plug, CheckCircle, XCircle } from 'lucide-react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { casAuthApi, type CASConfigParams } from '@/api/cas_auth'
-import { roleApi } from '@/api/role'
-import { useState, useEffect } from 'react'
+import { createLazyRoute } from "@tanstack/react-router";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Switch,
+  Skeleton,
+  message,
+  Alert,
+  theme,
+  Select,
+} from "antd";
+import {
+  Save,
+  Building2,
+  RefreshCw,
+  Plug,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { casAuthApi, type CASConfigParams } from "@/api/cas_auth";
+import { roleApi } from "@/api/role";
+import { useState, useEffect } from "react";
 
-export const Route = createLazyRoute('/admin/settings/cas')({
+export const Route = createLazyRoute("/admin/settings/cas")({
   component: CASSettings,
-})
+});
 
 /**
  * CAS 设置表单值类型
  */
 interface CASFormValues {
-  enabled: boolean
-  serverUrl: string
-  organization: string
-  application: string
-  serviceUrl: string
-  defaultRole: string
-  autoCreateUser: boolean
-  clientId: string
-  clientSecret: string
-  jwtPublicKey: string
-  syncToCasdoor: boolean
+  enabled: boolean;
+  serverUrl: string;
+  organization: string;
+  application: string;
+  serviceUrl: string;
+  defaultRole: string;
+  autoCreateUser: boolean;
+  clientId: string;
+  clientSecret: string;
+  jwtPublicKey: string;
+  syncToCasdoor: boolean;
 }
 
 /**
  * CAS 设置页面
  */
 function CASSettings() {
-  const [form] = Form.useForm<CASFormValues>()
-  const queryClient = useQueryClient()
-  const { token } = theme.useToken()
-  const [hasChanges, setHasChanges] = useState(false)
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [form] = Form.useForm<CASFormValues>();
+  const queryClient = useQueryClient();
+  const { token } = theme.useToken();
+  const [hasChanges, setHasChanges] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   // 获取 CAS 配置
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['casConfig'],
+    queryKey: ["casConfig"],
     queryFn: () => casAuthApi.getConfig(),
-  })
+  });
 
   // 获取角色列表（用于默认角色选择）
   const { data: rolesData } = useQuery({
-    queryKey: ['roles'],
+    queryKey: ["roles"],
     queryFn: () => roleApi.listRoles({ page: 1, pageSize: 100 }),
-  })
+  });
 
   // 更新 CAS 配置
   const updateMutation = useMutation({
     mutationFn: (params: CASConfigParams) => casAuthApi.updateConfig(params),
     onSuccess: () => {
-      message.success('CAS 配置已保存')
-      setHasChanges(false)
-      setTestResult(null)
-      queryClient.invalidateQueries({ queryKey: ['casConfig'] })
+      message.success("CAS 配置已保存");
+      setHasChanges(false);
+      setTestResult(null);
+      queryClient.invalidateQueries({ queryKey: ["casConfig"] });
     },
     onError: () => {
-      message.error('保存 CAS 配置失败')
+      message.error("保存 CAS 配置失败");
     },
-  })
+  });
 
   // 测试连接
   const testMutation = useMutation({
@@ -70,50 +91,50 @@ function CASSettings() {
       if (response.success) {
         setTestResult({
           success: true,
-          message: `连接成功！服务器版本: ${response.serverVersion || 'Unknown'}`,
-        })
-        message.success('CAS 连接测试成功')
+          message: `连接成功！服务器版本: ${response.serverVersion || "Unknown"}`,
+        });
+        message.success("CAS 连接测试成功");
       } else {
         setTestResult({
           success: false,
-          message: response.errorMessage || '连接失败',
-        })
-        message.error(`CAS 连接测试失败: ${response.errorMessage}`)
+          message: response.errorMessage || "连接失败",
+        });
+        message.error(`CAS 连接测试失败: ${response.errorMessage}`);
       }
     },
     onError: (error) => {
       setTestResult({
         success: false,
-        message: error instanceof Error ? error.message : '连接测试失败',
-      })
-      message.error('CAS 连接测试失败')
+        message: error instanceof Error ? error.message : "连接测试失败",
+      });
+      message.error("CAS 连接测试失败");
     },
-  })
+  });
 
   // 初始化表单值
   useEffect(() => {
     if (data?.config) {
       form.setFieldsValue({
         enabled: data.config.enabled || false,
-        serverUrl: data.config.serverUrl || '',
-        organization: data.config.organization || 'built-in',
-        application: data.config.application || 'zera',
-        serviceUrl: data.config.serviceUrl || '',
-        defaultRole: data.config.defaultRole || 'user',
+        serverUrl: data.config.serverUrl || "",
+        organization: data.config.organization || "built-in",
+        application: data.config.application || "zera",
+        serviceUrl: data.config.serviceUrl || "",
+        defaultRole: data.config.defaultRole || "user",
         autoCreateUser: data.config.autoCreateUser ?? true,
-        clientId: data.config.clientId || '',
-        clientSecret: data.config.clientSecret || '',
-        jwtPublicKey: data.config.jwtPublicKey || '',
+        clientId: data.config.clientId || "",
+        clientSecret: data.config.clientSecret || "",
+        jwtPublicKey: data.config.jwtPublicKey || "",
         syncToCasdoor: data.config.syncToCasdoor || false,
-      })
+      });
     }
-  }, [data, form])
+  }, [data, form]);
 
   // 表单值变化检测
   const handleValuesChange = () => {
-    setHasChanges(true)
-    setTestResult(null)
-  }
+    setHasChanges(true);
+    setTestResult(null);
+  };
 
   // 保存设置
   const handleSave = async (values: CASFormValues) => {
@@ -129,12 +150,12 @@ function CASSettings() {
       clientSecret: values.clientSecret,
       jwtPublicKey: values.jwtPublicKey,
       syncToCasdoor: values.syncToCasdoor,
-    })
-  }
+    });
+  };
 
   // 测试连接
   const handleTestConnection = async () => {
-    const values = form.getFieldsValue()
+    const values = form.getFieldsValue();
     await testMutation.mutateAsync({
       enabled: values.enabled,
       serverUrl: values.serverUrl,
@@ -147,36 +168,36 @@ function CASSettings() {
       clientSecret: values.clientSecret,
       jwtPublicKey: values.jwtPublicKey,
       syncToCasdoor: values.syncToCasdoor,
-    })
-  }
+    });
+  };
 
   // 重置表单
   const handleReset = () => {
     if (data?.config) {
       form.setFieldsValue({
         enabled: data.config.enabled || false,
-        serverUrl: data.config.serverUrl || '',
-        organization: data.config.organization || 'built-in',
-        application: data.config.application || 'zera',
-        serviceUrl: data.config.serviceUrl || '',
-        defaultRole: data.config.defaultRole || 'user',
+        serverUrl: data.config.serverUrl || "",
+        organization: data.config.organization || "built-in",
+        application: data.config.application || "zera",
+        serviceUrl: data.config.serviceUrl || "",
+        defaultRole: data.config.defaultRole || "user",
         autoCreateUser: data.config.autoCreateUser ?? true,
-        clientId: data.config.clientId || '',
-        clientSecret: data.config.clientSecret || '',
-        jwtPublicKey: data.config.jwtPublicKey || '',
+        clientId: data.config.clientId || "",
+        clientSecret: data.config.clientSecret || "",
+        jwtPublicKey: data.config.jwtPublicKey || "",
         syncToCasdoor: data.config.syncToCasdoor || false,
-      })
-      setHasChanges(false)
-      setTestResult(null)
+      });
+      setHasChanges(false);
+      setTestResult(null);
     }
-  }
+  };
 
   // 自动填充默认服务 URL
   const handleAutoFillServiceUrl = () => {
-    const currentOrigin = window.location.origin
-    form.setFieldValue('serviceUrl', `${currentOrigin}/cas/callback`)
-    setHasChanges(true)
-  }
+    const currentOrigin = window.location.origin;
+    form.setFieldValue("serviceUrl", `${currentOrigin}/cas/callback`);
+    setHasChanges(true);
+  };
 
   if (error) {
     return (
@@ -192,7 +213,7 @@ function CASSettings() {
           }
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -224,11 +245,18 @@ function CASSettings() {
                 <div className="font-medium" style={{ color: token.colorText }}>
                   启用 CAS 认证
                 </div>
-                <div className="text-sm" style={{ color: token.colorTextSecondary }}>
+                <div
+                  className="text-sm"
+                  style={{ color: token.colorTextSecondary }}
+                >
                   启用后，登录页面将显示 CAS 单点登录入口
                 </div>
               </div>
-              <Form.Item name="enabled" valuePropName="checked" className="mb-0">
+              <Form.Item
+                name="enabled"
+                valuePropName="checked"
+                className="mb-0"
+              >
                 <Switch className="flex-shrink-0" />
               </Form.Item>
             </div>
@@ -250,8 +278,8 @@ function CASSettings() {
                 label="CAS 服务器地址"
                 tooltip="Casdoor 服务的访问地址，例如 http://localhost:8000"
                 rules={[
-                  { required: true, message: '请输入 CAS 服务器地址' },
-                  { type: 'url', message: '请输入有效的 URL' },
+                  { required: true, message: "请输入 CAS 服务器地址" },
+                  { type: "url", message: "请输入有效的 URL" },
                 ]}
               >
                 <Input placeholder="http://localhost:8000" />
@@ -261,7 +289,7 @@ function CASSettings() {
                 name="organization"
                 label="组织名称"
                 tooltip="Casdoor 中配置的组织名称"
-                rules={[{ required: true, message: '请输入组织名称' }]}
+                rules={[{ required: true, message: "请输入组织名称" }]}
               >
                 <Input placeholder="built-in" />
               </Form.Item>
@@ -270,7 +298,7 @@ function CASSettings() {
                 name="application"
                 label="应用名称"
                 tooltip="Casdoor 中配置的应用名称"
-                rules={[{ required: true, message: '请输入应用名称' }]}
+                rules={[{ required: true, message: "请输入应用名称" }]}
               >
                 <Input placeholder="zera" />
               </Form.Item>
@@ -280,8 +308,8 @@ function CASSettings() {
                 label="回调地址"
                 tooltip="CAS 认证成功后的回调地址，需要在 Casdoor 应用中配置"
                 rules={[
-                  { required: true, message: '请输入回调地址' },
-                  { type: 'url', message: '请输入有效的 URL' },
+                  { required: true, message: "请输入回调地址" },
+                  { type: "url", message: "请输入有效的 URL" },
                 ]}
                 className="mb-0"
               >
@@ -314,14 +342,24 @@ function CASSettings() {
                 style={{ backgroundColor: token.colorBgTextHover }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium" style={{ color: token.colorText }}>
+                  <div
+                    className="font-medium"
+                    style={{ color: token.colorText }}
+                  >
                     自动创建用户
                   </div>
-                  <div className="text-sm" style={{ color: token.colorTextSecondary }}>
+                  <div
+                    className="text-sm"
+                    style={{ color: token.colorTextSecondary }}
+                  >
                     首次通过 CAS 登录时自动创建本地用户账号
                   </div>
                 </div>
-                <Form.Item name="autoCreateUser" valuePropName="checked" className="mb-0">
+                <Form.Item
+                  name="autoCreateUser"
+                  valuePropName="checked"
+                  className="mb-0"
+                >
                   <Switch className="flex-shrink-0" />
                 </Form.Item>
               </div>
@@ -330,7 +368,7 @@ function CASSettings() {
                 name="defaultRole"
                 label="默认角色"
                 tooltip="通过 CAS 自动创建的用户将被分配此角色"
-                rules={[{ required: true, message: '请选择默认角色' }]}
+                rules={[{ required: true, message: "请选择默认角色" }]}
                 className="mb-0"
               >
                 <Select placeholder="选择默认角色">
@@ -364,14 +402,24 @@ function CASSettings() {
                 style={{ backgroundColor: token.colorBgTextHover }}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium" style={{ color: token.colorText }}>
+                  <div
+                    className="font-medium"
+                    style={{ color: token.colorText }}
+                  >
                     同步到 Casdoor
                   </div>
-                  <div className="text-sm" style={{ color: token.colorTextSecondary }}>
+                  <div
+                    className="text-sm"
+                    style={{ color: token.colorTextSecondary }}
+                  >
                     启用后，本地创建的用户将自动同步到 Casdoor
                   </div>
                 </div>
-                <Form.Item name="syncToCasdoor" valuePropName="checked" className="mb-0">
+                <Form.Item
+                  name="syncToCasdoor"
+                  valuePropName="checked"
+                  className="mb-0"
+                >
                   <Switch className="flex-shrink-0" />
                 </Form.Item>
               </div>
@@ -382,8 +430,8 @@ function CASSettings() {
                 tooltip="Casdoor 应用的 Client ID"
                 rules={[
                   {
-                    required: form.getFieldValue('syncToCasdoor'),
-                    message: '启用同步时必须填写 Client ID',
+                    required: form.getFieldValue("syncToCasdoor"),
+                    message: "启用同步时必须填写 Client ID",
                   },
                 ]}
               >
@@ -396,8 +444,8 @@ function CASSettings() {
                 tooltip="Casdoor 应用的 Client Secret"
                 rules={[
                   {
-                    required: form.getFieldValue('syncToCasdoor'),
-                    message: '启用同步时必须填写 Client Secret',
+                    required: form.getFieldValue("syncToCasdoor"),
+                    message: "启用同步时必须填写 Client Secret",
                   },
                 ]}
               >
@@ -422,10 +470,16 @@ function CASSettings() {
         {/* 连接测试结果 */}
         {testResult && (
           <Alert
-            type={testResult.success ? 'success' : 'error'}
-            message={testResult.success ? '连接测试成功' : '连接测试失败'}
+            type={testResult.success ? "success" : "error"}
+            message={testResult.success ? "连接测试成功" : "连接测试失败"}
             description={testResult.message}
-            icon={testResult.success ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+            icon={
+              testResult.success ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                <XCircle className="w-4 h-4" />
+              )
+            }
             showIcon
           />
         )}
@@ -468,5 +522,5 @@ function CASSettings() {
         )}
       </Form>
     </div>
-  )
+  );
 }

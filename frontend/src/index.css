@@ -1,6 +1,9 @@
 @import "tailwindcss";
+@import "./theme/styles/themes.css";
 
-html,body,#root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
 }
@@ -53,6 +56,59 @@ html,body,#root {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* =========
+   Semantic color utility classes (CSS variable backed)
+   用于替代写死的 indigo/blue/purple 等 Tailwind 主色
+   ========= */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+.shadow-primary-glow {
+  box-shadow: var(--glow-primary);
+}
+
+.bg-primary-soft {
+  background-color: var(--color-primary-light);
+}
+
+.text-primary-strong {
+  color: var(--color-primary);
+}
+
+.hover-bg-primary:hover {
+  background-color: var(--color-primary);
+}
+
+.hover-text-primary:hover {
+  color: var(--color-primary);
+}
+
+.hover-bg-primary-soft:hover {
+  background-color: var(--color-primary-light);
+}
+
+/* =========
+   Auth gradient utility (CSS variable backed)
+   用于认证/品牌区域的渐变背景
+   ========= */
+.bg-auth-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--auth-gradient-from),
+    var(--auth-gradient-via),
+    var(--auth-gradient-to)
+  );
+}
+
 /* 菜单项悬停效果 */
 .menu-item-hover {
   position: relative;
@@ -60,7 +116,7 @@ html,body,#root {
 }
 
 .menu-item-hover::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0;

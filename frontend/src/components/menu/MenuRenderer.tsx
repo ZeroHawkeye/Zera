@@ -1,12 +1,12 @@
 /**
  * 多层级菜单渲染组件
- * 支持最深5层嵌套，递归渲染菜单项
+ * 支持最多5层嵌套，递归渲染菜单项
  */
 
-import { useCallback, useMemo, type ReactNode, isValidElement } from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
-import { ChevronDown, ExternalLink } from 'lucide-react'
-import { Badge, Tooltip } from 'antd'
+import { useCallback, useMemo, type ReactNode, isValidElement } from "react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { ChevronDown, ExternalLink } from "lucide-react";
+import { Badge, Tooltip } from "antd";
 import {
   type MenuItem,
   type MenuPermissionContext,
@@ -17,19 +17,37 @@ import {
   isMenuDivider,
   hasChildren,
   filterMenuItems,
-} from '@/config/menu'
-import { useMenuStore, useAuthStore } from '@/stores'
+} from "@/config/menu";
+import { useMenuStore, useAuthStore } from "@/stores";
+
+/**
+ * Theme-driven menu “active” styling
+ * - Uses CSS variables defined in `index.css` / `theme/styles/themes.css`
+ * - Avoids hardcoded Tailwind blue palette so themes can override primary color
+ */
+const MENU_ACTIVE_TEXT_STYLE: React.CSSProperties = {
+  color: "var(--color-primary)",
+};
+const MENU_ACTIVE_BAR_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--color-primary)",
+};
+const MENU_ACTIVE_DOT_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--color-primary)",
+};
+const MENU_ACTIVE_BG_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--color-primary-light)",
+};
 
 /**
  * 菜单渲染器 Props
  */
 interface MenuRendererProps {
   /** 菜单项列表 */
-  items: MenuItem[]
+  items: MenuItem[];
   /** 是否折叠模式 */
-  collapsed?: boolean
+  collapsed?: boolean;
   /** 当前嵌套层级（内部使用） */
-  level?: number
+  level?: number;
 }
 
 /**
@@ -41,9 +59,9 @@ export function MenuRenderer({
   collapsed = false,
   level = 0,
 }: MenuRendererProps) {
-  const location = useLocation()
-  const { user } = useAuthStore()
-  const { openKeys, toggleOpenKey } = useMenuStore()
+  const location = useLocation();
+  const { user } = useAuthStore();
+  const { openKeys, toggleOpenKey } = useMenuStore();
 
   // 构建权限上下文
   const permissionContext: MenuPermissionContext = useMemo(
@@ -52,50 +70,52 @@ export function MenuRenderer({
       roles: user?.roles || [],
       user: user as Record<string, unknown> | null,
     }),
-    [user]
-  )
+    [user],
+  );
 
   // 过滤菜单项
   const filteredItems = useMemo(
     () => (level === 0 ? filterMenuItems(items, permissionContext) : items),
-    [items, permissionContext, level]
-  )
+    [items, permissionContext, level],
+  );
 
   // 检查菜单项是否激活
   const isActive = useCallback(
     (item: MenuItem): boolean => {
-      if (!isMenuNavItem(item) || !item.path) return false
-      
+      if (!isMenuNavItem(item) || !item.path) return false;
+
       // 精确匹配
-      if (location.pathname === item.path) return true
-      
+      if (location.pathname === item.path) return true;
+
       // 对于仪表盘特殊处理
-      if (item.path === '/admin') {
-        return location.pathname === '/admin' || location.pathname === '/admin/'
+      if (item.path === "/admin") {
+        return (
+          location.pathname === "/admin" || location.pathname === "/admin/"
+        );
       }
-      
+
       // 前缀匹配（检查子路径）
-      return location.pathname.startsWith(item.path + '/')
+      return location.pathname.startsWith(item.path + "/");
     },
-    [location.pathname]
-  )
+    [location.pathname],
+  );
 
   // 检查分组是否包含激活项
   const hasActiveChild = useCallback(
     (item: MenuItem): boolean => {
-      if (!hasChildren(item)) return false
-      
-      const children = isMenuGroup(item) ? item.children : item.children
-      if (!children) return false
-      
+      if (!hasChildren(item)) return false;
+
+      const children = isMenuGroup(item) ? item.children : item.children;
+      if (!children) return false;
+
       return children.some((child) => {
-        if (isActive(child)) return true
-        if (hasChildren(child)) return hasActiveChild(child)
-        return false
-      })
+        if (isActive(child)) return true;
+        if (hasChildren(child)) return hasActiveChild(child);
+        return false;
+      });
     },
-    [isActive]
-  )
+    [isActive],
+  );
 
   // 渲染单个菜单项
   const renderMenuItem = useCallback(
@@ -106,10 +126,10 @@ export function MenuRenderer({
           <div
             key={item.key}
             className={`my-2 mx-3 border-t transition-opacity ${
-              collapsed ? 'border-gray-200/50' : 'border-gray-200/60'
+              collapsed ? "border-gray-200/50" : "border-gray-200/60"
             }`}
           />
-        )
+        );
       }
 
       // 分组或带子菜单的导航项
@@ -124,7 +144,7 @@ export function MenuRenderer({
             hasActiveChild={hasActiveChild(item)}
             onToggle={() => toggleOpenKey(item.key)}
           />
-        )
+        );
       }
 
       // 普通导航项
@@ -137,57 +157,56 @@ export function MenuRenderer({
             level={level}
             isActive={isActive(item)}
           />
-        )
+        );
       }
 
-      return null
+      return null;
     },
-    [collapsed, level, openKeys, toggleOpenKey, isActive, hasActiveChild]
-  )
+    [collapsed, level, openKeys, toggleOpenKey, isActive, hasActiveChild],
+  );
 
   // 防止超过最大嵌套层级
   if (level >= MAX_MENU_DEPTH) {
-    console.warn(`Menu depth exceeded maximum of ${MAX_MENU_DEPTH}`)
-    return null
+    console.warn(`Menu depth exceeded maximum of ${MAX_MENU_DEPTH}`);
+    return null;
   }
 
-  return (
-    <div className="space-y-1">
-      {filteredItems.map(renderMenuItem)}
-    </div>
-  )
+  return <div className="space-y-1">{filteredItems.map(renderMenuItem)}</div>;
 }
 
 /**
  * 渲染菜单图标
  */
-function renderIcon(icon: MenuIcon | undefined, className: string = 'w-5 h-5'): ReactNode {
-  if (!icon) return null
+function renderIcon(
+  icon: MenuIcon | undefined,
+  className: string = "w-5 h-5",
+): ReactNode {
+  if (!icon) return null;
 
   // 如果是 React 元素，直接返回
   if (isValidElement(icon)) {
-    return icon
+    return icon;
   }
 
   // 如果是组件，渲染它
-  if (typeof icon === 'function') {
-    const IconComponent = icon
-    return <IconComponent className={className} />
+  if (typeof icon === "function") {
+    const IconComponent = icon;
+    return <IconComponent className={className} />;
   }
 
-  return null
+  return null;
 }
 
 /**
  * 分组/子菜单项组件 Props
  */
 interface MenuGroupItemProps {
-  item: MenuItem
-  collapsed: boolean
-  level: number
-  isOpen: boolean
-  hasActiveChild: boolean
-  onToggle: () => void
+  item: MenuItem;
+  collapsed: boolean;
+  level: number;
+  isOpen: boolean;
+  hasActiveChild: boolean;
+  onToggle: () => void;
 }
 
 /**
@@ -202,33 +221,29 @@ function MenuGroupItem({
   hasActiveChild,
   onToggle,
 }: MenuGroupItemProps) {
-  const label = isMenuGroup(item) ? item.label : (item as { label: string }).label
-  const icon = 'icon' in item ? item.icon : undefined
+  const label = isMenuGroup(item)
+    ? item.label
+    : (item as { label: string }).label;
+  const icon = "icon" in item ? item.icon : undefined;
   const children = isMenuGroup(item)
     ? item.children
-    : (item as { children?: MenuItem[] }).children
+    : (item as { children?: MenuItem[] }).children;
 
-  // 根据层级获取背景色
+  // 根据层级获取背景色（主题化：active 走 CSS 变量，hover 保持灰度）
   const getLevelBgClass = (lvl: number, active: boolean) => {
     if (active) {
-      // 激活状态：蓝色背景，层级越深颜色越浅
-      const activeBgClasses = [
-        'bg-blue-100',
-        'bg-blue-100/80',
-        'bg-blue-100/60',
-        'bg-blue-50',
-      ]
-      return activeBgClasses[Math.min(lvl, activeBgClasses.length - 1)]
+      // 激活状态：使用主题 primary light（避免写死 blue-*）
+      return "menu-item-active";
     }
     // hover 状态：层级越深背景越浅
     const hoverBgClasses = [
-      'hover:bg-gray-100',
-      'hover:bg-gray-100/80',
-      'hover:bg-gray-100/60',
-      'hover:bg-gray-50',
-    ]
-    return hoverBgClasses[Math.min(lvl, hoverBgClasses.length - 1)]
-  }
+      "hover:bg-gray-100",
+      "hover:bg-gray-100/80",
+      "hover:bg-gray-100/60",
+      "hover:bg-gray-50",
+    ];
+    return hoverBgClasses[Math.min(lvl, hoverBgClasses.length - 1)];
+  };
 
   // 可展开/收起的 SubMenu
   const content = (
@@ -237,30 +252,33 @@ function MenuGroupItem({
         onClick={onToggle}
         className={`
           w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative group cursor-pointer
-          ${hasActiveChild
-            ? `${getLevelBgClass(level, true)} text-blue-600`
-            : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
+          ${
+            hasActiveChild
+              ? `${getLevelBgClass(level, true)}`
+              : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
           }
         `}
-        style={{ paddingLeft: `${12 + level * 12}px` }}
+        style={{
+          paddingLeft: `${12 + level * 12}px`,
+          ...(hasActiveChild ? MENU_ACTIVE_BG_STYLE : {}),
+        }}
       >
         {/* 激活指示条 */}
         <div
           className={`
-            absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-blue-500 transition-opacity duration-200
-            ${hasActiveChild ? 'opacity-60' : 'opacity-0'}
+            absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full transition-opacity duration-200
+            ${hasActiveChild ? "opacity-60" : "opacity-0"}
           `}
+          style={MENU_ACTIVE_BAR_STYLE}
         />
 
         {/* 图标 */}
-        <span className="flex-shrink-0">
-          {renderIcon(icon)}
-        </span>
+        <span className="flex-shrink-0">{renderIcon(icon)}</span>
 
         {/* 标签 */}
         <span
           className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 flex-1 text-left ${
-            collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
           }`}
         >
           {label}
@@ -270,7 +288,7 @@ function MenuGroupItem({
         {!collapsed && (
           <span
             className={`transition-transform duration-200 ${
-              isOpen ? 'rotate-180' : ''
+              isOpen ? "rotate-180" : ""
             }`}
           >
             <ChevronDown className="w-4 h-4" />
@@ -282,18 +300,22 @@ function MenuGroupItem({
       {!collapsed && (
         <div
           className={`overflow-hidden transition-all duration-300 ${
-            isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+            isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           <div className="pt-1">
             {children && (
-              <MenuRenderer items={children} collapsed={collapsed} level={level + 1} />
+              <MenuRenderer
+                items={children}
+                collapsed={collapsed}
+                level={level + 1}
+              />
             )}
           </div>
         </div>
       )}
     </div>
-  )
+  );
 
   // 折叠模式下显示 Tooltip
   if (collapsed) {
@@ -301,20 +323,20 @@ function MenuGroupItem({
       <Tooltip title={label} placement="right">
         {content}
       </Tooltip>
-    )
+    );
   }
 
-  return content
+  return content;
 }
 
 /**
  * 导航菜单项组件 Props
  */
 interface MenuNavItemProps {
-  item: MenuItem
-  collapsed: boolean
-  level: number
-  isActive: boolean
+  item: MenuItem;
+  collapsed: boolean;
+  level: number;
+  isActive: boolean;
 }
 
 /**
@@ -326,102 +348,96 @@ function MenuNavItemComponent({
   level,
   isActive,
 }: MenuNavItemProps) {
-  if (!isMenuNavItem(item)) return null
+  if (!isMenuNavItem(item)) return null;
 
-  const { label, icon, path, externalLink, openInNewTab, badge } = item
+  const { label, icon, path, externalLink, openInNewTab, badge } = item;
 
   // 外部链接
   if (externalLink) {
     const linkContent = (
       <a
         href={externalLink}
-        target={openInNewTab ? '_blank' : undefined}
-        rel={openInNewTab ? 'noopener noreferrer' : undefined}
+        target={openInNewTab ? "_blank" : undefined}
+        rel={openInNewTab ? "noopener noreferrer" : undefined}
         className={`
           flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative group
           text-gray-500 hover:bg-gray-100/80 hover:text-gray-700
         `}
         style={{ paddingLeft: `${12 + level * 12}px` }}
       >
-        <span className="flex-shrink-0">
-          {renderIcon(icon)}
-        </span>
+        <span className="flex-shrink-0">{renderIcon(icon)}</span>
         <span
           className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 flex-1 ${
-            collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
           }`}
         >
           {label}
         </span>
-        {!collapsed && (
-          <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
-        )}
+        {!collapsed && <ExternalLink className="w-3.5 h-3.5 text-gray-400" />}
       </a>
-    )
+    );
 
     if (collapsed) {
       return (
         <Tooltip title={label} placement="right">
           {linkContent}
         </Tooltip>
-      )
+      );
     }
 
-    return linkContent
+    return linkContent;
   }
 
-  // 根据层级获取背景色
+  // 根据层级获取背景色（主题化：active 走 CSS 变量，hover 保持灰度）
   const getLevelBgClass = (lvl: number, active: boolean) => {
     if (active) {
-      // 激活状态：蓝色背景，层级越深颜色越浅
-      const activeBgClasses = [
-        'bg-blue-100',
-        'bg-blue-100/80',
-        'bg-blue-100/60',
-        'bg-blue-50',
-      ]
-      return activeBgClasses[Math.min(lvl, activeBgClasses.length - 1)]
+      // 激活状态：使用主题 primary light（避免写死 blue-*）
+      return "menu-item-active";
     }
     // hover 状态：层级越深背景越浅
     const hoverBgClasses = [
-      'hover:bg-gray-100',
-      'hover:bg-gray-100/80',
-      'hover:bg-gray-100/60',
-      'hover:bg-gray-50',
-    ]
-    return hoverBgClasses[Math.min(lvl, hoverBgClasses.length - 1)]
-  }
+      "hover:bg-gray-100",
+      "hover:bg-gray-100/80",
+      "hover:bg-gray-100/60",
+      "hover:bg-gray-50",
+    ];
+    return hoverBgClasses[Math.min(lvl, hoverBgClasses.length - 1)];
+  };
 
   // 内部导航
   const navContent = (
     <Link
-      to={path || '#'}
+      to={path || "#"}
       className={`
         flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden group
-        ${isActive
-          ? `${getLevelBgClass(level, true)} text-blue-600`
-          : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
+        ${
+          isActive
+            ? `${getLevelBgClass(level, true)}`
+            : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
         }
       `}
-      style={{ paddingLeft: `${12 + level * 12}px` }}
+      style={{
+        paddingLeft: `${12 + level * 12}px`,
+        ...(isActive ? MENU_ACTIVE_BG_STYLE : {}),
+        ...(isActive ? MENU_ACTIVE_TEXT_STYLE : {}),
+      }}
     >
       {/* 激活指示条 */}
       <div
         className={`
-          absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-blue-500 transition-all duration-200
-          ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}
+          absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full transition-all duration-200
+          ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"}
         `}
+        style={MENU_ACTIVE_BAR_STYLE}
       />
 
       {/* 图标 */}
-      <span className="flex-shrink-0">
-        {renderIcon(icon)}
-      </span>
+      <span className="flex-shrink-0">{renderIcon(icon)}</span>
 
       {/* 标签 */}
       <span
         className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300 flex-1 ${
-          collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+          collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
         }`}
       >
         {label}
@@ -441,13 +457,14 @@ function MenuNavItemComponent({
       {/* 激活状态指示点 */}
       {!collapsed && (
         <div
-          className={`absolute right-3 w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse transition-opacity duration-200 ${
-            isActive ? 'opacity-100' : 'opacity-0'
+          className={`absolute right-3 w-1.5 h-1.5 rounded-full animate-pulse transition-opacity duration-200 ${
+            isActive ? "opacity-100" : "opacity-0"
           }`}
+          style={MENU_ACTIVE_DOT_STYLE}
         />
       )}
     </Link>
-  )
+  );
 
   // 折叠模式下显示 Tooltip
   if (collapsed) {
@@ -455,10 +472,10 @@ function MenuNavItemComponent({
       <Tooltip title={label} placement="right">
         {navContent}
       </Tooltip>
-    )
+    );
   }
 
-  return navContent
+  return navContent;
 }
 
-export default MenuRenderer
+export default MenuRenderer;

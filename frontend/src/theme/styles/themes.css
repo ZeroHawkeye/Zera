@@ -1,0 +1,144 @@
+/*
+  Multi-theme CSS variables
+
+  Usage:
+  - Light/Dark mode: toggle `dark` class on <html>
+  - Theme selection: set `data-theme="<id>"` on <html>
+
+  Example:
+    <html data-theme="default" class="dark">
+*/
+
+:root {
+  /* Ensure there is always a theme id, even if the app forgets to set it */
+  --theme-id: default;
+
+  /* --- Core brand tokens (fallbacks) --- */
+  --color-primary: #6366f1;
+  --color-primary-light: rgba(99, 102, 241, 0.1);
+
+  /* --- Glass / AI style tokens (fallbacks) --- */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.15);
+
+  /* --- Auth hero gradient tokens (fallbacks) --- */
+  --auth-gradient-from: #2563eb; /* blue-600 */
+  --auth-gradient-via: #7c3aed;  /* purple-600 */
+  --auth-gradient-to: #4338ca;   /* indigo-700 */
+}
+
+/* =========================
+   Theme: default (light)
+   ========================= */
+:root[data-theme="default"] {
+  --theme-id: default;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+  --color-primary: #6366f1;
+  --color-primary-light: rgba(99, 102, 241, 0.1);
+  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.15);
+
+  --auth-gradient-from: #2563eb;
+  --auth-gradient-via: #7c3aed;
+  --auth-gradient-to: #4338ca;
+}
+
+/* =========================
+   Theme: default (dark)
+   ========================= */
+:root.dark[data-theme="default"] {
+  --theme-id: default;
+
+  --glass-bg: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  --color-primary: #818cf8;
+  --color-primary-light: rgba(129, 140, 248, 0.15);
+  --glow-primary: 0 0 20px rgba(129, 140, 248, 0.2);
+
+  --auth-gradient-from: #1d4ed8; /* blue-700 */
+  --auth-gradient-via: #6d28d9;  /* violet-700 */
+  --auth-gradient-to: #3730a3;   /* indigo-800 */
+}
+
+/* =========================
+   Theme: ocean (light)
+   ========================= */
+:root[data-theme="ocean"] {
+  --theme-id: ocean;
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.28);
+  --glass-shadow: 0 10px 34px rgba(0, 0, 0, 0.08);
+
+  --color-primary: #0ea5e9; /* sky-500 */
+  --color-primary-light: rgba(14, 165, 233, 0.12);
+  --glow-primary: 0 0 22px rgba(14, 165, 233, 0.16);
+
+  --auth-gradient-from: #0ea5e9;
+  --auth-gradient-via: #22c55e; /* green-500 */
+  --auth-gradient-to: #2563eb;  /* blue-600 */
+}
+
+/* =========================
+   Theme: ocean (dark)
+   ========================= */
+:root.dark[data-theme="ocean"] {
+  --theme-id: ocean;
+
+  --glass-bg: rgba(2, 6, 23, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 10px 34px rgba(0, 0, 0, 0.38);
+
+  --color-primary: #38bdf8; /* sky-400 */
+  --color-primary-light: rgba(56, 189, 248, 0.16);
+  --glow-primary: 0 0 24px rgba(56, 189, 248, 0.2);
+
+  --auth-gradient-from: #0284c7; /* sky-600 */
+  --auth-gradient-via: #16a34a;  /* green-600 */
+  --auth-gradient-to: #1d4ed8;   /* blue-700 */
+}
+
+/* =========================
+   Theme: grape (light)
+   ========================= */
+:root[data-theme="grape"] {
+  --theme-id: grape;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 10px 34px rgba(0, 0, 0, 0.08);
+
+  --color-primary: #a855f7; /* purple-500 */
+  --color-primary-light: rgba(168, 85, 247, 0.12);
+  --glow-primary: 0 0 22px rgba(168, 85, 247, 0.18);
+
+  --auth-gradient-from: #a855f7;
+  --auth-gradient-via: #ec4899; /* pink-500 */
+  --auth-gradient-to: #6366f1;  /* indigo-500 */
+}
+
+/* =========================
+   Theme: grape (dark)
+   ========================= */
+:root.dark[data-theme="grape"] {
+  --theme-id: grape;
+
+  --glass-bg: rgba(15, 23, 42, 0.74);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 10px 34px rgba(0, 0, 0, 0.36);
+
+  --color-primary: #c084fc; /* purple-400 */
+  --color-primary-light: rgba(192, 132, 252, 0.16);
+  --glow-primary: 0 0 24px rgba(192, 132, 252, 0.22);
+
+  --auth-gradient-from: #7e22ce; /* purple-700 */
+  --auth-gradient-via: #be185d;  /* pink-700 */
+  --auth-gradient-to: #3730a3;   /* indigo-800 */
+}
