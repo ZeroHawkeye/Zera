@@ -11,7 +11,6 @@ import (
 func main() {
 	// 加载配置
 	cfg := config.Load()
-
 	// 创建服务器
 	srv, err := server.New(cfg)
 	if err != nil {
