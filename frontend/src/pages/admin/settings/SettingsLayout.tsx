@@ -73,8 +73,8 @@ function SettingsLayout() {
     <div className="space-y-6">
       {/* 页面标题 */}
       <div>
-        <h1 className="text-xl md:text-2xl font-semibold text-gray-900">系统设置</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-xl md:text-2xl font-semibold text-default">系统设置</h1>
+        <p className="mt-1 text-sm text-secondary">
           配置系统的各项参数和选项
         </p>
       </div>
@@ -87,7 +87,7 @@ function SettingsLayout() {
             mode={isMobile ? 'horizontal' : 'vertical'}
             selectedKeys={[location.pathname]}
             items={menuItems}
-            className={`rounded-lg border border-gray-200 ${isMobile ? 'min-w-max' : ''}`}
+            className={`rounded-lg border border-default ${isMobile ? 'min-w-max' : ''}`}
           />
         </div>
 

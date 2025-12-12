@@ -16,6 +16,7 @@ import { useResponsive } from "@/hooks";
 import { useAuthStore, useMenuStore } from "@/stores";
 import { MenuRenderer } from "@/components/menu";
 import { GlobalSearchTrigger } from "@/components/GlobalSearch";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { initAdminMenus, generateBreadcrumbs } from "@/config/menu";
 import { Logo, LogoIcon } from "@/components";
 import { getCasLogoutRedirectUrl } from "@/api/cas_auth";
@@ -136,7 +137,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }, [breadcrumbData]);
 
   return (
-    <div className="min-h-screen flex bg-slate-50 relative">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 relative">
       {/* 移动端遮罩层 */}
       {isMobile && mobileMenuOpen && (
         <div
@@ -162,7 +163,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         }}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between border-b border-white/20 px-4">
+        <div className="h-16 flex items-center justify-between border-b border-muted px-4">
           <Link to="/admin" className="flex items-center gap-3 group">
             {/* 折叠时只显示图标，展开时显示完整 Logo */}
             {!isMobile && collapsed ? (
@@ -176,7 +177,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {isMobile && (
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 hover:bg-white/60 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700"
+              className="p-2 hover:bg-interactive rounded-xl transition-all duration-200 text-tertiary hover:text-default"
             >
               <X className="w-5 h-5" />
             </button>
@@ -192,7 +193,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {!isMobile && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`absolute -right-3 cursor-pointer  top-[54px] w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 ${ADMIN_ACCENT_HOVER_BG} hover:border-transparent hover:text-white text-gray-400 transition-all duration-200 group`}
+            className={`absolute -right-3 cursor-pointer top-[54px] w-6 h-6 bg-container rounded-full flex items-center justify-center shadow-lg border border-default ${ADMIN_ACCENT_HOVER_BG} hover:border-transparent hover:text-white text-muted transition-all duration-200 group`}
           >
             {collapsed ? (
               <ChevronRight className="w-3.5 h-3.5" />
@@ -220,7 +221,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {isMobile && (
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-2 hover:bg-white/60 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700"
+                className="p-2 hover:bg-interactive rounded-xl transition-all duration-200 text-tertiary hover:text-default"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -244,11 +245,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {/* 搜索按钮 */}
             <GlobalSearchTrigger />
 
-            <div className="hidden md:block w-px h-8 bg-gray-200/60 mx-2" />
+            {/* 主题切换 */}
+            <ThemeToggle />
+
+            <div className="hidden md:block w-px h-8 bg-border-muted mx-2" />
 
             {/* 用户菜单 */}
             <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-              <button className="flex items-center gap-2 md:gap-3 py-1.5 px-1.5 md:px-2 hover:bg-white/60 rounded-xl transition-all duration-200 group">
+              <button className="flex items-center gap-2 md:gap-3 py-1.5 px-1.5 md:px-2 hover:bg-interactive rounded-xl transition-all duration-200 group">
                 <div className="relative">
                   <Avatar
                     size={isMobile ? 32 : 36}
@@ -259,18 +263,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       user?.username?.charAt(0) ||
                       "U"}
                   </Avatar>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 md:w-3 h-2.5 md:h-3 bg-green-500 rounded-full border-2 border-white" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 md:w-3 h-2.5 md:h-3 bg-green-500 rounded-full border-2 border-container" />
                 </div>
                 {/* 用户信息 - 移动端隐藏 */}
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-default">
                     {user?.nickname || user?.username || "用户"}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted">
                     {user?.roles?.[0] || "普通用户"}
                   </p>
                 </div>
-                <ChevronDown className="hidden md:block w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                <ChevronDown className="hidden md:block w-4 h-4 text-muted group-hover:text-secondary transition-colors" />
               </button>
             </Dropdown>
           </div>

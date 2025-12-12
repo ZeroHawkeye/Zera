@@ -96,7 +96,7 @@ function LogCard({
 }) {
   return (
     <div
-      className="p-4 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/50 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer active:scale-[0.99]"
+      className="p-4 rounded-2xl bg-container backdrop-blur-sm border border-default shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer active:scale-[0.99]"
       onClick={() => onViewDetail(log)}
     >
       {/* 头部：级别 + 时间 */}
@@ -108,7 +108,7 @@ function LogCard({
         >
           {LogLevelNames[log.level]}
         </Tag>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-muted">
           {log.createdAt ? dayjs(log.createdAt).format('MM-DD HH:mm:ss') : '-'}
         </span>
       </div>
@@ -116,20 +116,20 @@ function LogCard({
       {/* 操作信息 */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm">
-          <Activity className="w-4 h-4 text-gray-400 flex-shrink-0" />
-          <span className="text-gray-600 truncate">
+          <Activity className="w-4 h-4 text-muted flex-shrink-0" />
+          <span className="text-secondary truncate">
             {log.module && <span className="font-medium">[{log.module}]</span>} {log.action}
           </span>
         </div>
 
         {/* 用户信息 */}
         <div className="flex items-center gap-2 text-sm">
-          <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-          <span className="text-gray-500 truncate">{log.username || '系统'}</span>
+          <User className="w-4 h-4 text-muted flex-shrink-0" />
+          <span className="text-tertiary truncate">{log.username || '系统'}</span>
         </div>
 
         {/* IP + 路径 */}
-        <div className="flex items-center gap-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2 text-xs text-muted">
           <Globe className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="truncate">{log.ip || '-'}</span>
           <span className="mx-1">•</span>
@@ -139,7 +139,7 @@ function LogCard({
 
       {/* 错误信息 */}
       {log.errorMessage && (
-        <div className="mt-2 p-2 rounded-lg bg-red-50 text-red-600 text-xs truncate">
+        <div className="mt-2 p-2 rounded-lg bg-red-500/10 text-red-500 dark:text-red-400 text-xs truncate">
           {log.errorMessage}
         </div>
       )}
@@ -161,12 +161,12 @@ function StatsCards({
 }) {
   if (loading) {
     return (
-      <div 
+      <div
         className="grid gap-3 md:gap-4"
         style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}
       >
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="!rounded-xl !bg-white/70 backdrop-blur-sm !p-3 md:!p-4">
+          <Card key={i} className="!rounded-xl !bg-container backdrop-blur-sm !p-3 md:!p-4">
             <Skeleton.Input active className="!w-full !h-12 md:!h-16" />
           </Card>
         ))}
@@ -186,44 +186,44 @@ function StatsCards({
       value: Number(stats.total),
       icon: <Activity className="w-4 h-4 md:w-5 md:h-5" />,
       color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      bgColor: 'bg-blue-500/10 dark:bg-blue-500/20',
+      textColor: 'text-blue-600 dark:text-blue-400',
     },
     {
       title: 'INFO',
       value: Number(infoCount),
       icon: <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />,
       color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600',
+      bgColor: 'bg-green-500/10 dark:bg-green-500/20',
+      textColor: 'text-green-600 dark:text-green-400',
     },
     {
       title: 'WARN',
       value: Number(warningCount),
       icon: <AlertTriangle className="w-4 h-4 md:w-5 md:h-5" />,
       color: 'from-orange-500 to-orange-600',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-600',
+      bgColor: 'bg-orange-500/10 dark:bg-orange-500/20',
+      textColor: 'text-orange-600 dark:text-orange-400',
     },
     {
       title: 'ERROR',
       value: Number(errorCount),
       icon: <AlertCircle className="w-4 h-4 md:w-5 md:h-5" />,
       color: 'from-red-500 to-red-600',
-      bgColor: 'bg-red-50',
-      textColor: 'text-red-600',
+      bgColor: 'bg-red-500/10 dark:bg-red-500/20',
+      textColor: 'text-red-600 dark:text-red-400',
     },
   ]
 
   return (
-    <div 
+    <div
       className="grid gap-3 md:gap-4"
       style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}
     >
       {statItems.map((item) => (
         <Card
           key={item.title}
-          className="!rounded-xl !border-white/50 !bg-white/70 backdrop-blur-sm hover:shadow-md transition-shadow"
+          className="!rounded-xl !border-default !bg-container backdrop-blur-sm hover:shadow-md transition-shadow"
           styles={{ body: { padding: isMobile ? '12px' : '16px' } }}
         >
           <div className="flex items-center gap-2 md:gap-3">
@@ -231,7 +231,7 @@ function StatsCards({
               <div className={item.textColor}>{item.icon}</div>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs text-gray-500 truncate">{item.title}</div>
+              <div className="text-xs text-tertiary truncate">{item.title}</div>
               <div className={`text-lg md:text-xl font-bold ${item.textColor} truncate`}>
                 {item.value.toLocaleString()}
               </div>
@@ -300,7 +300,7 @@ function LogDetailModal({
           <Tag color="blue">{log.method || '-'}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="请求路径" span={2}>
-          <code className="text-xs bg-gray-100 px-2 py-1 rounded">{log.path || '-'}</code>
+          <code className="text-xs bg-subtle px-2 py-1 rounded">{log.path || '-'}</code>
         </Descriptions.Item>
         <Descriptions.Item label="状态码">
           <Tag color={log.statusCode >= 400 ? 'error' : 'success'}>
@@ -311,20 +311,20 @@ function LogDetailModal({
           {log.durationMs ? `${log.durationMs}ms` : '-'}
         </Descriptions.Item>
         <Descriptions.Item label="User-Agent" span={2}>
-          <div className="text-xs text-gray-500 break-all max-h-20 overflow-auto">
+          <div className="text-xs text-tertiary break-all max-h-20 overflow-auto">
             {log.userAgent || '-'}
           </div>
         </Descriptions.Item>
         {log.errorMessage && (
           <Descriptions.Item label="错误信息" span={2}>
-            <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
+            <div className="text-red-500 dark:text-red-400 text-sm bg-red-500/10 p-2 rounded">
               {log.errorMessage}
             </div>
           </Descriptions.Item>
         )}
         {log.details && (
           <Descriptions.Item label="详细信息" span={2}>
-            <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-40">
+            <pre className="text-xs bg-subtle p-2 rounded overflow-auto max-h-40">
               {log.details}
             </pre>
           </Descriptions.Item>
@@ -484,11 +484,11 @@ function AuditLogList() {
       width: 200,
       render: (_, record) => (
         <div>
-          <div className="font-medium text-gray-900">
-            {record.module && <span className="text-blue-600">[{record.module}]</span>} {record.action}
+          <div className="font-medium text-default">
+            {record.module && <span className="text-primary">[{record.module}]</span>} {record.action}
           </div>
           {record.resource && (
-            <div className="text-xs text-gray-400 mt-0.5">
+            <div className="text-xs text-muted mt-0.5">
               资源: {record.resource} {record.resourceId && `#${record.resourceId}`}
             </div>
           )}
@@ -502,7 +502,7 @@ function AuditLogList() {
       width: 120,
       render: (username: string) => (
         <div className="flex items-center gap-2">
-          <User className="w-4 h-4 text-gray-400" />
+          <User className="w-4 h-4 text-muted" />
           <span>{username || '系统'}</span>
         </div>
       ),
@@ -514,7 +514,7 @@ function AuditLogList() {
       width: 130,
       render: (ip: string) => (
         <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-gray-400" />
+          <Globe className="w-4 h-4 text-muted" />
           <span className="font-mono text-sm">{ip || '-'}</span>
         </div>
       ),
@@ -533,7 +533,7 @@ function AuditLogList() {
                 {record.method}
               </Tag>
             )}
-            <span className="truncate text-gray-600">{path || '-'}</span>
+            <span className="truncate text-secondary">{path || '-'}</span>
           </div>
         </Tooltip>
       ),
@@ -550,7 +550,7 @@ function AuditLogList() {
             </Tag>
           )}
           {record.durationMs > 0 && (
-            <span className="text-xs text-gray-400">{Number(record.durationMs)}ms</span>
+            <span className="text-xs text-muted">{Number(record.durationMs)}ms</span>
           )}
         </div>
       ),
@@ -561,7 +561,7 @@ function AuditLogList() {
       key: 'createdAt',
       width: 160,
       render: (createdAt: string) => (
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-tertiary">
           <Clock className="w-4 h-4" />
           <span>{createdAt ? dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss') : '-'}</span>
         </div>
@@ -579,7 +579,7 @@ function AuditLogList() {
             size="small"
             icon={<Eye className="w-4 h-4" />}
             onClick={() => handleViewDetail(record)}
-            className="!text-gray-500 hover:!text-blue-600 hover:!bg-blue-50"
+            className="!text-tertiary hover:!text-primary hover:bg-hover"
           />
         </Tooltip>
       ),
@@ -590,10 +590,10 @@ function AuditLogList() {
     <div className="space-y-4 md:space-y-6">
       {/* 页面标题 */}
       <div>
-        <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+        <h1 className="text-xl md:text-2xl font-bold text-default">
           审计日志
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-secondary">
           查看系统操作日志，追踪用户行为和系统事件
         </p>
       </div>
@@ -602,8 +602,8 @@ function AuditLogList() {
       <StatsCards stats={stats} loading={statsLoading} isMobile={isMobile} />
 
       {/* 搜索和筛选 - 紧凑单行布局 */}
-      <Card 
-        className="!rounded-xl !border-white/50 !bg-white/70 backdrop-blur-sm"
+      <Card
+        className="!rounded-xl !border-default !bg-container backdrop-blur-sm"
         styles={{ body: { padding: isMobile ? '12px' : '12px 16px' } }}
       >
         {/* 桌面端：单行紧凑布局 */}
@@ -612,7 +612,7 @@ function AuditLogList() {
             {/* 搜索框 */}
             <Input
               placeholder="搜索关键词..."
-              prefix={<Search className="w-4 h-4 text-gray-400" />}
+              prefix={<Search className="w-4 h-4 text-muted" />}
               value={filters.keyword}
               onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
               onPressEnter={() => {
@@ -695,7 +695,7 @@ function AuditLogList() {
             <div className="flex gap-2">
               <Input
                 placeholder="搜索..."
-                prefix={<Search className="w-4 h-4 text-gray-400" />}
+                prefix={<Search className="w-4 h-4 text-muted" />}
                 value={filters.keyword}
                 onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
                 onPressEnter={() => {
@@ -763,7 +763,7 @@ function AuditLogList() {
 
         {/* 展开的高级筛选 */}
         {showFilters && (
-          <div className={`mt-3 pt-3 border-t border-gray-100 ${isMobile ? 'space-y-2' : ''}`}>
+          <div className={`mt-3 pt-3 border-t border-subtle ${isMobile ? 'space-y-2' : ''}`}>
             {isMobile ? (
               /* 移动端筛选 */
               <>
@@ -811,7 +811,7 @@ function AuditLogList() {
             ) : (
               /* 桌面端筛选 - 单行布局 */
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 shrink-0">高级筛选:</span>
+                <span className="text-xs text-muted shrink-0">高级筛选:</span>
                 <Select
                   placeholder="选择模块"
                   value={filters.module || undefined}
@@ -871,18 +871,18 @@ function AuditLogList() {
         isMobile ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="!rounded-xl !bg-white/70 backdrop-blur-sm">
+              <Card key={i} className="!rounded-xl !bg-container backdrop-blur-sm">
                 <Skeleton active paragraph={{ rows: 3 }} />
               </Card>
             ))}
           </div>
         ) : (
-          <Card className="!rounded-xl !bg-white/70 backdrop-blur-sm">
+          <Card className="!rounded-xl !bg-container backdrop-blur-sm">
             <Skeleton active paragraph={{ rows: 8 }} />
           </Card>
         )
       ) : logs.length === 0 ? (
-        <Card className="!rounded-xl !bg-white/70 backdrop-blur-sm">
+        <Card className="!rounded-xl !bg-container backdrop-blur-sm">
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description="暂无日志数据"
@@ -909,7 +909,7 @@ function AuditLogList() {
         </div>
       ) : (
         /* 桌面端：表格 */
-        <Card className="overflow-hidden !rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm">
+        <Card className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm">
           <Table
             columns={columns}
             dataSource={logs}

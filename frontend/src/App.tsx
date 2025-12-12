@@ -5,6 +5,7 @@ import { ConfigProvider, Spin, theme as antdTheme } from "antd";
 import { router } from "./router/router";
 import { useAuthStore, useSiteStore, useThemeStore } from "./stores";
 import { useFavicon } from "./hooks";
+import { darkModeTokens } from "./theme/themes";
 
 // 创建 QueryClient 实例
 const queryClient = new QueryClient({
@@ -52,16 +53,20 @@ function App() {
     const primary =
       resolvedMode === "dark" ? def.primary.dark : def.primary.light;
 
+    const baseToken = {
+      colorPrimary: primary,
+      colorInfo: primary,
+      borderRadius: def.tokens?.antdBorderRadius ?? 10,
+    };
+
     return {
       algorithm:
         resolvedMode === "dark"
           ? antdTheme.darkAlgorithm
           : antdTheme.defaultAlgorithm,
-      token: {
-        colorPrimary: primary,
-        colorInfo: primary,
-        borderRadius: def.tokens?.antdBorderRadius ?? 10,
-      },
+      token: resolvedMode === "dark"
+        ? { ...baseToken, ...darkModeTokens }
+        : baseToken,
     };
   }, [getThemeDefinition, resolvedMode]);
 

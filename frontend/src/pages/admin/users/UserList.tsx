@@ -100,7 +100,7 @@ function UserCard({
   ]
 
   return (
-    <div className="p-4 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/50 shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99]">
+    <div className="p-4 rounded-2xl bg-container backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.99]">
       {/* 头部：用户信息 + 操作 */}
       <div className="flex items-start gap-3">
         {/* 头像 */}
@@ -113,23 +113,23 @@ function UserCard({
             {user.nickname?.charAt(0) || user.username?.charAt(0) || '-'}
           </Avatar>
           {/* 状态指示点 */}
-          <div 
-            className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${statusConfig.dotClass}`}
+          <div
+            className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-container ${statusConfig.dotClass}`}
           />
         </div>
         
         {/* 用户信息 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-900 truncate">{user.nickname || user.username}</span>
-            <Tag 
-              color={ROLE_COLORS[user.roles?.[0]] || 'default'} 
+            <span className="font-semibold text-default truncate">{user.nickname || user.username}</span>
+            <Tag
+              color={ROLE_COLORS[user.roles?.[0]] || 'default'}
               className="!mr-0 !text-xs"
             >
               {user.roles?.[0] || '-'}
             </Tag>
           </div>
-          <div className="flex items-center gap-1.5 mt-1 text-sm text-gray-500">
+          <div className="flex items-center gap-1.5 mt-1 text-sm text-secondary">
             <Mail className="w-3.5 h-3.5" />
             <span className="truncate">{user.email}</span>
           </div>
@@ -141,14 +141,14 @@ function UserCard({
             type="text"
             size="small"
             icon={<MoreVertical className="w-4 h-4" />}
-            className="!text-gray-400 hover:!text-gray-600 hover:!bg-gray-100/80"
+            className="!text-muted hover:!text-default hover:bg-hover"
           />
         </Dropdown>
       </div>
-      
+
       {/* 底部：元信息 */}
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-muted">
+        <div className="flex items-center gap-1.5 text-xs text-muted">
           <Calendar className="w-3.5 h-3.5" />
           <span>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}</span>
         </div>
@@ -171,7 +171,7 @@ function UserListSkeleton({ isMobile }: { isMobile: boolean }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-4 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/50">
+          <div key={i} className="p-4 rounded-2xl bg-container backdrop-blur-sm shadow-sm">
             <div className="flex items-start gap-3">
               <Skeleton.Avatar active size={48} />
               <div className="flex-1">
@@ -186,7 +186,7 @@ function UserListSkeleton({ isMobile }: { isMobile: boolean }) {
   }
 
   return (
-    <Card className="overflow-hidden !rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm">
+    <Card className="overflow-hidden !rounded-2xl backdrop-blur-sm shadow-sm">
       <Skeleton active paragraph={{ rows: 5 }} />
     </Card>
   )
@@ -231,19 +231,19 @@ function UserList() {
         return (
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Avatar 
+              <Avatar
                 src={record.avatar}
                 className="bg-gradient-to-br from-blue-500 to-blue-600 shadow-md shadow-blue-500/20"
               >
                 {record.nickname?.charAt(0) || record.username?.charAt(0) || '-'}
               </Avatar>
-              <div 
-                className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${statusConfig.dotClass}`}
+              <div
+                className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-container ${statusConfig.dotClass}`}
               />
             </div>
             <div className="min-w-0">
-              <div className="font-medium text-gray-900">{record.nickname || record.username}</div>
-              <div className="text-sm text-gray-500">{record.email}</div>
+              <div className="font-medium text-default">{record.nickname || record.username}</div>
+              <div className="text-sm text-secondary">{record.email}</div>
             </div>
           </div>
         )
@@ -308,7 +308,7 @@ function UserList() {
                 size="small"
                 icon={<Edit className="w-4 h-4" />}
                 onClick={() => handleEdit(record)}
-                className="!text-gray-500 hover:!text-indigo-600 hover:!bg-indigo-50"
+                className="!text-tertiary hover:!text-primary hover:bg-primary-soft"
               />
             </Tooltip>
             <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
@@ -316,7 +316,7 @@ function UserList() {
                 type="text"
                 size="small"
                 icon={<MoreVertical className="w-4 h-4" />}
-                className="!text-gray-400 hover:!text-gray-600"
+                className="!text-muted hover:!text-default"
               />
             </Dropdown>
           </Space>
@@ -396,7 +396,7 @@ function UserList() {
     return (
       <div className="space-y-4 md:space-y-6">
         <PageHeader onAdd={handleAddUser} isMobile={isMobile} />
-        <Card className="p-8 text-center text-red-500 bg-white/80">{error}</Card>
+        <Card className="p-8 text-center text-red-500 bg-container">{error}</Card>
       </div>
     )
   }
@@ -410,7 +410,7 @@ function UserList() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
           placeholder="搜索用户名/邮箱/昵称..."
-          prefix={<Search className="w-4 h-4 text-gray-400" />}
+          prefix={<Search className="w-4 h-4 text-muted" />}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           onPressEnter={() => search(searchValue)}
@@ -456,7 +456,7 @@ function UserList() {
         </div>
       ) : (
         /* 桌面端：表格 */
-        <Card className="overflow-hidden !rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm">
+        <Card className="overflow-hidden !rounded-2xl backdrop-blur-sm shadow-sm">
           <Table
             columns={columns}
             dataSource={users}
@@ -507,10 +507,10 @@ function PageHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+        <h1 className="text-xl md:text-2xl font-bold text-default">
           用户管理
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-secondary">
           管理系统中的所有用户账户
         </p>
       </div>

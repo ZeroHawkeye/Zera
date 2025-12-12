@@ -335,6 +335,22 @@ components:
           type: boolean
           title: auto_create_user
           description: 是否自动创建用户
+        clientId:
+          type: string
+          title: client_id
+          description: Casdoor 应用 Client ID (用于 SDK 调用)
+        clientSecret:
+          type: string
+          title: client_secret
+          description: Casdoor 应用 Client Secret (用于 SDK 调用)
+        jwtPublicKey:
+          type: string
+          title: jwt_public_key
+          description: Casdoor 应用 JWT 公钥证书 (用于验证 token)
+        syncToCasdoor:
+          type: boolean
+          title: sync_to_casdoor
+          description: 是否启用同步到 Casdoor
       title: CASConfig
       additionalProperties: false
       description: CAS 配置

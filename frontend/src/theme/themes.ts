@@ -22,6 +22,40 @@ export interface ThemeTokens {
   antdBorderRadius?: number;
 }
 
+/**
+ * Antd 暗色模式额外的 token 配置
+ * 这些值会在 darkAlgorithm 基础上覆盖
+ */
+export interface AntdDarkModeTokens {
+  colorBgContainer: string;
+  colorBgElevated: string;
+  colorBgLayout: string;
+  colorBgSpotlight: string;
+  colorBorder: string;
+  colorBorderSecondary: string;
+  colorText: string;
+  colorTextSecondary: string;
+  colorTextTertiary: string;
+  colorTextQuaternary: string;
+}
+
+/**
+ * 默认的暗色模式 token 配置
+ * 使用 slate 色系与 Tailwind 的暗色模式保持一致
+ */
+export const darkModeTokens: AntdDarkModeTokens = {
+  colorBgContainer: "#1e293b",      // slate-800
+  colorBgElevated: "#334155",       // slate-700
+  colorBgLayout: "#0f172a",         // slate-900
+  colorBgSpotlight: "#475569",      // slate-600
+  colorBorder: "#334155",           // slate-700
+  colorBorderSecondary: "#1e293b", // slate-800
+  colorText: "#f1f5f9",             // slate-100
+  colorTextSecondary: "#cbd5e1",    // slate-300
+  colorTextTertiary: "#94a3b8",     // slate-400
+  colorTextQuaternary: "#64748b",   // slate-500
+};
+
 export interface ThemeDefinition {
   /** Must match CSS `[data-theme="<id>"]` selectors. */
   id: ThemeId;

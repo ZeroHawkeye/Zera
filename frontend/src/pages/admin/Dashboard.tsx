@@ -28,9 +28,9 @@ function Dashboard() {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="!rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+          <Card className="!rounded-2xl backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
             <Statistic
-              title="总用户数"
+              title={<span className="text-tertiary">总用户数</span>}
               value={1234}
               prefix={<Users className="w-5 h-5 text-indigo-500" />}
               valueStyle={{ color: '#6366f1' }}
@@ -38,9 +38,9 @@ function Dashboard() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="!rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+          <Card className="!rounded-2xl backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
             <Statistic
-              title="活跃用户"
+              title={<span className="text-tertiary">活跃用户</span>}
               value={856}
               prefix={<UserCheck className="w-5 h-5 text-green-500" />}
               valueStyle={{ color: '#22c55e' }}
@@ -48,9 +48,9 @@ function Dashboard() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="!rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+          <Card className="!rounded-2xl backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
             <Statistic
-              title="未激活"
+              title={<span className="text-tertiary">未激活</span>}
               value={378}
               prefix={<UserX className="w-5 h-5 text-orange-500" />}
               valueStyle={{ color: '#f97316' }}
@@ -58,9 +58,9 @@ function Dashboard() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="!rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
+          <Card className="!rounded-2xl backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow">
             <Statistic
-              title="今日活跃"
+              title={<span className="text-tertiary">今日活跃</span>}
               value={234}
               prefix={<Activity className="w-5 h-5 text-blue-500" />}
               valueStyle={{ color: '#3b82f6' }}
@@ -70,9 +70,9 @@ function Dashboard() {
       </Row>
 
       {/* 快速操作 */}
-      <Card 
-        title="快速操作" 
-        className="!rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm"
+      <Card
+        title={<span className="text-default">快速操作</span>}
+        className="!rounded-2xl backdrop-blur-sm shadow-sm"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <QuickActionCard
@@ -116,15 +116,15 @@ function QuickActionCard({
   return (
     <Link
       to={link}
-      className="block p-4 rounded-xl bg-gradient-to-br from-white to-gray-50 border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all duration-200 group"
+      className="block p-4 rounded-xl hover:shadow-md transition-all duration-200 group bg-elevated"
     >
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform">
           {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-          <p className="text-sm text-gray-500">{description}</p>
+          <h3 className="font-semibold text-default mb-1">{title}</h3>
+          <p className="text-sm text-tertiary">{description}</p>
         </div>
       </div>
     </Link>

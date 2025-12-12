@@ -125,8 +125,8 @@ export function MenuRenderer({
         return (
           <div
             key={item.key}
-            className={`my-2 mx-3 border-t transition-opacity ${
-              collapsed ? "border-gray-200/50" : "border-gray-200/60"
+            className={`my-2 mx-3 border-t transition-opacity border-subtle ${
+              collapsed ? "opacity-50" : "opacity-60"
             }`}
           />
         );
@@ -247,19 +247,21 @@ function MenuGroupItem({
     : (item as { children?: MenuItem[] }).children;
 
   // 根据层级获取背景色（主题化：active 走 CSS 变量，hover 保持灰度）
-  const getLevelBgClass = (lvl: number, active: boolean) => {
+  const getLevelBgClass = (_lvl: number, active: boolean) => {
     if (active) {
       // 激活状态：使用主题 primary light（避免写死 blue-*）
       return "menu-item-active";
     }
-    // hover 状态：层级越深背景越浅
-    const hoverBgClasses = [
-      "hover:bg-gray-100",
-      "hover:bg-gray-100/80",
-      "hover:bg-gray-100/60",
-      "hover:bg-gray-50",
-    ];
-    return hoverBgClasses[Math.min(lvl, hoverBgClasses.length - 1)];
+    // hover 状态：使用语义化变量
+    return "hover:bg-hover";
+  };
+
+  // 文字颜色样式 - 使用 CSS 变量确保暗色模式正确
+  const getTextStyle = (active: boolean): React.CSSProperties => {
+    if (active) {
+      return { color: 'var(--color-primary)' };
+    }
+    return { color: 'var(--color-text-tertiary)' };
   };
 
   // 折叠模式下的按钮（用于触发 Popover）
@@ -267,15 +269,12 @@ function MenuGroupItem({
     <button
       className={`
         w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative group cursor-pointer
-        ${
-          hasActiveChild
-            ? `${getLevelBgClass(level, true)}`
-            : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
-        }
+        ${getLevelBgClass(level, hasActiveChild)}
       `}
       style={{
         paddingLeft: `${12 + level * 12}px`,
         ...(hasActiveChild ? MENU_ACTIVE_BG_STYLE : {}),
+        ...getTextStyle(hasActiveChild),
       }}
     >
       {/* 激活指示条 */}
@@ -294,8 +293,8 @@ function MenuGroupItem({
 
   // 折叠模式下的弹出菜单内容
   const popoverContent = (
-    <div className="min-w-[160px] py-1">
-      <div className="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 mb-1">
+    <div className="min-w-[160px] py-1" style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)' }}>
+      <div className="px-3 py-2 text-sm font-medium border-b mb-1" style={{ color: 'var(--color-text-primary)', borderColor: 'var(--color-border-secondary)' }}>
         {label}
       </div>
       {children && (
@@ -329,15 +328,22 @@ function MenuGroupItem({
         onClick={onToggle}
         className={`
           w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative group cursor-pointer
-          ${
-            hasActiveChild
-              ? `${getLevelBgClass(level, true)}`
-              : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
-          }
+          ${getLevelBgClass(level, hasActiveChild)}
         `}
         style={{
           paddingLeft: `${12 + level * 12}px`,
           ...(hasActiveChild ? MENU_ACTIVE_BG_STYLE : {}),
+          ...getTextStyle(hasActiveChild),
+        }}
+        onMouseEnter={(e) => {
+          if (!hasActiveChild) {
+            e.currentTarget.style.color = 'var(--color-text-primary)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!hasActiveChild) {
+            e.currentTarget.style.color = 'var(--color-text-tertiary)';
+          }
         }}
       >
         {/* 激活指示条 */}
@@ -427,7 +433,7 @@ function CollapsedSubMenuRenderer({
     <div className="space-y-0.5">
       {items.map((subItem) => {
         if (isMenuDivider(subItem)) {
-          return <div key={subItem.key} className="my-1 border-t border-gray-100" />;
+          return <div key={subItem.key} className="my-1 border-t border-subtle" />;
         }
 
         if (hasChildren(subItem)) {
@@ -451,12 +457,23 @@ function CollapsedSubMenuRenderer({
               onClick={onClose}
               className={`
                 flex items-center gap-2 px-3 py-2 mx-1 rounded-lg text-sm transition-colors
-                ${active 
-                  ? 'text-primary bg-primary/10 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }
+                hover:bg-hover
+                ${active ? 'font-medium' : ''}
               `}
-              style={active ? { color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)' } : {}}
+              style={active
+                ? { color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)' }
+                : { color: 'var(--color-text-secondary)' }
+              }
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.color = 'var(--color-text-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.color = 'var(--color-text-secondary)';
+                }
+              }}
             >
               <span className="flex-shrink-0">{renderIcon(subItem.icon, "w-4 h-4")}</span>
               <span>{subItem.label}</span>
@@ -500,7 +517,7 @@ function CollapsedNestedSubMenu({
   }) ?? false;
 
   const nestedContent = (
-    <div className="min-w-[140px] py-1">
+    <div className="min-w-[140px] py-1" style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)' }}>
       {children && (
         <CollapsedSubMenuRenderer items={children} onClose={onClose} />
       )}
@@ -515,23 +532,35 @@ function CollapsedNestedSubMenu({
       open={open}
       onOpenChange={setOpen}
       arrow={false}
+      overlayClassName="collapsed-menu-popover"
       overlayInnerStyle={{ padding: 0, borderRadius: '8px' }}
     >
       <div
         className={`
           flex items-center justify-between gap-2 px-3 py-2 mx-1 rounded-lg text-sm cursor-pointer transition-colors
-          ${hasActiveChild 
-            ? 'text-primary font-medium' 
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-          }
+          hover:bg-hover
+          ${hasActiveChild ? 'font-medium' : ''}
         `}
-        style={hasActiveChild ? { color: 'var(--color-primary)' } : {}}
+        style={hasActiveChild
+          ? { color: 'var(--color-primary)' }
+          : { color: 'var(--color-text-secondary)' }
+        }
+        onMouseEnter={(e) => {
+          if (!hasActiveChild) {
+            e.currentTarget.style.color = 'var(--color-text-primary)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!hasActiveChild) {
+            e.currentTarget.style.color = 'var(--color-text-secondary)';
+          }
+        }}
       >
         <div className="flex items-center gap-2">
           <span className="flex-shrink-0">{renderIcon(icon, "w-4 h-4")}</span>
           <span>{label}</span>
         </div>
-        <ChevronRight className="w-3 h-3 text-gray-400" />
+        <ChevronRight className="w-3 h-3" style={{ color: 'var(--color-text-muted)' }} />
       </div>
     </Popover>
   );
@@ -560,6 +589,24 @@ function MenuNavItemComponent({
 
   const { label, icon, path, externalLink, openInNewTab, badge } = item;
 
+  // 根据层级获取背景色（主题化：active 走 CSS 变量，hover 保持灰度）
+  const getLevelBgClass = (_lvl: number, active: boolean) => {
+    if (active) {
+      // 激活状态：使用主题 primary light（避免写死 blue-*）
+      return "menu-item-active";
+    }
+    // hover 状态：使用语义化变量
+    return "hover:bg-hover";
+  };
+
+  // 文字颜色样式 - 使用 CSS 变量确保暗色模式正确
+  const getTextStyle = (active: boolean): React.CSSProperties => {
+    if (active) {
+      return { color: 'var(--color-primary)' };
+    }
+    return { color: 'var(--color-text-tertiary)' };
+  };
+
   // 外部链接
   if (externalLink) {
     const linkContent = (
@@ -569,9 +616,18 @@ function MenuNavItemComponent({
         rel={openInNewTab ? "noopener noreferrer" : undefined}
         className={`
           flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative group
-          text-gray-500 hover:bg-gray-100/80 hover:text-gray-700
+          hover:bg-hover
         `}
-        style={{ paddingLeft: `${12 + level * 12}px` }}
+        style={{
+          paddingLeft: `${12 + level * 12}px`,
+          color: 'var(--color-text-tertiary)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = 'var(--color-text-primary)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = 'var(--color-text-tertiary)';
+        }}
       >
         <span className="flex-shrink-0">{renderIcon(icon)}</span>
         <span
@@ -581,7 +637,7 @@ function MenuNavItemComponent({
         >
           {label}
         </span>
-        {!collapsed && <ExternalLink className="w-3.5 h-3.5 text-gray-400" />}
+        {!collapsed && <ExternalLink className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />}
       </a>
     );
 
@@ -596,38 +652,28 @@ function MenuNavItemComponent({
     return linkContent;
   }
 
-  // 根据层级获取背景色（主题化：active 走 CSS 变量，hover 保持灰度）
-  const getLevelBgClass = (lvl: number, active: boolean) => {
-    if (active) {
-      // 激活状态：使用主题 primary light（避免写死 blue-*）
-      return "menu-item-active";
-    }
-    // hover 状态：层级越深背景越浅
-    const hoverBgClasses = [
-      "hover:bg-gray-100",
-      "hover:bg-gray-100/80",
-      "hover:bg-gray-100/60",
-      "hover:bg-gray-50",
-    ];
-    return hoverBgClasses[Math.min(lvl, hoverBgClasses.length - 1)];
-  };
-
   // 内部导航
   const navContent = (
     <Link
       to={path || "#"}
       className={`
         flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 relative overflow-hidden group
-        ${
-          isActive
-            ? `${getLevelBgClass(level, true)}`
-            : `text-gray-500 ${getLevelBgClass(level, false)} hover:text-gray-700`
-        }
+        ${getLevelBgClass(level, isActive)}
       `}
       style={{
         paddingLeft: `${12 + level * 12}px`,
         ...(isActive ? MENU_ACTIVE_BG_STYLE : {}),
-        ...(isActive ? MENU_ACTIVE_TEXT_STYLE : {}),
+        ...getTextStyle(isActive),
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.color = 'var(--color-text-primary)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.color = 'var(--color-text-tertiary)';
+        }
       }}
     >
       {/* 激活指示条 */}

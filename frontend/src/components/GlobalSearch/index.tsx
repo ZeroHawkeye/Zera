@@ -109,7 +109,7 @@ function SearchResultItem({
         ${
           isActive
             ? "border-l-2"
-            : "hover:bg-gray-50 border-l-2 border-transparent"
+            : "hover:bg-hover border-l-2 border-transparent"
         }
       `}
       style={isActive ? { ...ACTIVE_BG_STYLE, ...ACTIVE_BAR_STYLE } : undefined}
@@ -118,7 +118,7 @@ function SearchResultItem({
       <div
         className={`
           flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
-          ${isActive ? "" : "bg-gray-100 text-gray-500"}
+          ${isActive ? "" : "bg-subtle text-tertiary"}
         `}
         style={
           isActive
@@ -132,12 +132,12 @@ function SearchResultItem({
       {/* 内容 */}
       <div className="flex-1 min-w-0">
         <div
-          className={`font-medium ${isActive ? "" : "text-gray-900"}`}
+          className={`font-medium ${isActive ? "" : "text-default"}`}
           style={isActive ? ACTIVE_TEXT_STYLE : undefined}
         >
           {item.label}
         </div>
-        <div className="text-xs text-gray-400 truncate">
+        <div className="text-xs text-muted truncate">
           {item.breadcrumb.join(" / ")}
         </div>
       </div>
@@ -315,7 +315,7 @@ export function GlobalSearch({
       }}
     >
       {/* 搜索输入框 */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-default">
         <Input
           ref={inputRef}
           autoFocus
@@ -351,25 +351,25 @@ export function GlobalSearch({
       </div>
 
       {/* 快捷键提示 */}
-      <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-400">
+      <div className="px-4 py-3 border-t border-default bg-subtle flex items-center justify-between text-xs text-muted">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+            <kbd className="px-1.5 py-0.5 bg-container border border-default rounded text-secondary">
               ↑
             </kbd>
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+            <kbd className="px-1.5 py-0.5 bg-container border border-default rounded text-secondary">
               ↓
             </kbd>
             <span className="ml-1">选择</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+            <kbd className="px-1.5 py-0.5 bg-container border border-default rounded text-secondary">
               ↵
             </kbd>
             <span className="ml-1">确认</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+            <kbd className="px-1.5 py-0.5 bg-container border border-default rounded text-secondary">
               esc
             </kbd>
             <span className="ml-1">关闭</span>
@@ -378,7 +378,7 @@ export function GlobalSearch({
         <div className="flex items-center gap-1">
           <Command className="w-3 h-3" />
           <span>+</span>
-          <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-500">
+          <kbd className="px-1.5 py-0.5 bg-container border border-default rounded text-secondary">
             K
           </kbd>
           <span className="ml-1">打开搜索</span>
@@ -413,11 +413,11 @@ export function GlobalSearchTrigger() {
       {/* 搜索触发按钮 */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-2 hover:bg-white/60 rounded-xl transition-all duration-200 text-gray-500 hover:text-gray-700 hover:shadow-sm"
+        className="flex items-center gap-2 px-3 py-2 hover:bg-interactive rounded-xl transition-all duration-200 text-tertiary hover:text-default hover:shadow-sm"
       >
         <Search className="w-5 h-5" />
         <span className="hidden md:inline text-sm">搜索</span>
-        <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs text-gray-400">
+        <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-subtle border border-default rounded text-xs text-muted">
           <Command className="w-3 h-3" />
           <span>K</span>
         </kbd>

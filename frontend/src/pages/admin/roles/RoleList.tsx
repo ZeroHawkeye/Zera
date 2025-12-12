@@ -68,7 +68,7 @@ function RoleCard({
   ]
 
   return (
-    <div className="p-4 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/50 shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="p-4 rounded-2xl bg-container backdrop-blur-sm border border-default shadow-sm hover:shadow-md transition-all duration-300">
       {/* 头部：角色信息 + 操作 */}
       <div className="flex items-start gap-3">
         {/* 图标 */}
@@ -86,18 +86,18 @@ function RoleCard({
         {/* 角色信息 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-900 truncate">{role.name}</span>
+            <span className="font-semibold text-default truncate">{role.name}</span>
             {role.isSystem && (
               <Tag color="orange" className="!mr-0 !text-xs">
                 系统
               </Tag>
             )}
           </div>
-          <div className="text-sm text-gray-500 truncate mt-0.5">
+          <div className="text-sm text-secondary truncate mt-0.5">
             {role.description || '暂无描述'}
           </div>
-          <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
-            <code className="px-1.5 py-0.5 bg-gray-100 rounded">{role.code}</code>
+          <div className="flex items-center gap-1.5 mt-1 text-xs text-muted">
+            <code className="px-1.5 py-0.5 bg-subtle rounded">{role.code}</code>
           </div>
         </div>
 
@@ -107,22 +107,22 @@ function RoleCard({
             type="text"
             size="small"
             icon={<MoreVertical className="w-4 h-4" />}
-            className="!text-gray-400 hover:!text-gray-600 hover:!bg-gray-100/80"
+            className="!text-muted hover:!text-secondary hover:bg-hover"
           />
         </Dropdown>
       </div>
 
       {/* 底部：元信息 */}
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-subtle">
+        <div className="flex items-center gap-1.5 text-xs text-muted">
           <Users className="w-3.5 h-3.5" />
           <span>{role.userCount} 个用户</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+        <div className="flex items-center gap-1.5 text-xs text-muted">
           <Lock className="w-3.5 h-3.5" />
           <span>{role.isAllPermissions ? '全部权限' : `${role.permissions.length} 个权限`}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 ml-auto">
+        <div className="flex items-center gap-1.5 text-xs text-muted ml-auto">
           <Calendar className="w-3.5 h-3.5" />
           <span>{role.createdAt ? new Date(role.createdAt).toLocaleDateString() : '-'}</span>
         </div>
@@ -139,7 +139,7 @@ function RoleListSkeleton({ isMobile }: { isMobile: boolean }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-4 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/50">
+          <div key={i} className="p-4 rounded-2xl bg-container backdrop-blur-sm border border-default">
             <div className="flex items-start gap-3">
               <Skeleton.Avatar active size={48} shape="square" />
               <div className="flex-1">
@@ -154,7 +154,7 @@ function RoleListSkeleton({ isMobile }: { isMobile: boolean }) {
   }
 
   return (
-    <Card className="overflow-hidden !rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm">
+    <Card className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm">
       <Skeleton active paragraph={{ rows: 5 }} />
     </Card>
   )
@@ -173,10 +173,10 @@ function PageHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+        <h1 className="text-xl md:text-2xl font-bold text-default">
           角色管理
         </h1>
-        <p className="mt-1 text-sm text-gray-500">管理系统角色和权限配置</p>
+        <p className="mt-1 text-sm text-secondary">管理系统角色和权限配置</p>
       </div>
       <Button
         type="primary"
@@ -235,14 +235,14 @@ function RoleList() {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">{record.name}</span>
+              <span className="font-medium text-default">{record.name}</span>
               {record.isSystem && (
                 <Tag color="orange" className="!text-xs">
                   系统
                 </Tag>
               )}
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted">
               <code>{record.code}</code>
             </div>
           </div>
@@ -256,7 +256,7 @@ function RoleList() {
       width: 200,
       ellipsis: true,
       render: (description: string) => (
-        <span className="text-gray-500">{description || '-'}</span>
+        <span className="text-secondary">{description || '-'}</span>
       ),
     },
     {
@@ -264,7 +264,7 @@ function RoleList() {
       key: 'permissions',
       width: 100,
       render: (_: unknown, record: RoleInfo) => (
-        record.isAllPermissions 
+        record.isAllPermissions
           ? <Tag color="gold">全部权限</Tag>
           : <Tag color="blue">{record.permissions?.length || 0} 个权限</Tag>
       ),
@@ -275,7 +275,7 @@ function RoleList() {
       key: 'userCount',
       width: 100,
       render: (count: number) => (
-        <div className="flex items-center gap-1.5 text-gray-600">
+        <div className="flex items-center gap-1.5 text-secondary">
           <Users className="w-4 h-4" />
           <span>{count || 0}</span>
         </div>
@@ -314,7 +314,7 @@ function RoleList() {
                 size="small"
                 icon={<Edit className="w-4 h-4" />}
                 onClick={() => handleEdit(record)}
-                className="!text-gray-500 hover:!text-indigo-600 hover:!bg-indigo-50"
+                className="!text-tertiary hover:!text-primary hover:bg-hover"
               />
             </Tooltip>
             <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
@@ -322,7 +322,7 @@ function RoleList() {
                 type="text"
                 size="small"
                 icon={<MoreVertical className="w-4 h-4" />}
-                className="!text-gray-400 hover:!text-gray-600"
+                className="!text-muted hover:!text-secondary"
               />
             </Dropdown>
           </Space>
@@ -388,7 +388,7 @@ function RoleList() {
     return (
       <div className="space-y-4 md:space-y-6">
         <PageHeader onAdd={handleAddRole} isMobile={isMobile} />
-        <Card className="p-8 text-center text-red-500 bg-white/80">{error}</Card>
+        <Card className="p-8 text-center text-red-500 bg-container">{error}</Card>
       </div>
     )
   }
@@ -402,7 +402,7 @@ function RoleList() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
           placeholder="搜索角色名称/代码..."
-          prefix={<Search className="w-4 h-4 text-gray-400" />}
+          prefix={<Search className="w-4 h-4 text-muted" />}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           onPressEnter={() => search(searchValue)}
@@ -445,7 +445,7 @@ function RoleList() {
         </div>
       ) : (
         /* 桌面端：表格 */
-        <Card className="overflow-hidden !rounded-2xl !border-white/50 !bg-white/70 backdrop-blur-sm shadow-sm">
+        <Card className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm">
           <Table
             columns={columns}
             dataSource={roles}
