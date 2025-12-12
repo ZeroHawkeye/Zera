@@ -30,6 +30,48 @@ const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_INFO_KEY = 'user_info'
 
 /**
+ * 验证对象是否为有效的 UserInfo 结构
+ * 防止 localStorage 数据被篡改或损坏
+ */
+function isValidUserInfo(obj: unknown): obj is UserInfo {
+  if (typeof obj !== 'object' || obj === null) {
+    return false
+  }
+
+  const record = obj as Record<string, unknown>
+
+  // 验证必需的字符串字段
+  const requiredStringFields = ['id', 'username', 'email']
+  for (const field of requiredStringFields) {
+    if (typeof record[field] !== 'string') {
+      return false
+    }
+  }
+
+  // 验证可选的字符串字段（允许为空字符串或未定义）
+  const optionalStringFields = ['nickname', 'avatar', 'phone']
+  for (const field of optionalStringFields) {
+    if (record[field] !== undefined && typeof record[field] !== 'string') {
+      return false
+    }
+  }
+
+  // 验证数组字段
+  if (!Array.isArray(record.roles) || !record.roles.every((r) => typeof r === 'string')) {
+    return false
+  }
+
+  if (
+    !Array.isArray(record.permissions) ||
+    !record.permissions.every((p) => typeof p === 'string')
+  ) {
+    return false
+  }
+
+  return true
+}
+
+/**
  * 登录参数
  */
 export interface LoginParams {
@@ -155,13 +197,27 @@ export const authApi = {
 
   /**
    * 获取本地存储的用户信息
+   * 使用类型守卫验证数据结构，防止数据被篡改或损坏
    */
   getStoredUser(): UserInfo | null {
     const userStr = localStorage.getItem(USER_INFO_KEY)
     if (!userStr) return null
+
     try {
-      return JSON.parse(userStr) as UserInfo
+      const parsed: unknown = JSON.parse(userStr)
+
+      if (isValidUserInfo(parsed)) {
+        return parsed
+      }
+
+      // 数据结构无效，清除损坏的数据
+      console.warn('Invalid user info in localStorage, clearing...')
+      localStorage.removeItem(USER_INFO_KEY)
+      return null
     } catch {
+      // JSON 解析失败，清除损坏的数据
+      console.warn('Failed to parse user info from localStorage, clearing...')
+      localStorage.removeItem(USER_INFO_KEY)
       return null
     }
   },
