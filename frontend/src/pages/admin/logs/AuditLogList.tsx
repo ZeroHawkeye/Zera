@@ -587,7 +587,7 @@ function AuditLogList() {
   ]
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       {/* 页面标题 */}
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-default">

@@ -11,7 +11,7 @@ import { config } from '@/config'
 /** 默认 Favicon - 使用 Sparkles 图标样式 */
 const DEFAULT_FAVICON_SVG = `
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" rx="8" fill="#6366f1"/>
+  <rect width="32" height="32" rx="8" fill="#3b82f6"/>
   <path d="M16 6L17.545 12.455L24 14L17.545 15.545L16 22L14.455 15.545L8 14L14.455 12.455L16 6Z" fill="white"/>
   <path d="M22 16L22.727 18.273L25 19L22.727 19.727L22 22L21.273 19.727L19 19L21.273 18.273L22 16Z" fill="white" opacity="0.8"/>
   <path d="M10 18L10.545 19.455L12 20L10.545 20.545L10 22L9.455 20.545L8 20L9.455 19.455L10 18Z" fill="white" opacity="0.6"/>

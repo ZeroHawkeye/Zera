@@ -89,18 +89,18 @@ function CASCallbackPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/30 p-4">
       {/* 背景装饰 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-sky-400/20 rounded-full blur-3xl" />
       </div>
 
       {/* 回调处理卡片 */}
-      <Card className="w-full max-w-md relative z-10 !rounded-3xl !border-white/50 !bg-white/70 backdrop-blur-xl shadow-2xl shadow-indigo-500/10">
+      <Card className="w-full max-w-md relative z-10 !rounded-3xl !border-white/50 !bg-white/70 backdrop-blur-xl shadow-2xl shadow-blue-500/10">
         {/* Logo */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-indigo-500/30 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg shadow-blue-500/30 mb-4">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <p className="text-gray-500">{siteName}</p>
@@ -134,7 +134,7 @@ function CASCallbackPage() {
               <Button
                 type="primary"
                 onClick={handleRetry}
-                className="!rounded-xl !bg-gradient-to-r !from-indigo-500 !to-purple-600 hover:!from-indigo-600 hover:!to-purple-700 !border-0"
+                className="!rounded-xl !bg-gradient-to-r !from-blue-500 !to-blue-600 hover:!from-blue-600 hover:!to-blue-700 !border-0"
               >
                 返回登录
               </Button>

@@ -1,91 +1,107 @@
-import { createLazyRoute } from '@tanstack/react-router'
-import { Card, Form, Input, Button, Switch, Skeleton, message, Alert, theme, Select } from 'antd'
-import { Save, RefreshCw } from 'lucide-react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { systemSettingApi, type UpdateSettingsParams } from '@/api/system_setting'
-import { roleApi } from '@/api/role'
-import { useSiteStore } from '@/stores'
-import { useState, useEffect } from 'react'
-import { LogoUpload } from '@/components'
+import { createLazyRoute } from "@tanstack/react-router";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Switch,
+  Skeleton,
+  message,
+  Alert,
+  theme,
+  Select,
+} from "antd";
+import { Save, RefreshCw } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  systemSettingApi,
+  type UpdateSettingsParams,
+} from "@/api/system_setting";
+import { roleApi } from "@/api/role";
+import { useSiteStore } from "@/stores";
+import { useState, useEffect } from "react";
+import { LogoUpload } from "@/components";
 
-export const Route = createLazyRoute('/admin/settings/general')({
+export const Route = createLazyRoute("/admin/settings/general")({
   component: GeneralSettings,
-})
+});
 
 /**
  * 表单值类型
  */
 interface FormValues {
-  siteName: string
-  siteDescription: string
-  siteLogoUrl: string
-  siteLogoType: string
-  enableRegistration: boolean
-  maintenanceMode: boolean
-  defaultRegisterRole: string
+  siteName: string;
+  siteDescription: string;
+  siteLogoUrl: string;
+  siteLogoType: string;
+  enableRegistration: boolean;
+  maintenanceMode: boolean;
+  defaultRegisterRole: string;
 }
 
 /**
  * 基础设置页面
  */
 function GeneralSettings() {
-  const [form] = Form.useForm<FormValues>()
-  const queryClient = useQueryClient()
-  const { token } = theme.useToken()
-  const [hasChanges, setHasChanges] = useState(false)
-  const refreshSiteSettings = useSiteStore((state) => state.refresh)
+  const [form] = Form.useForm<FormValues>();
+  const queryClient = useQueryClient();
+  const { token } = theme.useToken();
+  const [hasChanges, setHasChanges] = useState(false);
+  const refreshSiteSettings = useSiteStore((state) => state.refresh);
 
   // 监听表单中 Logo 相关字段的变化
-  const siteLogoUrl = Form.useWatch('siteLogoUrl', form)
-  const siteLogoType = Form.useWatch('siteLogoType', form)
+  const siteLogoUrl = Form.useWatch("siteLogoUrl", form);
+  const siteLogoType = Form.useWatch("siteLogoType", form);
 
   // 获取系统设置
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['systemSettings'],
+    queryKey: ["systemSettings"],
     queryFn: () => systemSettingApi.getSettings(),
-  })
+  });
 
   // 获取角色列表
   const { data: rolesData } = useQuery({
-    queryKey: ['roles'],
+    queryKey: ["roles"],
     queryFn: () => roleApi.listRoles({ page: 1, pageSize: 100 }),
-  })
+  });
 
   // 更新系统设置
   const updateMutation = useMutation({
-    mutationFn: (params: UpdateSettingsParams) => systemSettingApi.updateSettings(params),
+    mutationFn: (params: UpdateSettingsParams) =>
+      systemSettingApi.updateSettings(params),
     onSuccess: async () => {
-      message.success('设置已保存')
-      setHasChanges(false)
-      queryClient.invalidateQueries({ queryKey: ['systemSettings'] })
-      queryClient.invalidateQueries({ queryKey: ['publicSettings'] })
+      message.success("设置已保存");
+      setHasChanges(false);
+      queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
+      queryClient.invalidateQueries({ queryKey: ["publicSettings"] });
       // 刷新全局站点设置，更新标题和描述
-      await refreshSiteSettings()
+      await refreshSiteSettings();
     },
     onError: () => {
-      message.error('保存设置失败')
+      message.error("保存设置失败");
     },
-  })
+  });
 
   // 初始化表单值
   useEffect(() => {
     if (data?.settings) {
       form.setFieldsValue({
-        siteName: data.settings.general?.siteName ?? 'Zera',
-        siteDescription: data.settings.general?.siteDescription ?? '',
-        siteLogoUrl: data.settings.general?.siteLogoUrl ?? '',
-        siteLogoType: data.settings.general?.siteLogoType ?? 'default',
+        siteName: data.settings.general?.siteName ?? "Zera",
+        siteDescription: data.settings.general?.siteDescription ?? "",
+        siteLogoUrl: data.settings.general?.siteLogoUrl ?? "",
+        siteLogoType: data.settings.general?.siteLogoType ?? "default",
         enableRegistration: data.settings.features?.enableRegistration ?? true,
         maintenanceMode: data.settings.features?.maintenanceMode ?? false,
-        defaultRegisterRole: data.settings.features?.defaultRegisterRole ?? 'user',
-      })
+        defaultRegisterRole:
+          data.settings.features?.defaultRegisterRole ?? "user",
+      });
     }
-  }, [data, form])
+  }, [data, form]);
 
   // 表单值变化检测
   const handleValuesChange = () => {
-    setHasChanges(true)
-  }
+    setHasChanges(true);
+  };
 
   // 保存设置
   const handleSave = async (values: FormValues) => {
@@ -99,50 +115,51 @@ function GeneralSettings() {
         maintenanceMode: values.maintenanceMode,
         defaultRegisterRole: values.defaultRegisterRole,
       },
-    })
-  }
+    });
+  };
 
   // 重置表单
   const handleReset = () => {
     if (data?.settings) {
       form.setFieldsValue({
-        siteName: data.settings.general?.siteName ?? 'Zera',
-        siteDescription: data.settings.general?.siteDescription ?? '',
-        siteLogoUrl: data.settings.general?.siteLogoUrl ?? '',
-        siteLogoType: data.settings.general?.siteLogoType ?? 'default',
+        siteName: data.settings.general?.siteName ?? "Zera",
+        siteDescription: data.settings.general?.siteDescription ?? "",
+        siteLogoUrl: data.settings.general?.siteLogoUrl ?? "",
+        siteLogoType: data.settings.general?.siteLogoType ?? "default",
         enableRegistration: data.settings.features?.enableRegistration ?? true,
         maintenanceMode: data.settings.features?.maintenanceMode ?? false,
-        defaultRegisterRole: data.settings.features?.defaultRegisterRole ?? 'user',
-      })
-      setHasChanges(false)
+        defaultRegisterRole:
+          data.settings.features?.defaultRegisterRole ?? "user",
+      });
+      setHasChanges(false);
     }
-  }
+  };
 
   // 处理 Logo 变化
   const handleLogoChange = async (url: string, type: string) => {
     form.setFieldsValue({
       siteLogoUrl: url,
       siteLogoType: type,
-    })
-    setHasChanges(true)
+    });
+    setHasChanges(true);
     // Logo 上传后刷新缓存和全局站点设置
-    queryClient.invalidateQueries({ queryKey: ['systemSettings'] })
-    queryClient.invalidateQueries({ queryKey: ['publicSettings'] })
-    await refreshSiteSettings()
-  }
+    queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
+    queryClient.invalidateQueries({ queryKey: ["publicSettings"] });
+    await refreshSiteSettings();
+  };
 
   // 角色选项
-  const roleOptions = rolesData?.roles?.map(role => ({
+  const roleOptions = rolesData?.roles?.map((role) => ({
     label: role.name,
     value: role.code,
-  })) ?? [{ label: '普通用户', value: 'user' }]
+  })) ?? [{ label: "普通用户", value: "user" }];
 
   if (error) {
     return (
-      <div className="space-y-4 md:space-y-6 min-w-0">
+      <div className="flex flex-col gap-4 md:gap-6 min-w-0">
         <Alert
           type="error"
-          message="加载设置失败"
+          title="加载设置失败"
           description="无法获取系统设置，请检查网络连接后重试。"
           action={
             <Button size="small" onClick={() => refetch()}>
@@ -151,16 +168,16 @@ function GeneralSettings() {
           }
         />
       </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 min-w-0">
+    <div className="flex flex-col gap-4 md:gap-6 min-w-0">
       {/* 维护模式警告 */}
       {data?.settings?.features?.maintenanceMode && (
         <Alert
           type="warning"
-          message="维护模式已启用"
+          title="维护模式已启用"
           description="系统当前处于维护模式，普通用户无法访问。"
           showIcon
         />
@@ -171,8 +188,12 @@ function GeneralSettings() {
         layout="vertical"
         onFinish={handleSave}
         onValuesChange={handleValuesChange}
+        className="flex flex-col gap-4 md:gap-6"
       >
-        <Card title="站点信息" className="overflow-hidden">
+        <Card
+          title="站点信息"
+          className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm"
+        >
           {isLoading ? (
             <div className="space-y-4">
               <Skeleton.Input active block style={{ height: 32 }} />
@@ -183,7 +204,7 @@ function GeneralSettings() {
               <Form.Item
                 name="siteName"
                 label="站点名称"
-                rules={[{ required: true, message: '请输入站点名称' }]}
+                rules={[{ required: true, message: "请输入站点名称" }]}
               >
                 <Input placeholder="请输入站点名称" maxLength={100} showCount />
               </Form.Item>
@@ -206,8 +227,12 @@ function GeneralSettings() {
                 extra="自定义站点 Logo，将显示在导航栏和侧边栏"
                 className="mb-0"
               >
-                <Form.Item name="siteLogoUrl" hidden><Input /></Form.Item>
-                <Form.Item name="siteLogoType" hidden><Input /></Form.Item>
+                <Form.Item name="siteLogoUrl" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="siteLogoType" hidden>
+                  <Input />
+                </Form.Item>
                 <LogoUpload
                   value={siteLogoUrl}
                   logoType={siteLogoType}
@@ -218,7 +243,10 @@ function GeneralSettings() {
           )}
         </Card>
 
-        <Card title="功能开关" className="overflow-hidden">
+        <Card
+          title="功能开关"
+          className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm"
+        >
           {isLoading ? (
             <div className="space-y-4">
               <Skeleton active paragraph={{ rows: 2 }} />
@@ -244,7 +272,11 @@ function GeneralSettings() {
                     允许新用户自行注册账号。关闭后，只有管理员可以创建新用户。
                   </div>
                 </div>
-                <Form.Item name="enableRegistration" valuePropName="checked" className="mb-0">
+                <Form.Item
+                  name="enableRegistration"
+                  valuePropName="checked"
+                  className="mb-0"
+                >
                   <Switch className="flex-shrink-0" />
                 </Form.Item>
               </div>
@@ -268,7 +300,10 @@ function GeneralSettings() {
                     新注册用户将自动获得此角色的权限
                   </div>
                 </div>
-                <Form.Item name="defaultRegisterRole" className="mb-0 min-w-[140px]">
+                <Form.Item
+                  name="defaultRegisterRole"
+                  className="mb-0 min-w-[140px]"
+                >
                   <Select
                     options={roleOptions}
                     placeholder="选择角色"
@@ -300,7 +335,11 @@ function GeneralSettings() {
                     开启后普通用户将无法访问系统，仅管理员可正常使用。适用于系统维护期间。
                   </div>
                 </div>
-                <Form.Item name="maintenanceMode" valuePropName="checked" className="mb-0">
+                <Form.Item
+                  name="maintenanceMode"
+                  valuePropName="checked"
+                  className="mb-0"
+                >
                   <Switch className="flex-shrink-0" />
                 </Form.Item>
               </div>
@@ -339,5 +378,5 @@ function GeneralSettings() {
         )}
       </Form>
     </div>
-  )
+  );
 }

@@ -13,7 +13,7 @@ body,
 
 /* ===========================================
    语义化颜色系统 (Semantic Color System)
-   
+
    所有颜色都通过 CSS 变量定义，支持多主题扩展
    添加新主题只需在 themes.css 中定义对应的变量值
    =========================================== */
@@ -23,33 +23,33 @@ body,
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.3);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --color-primary: #6366f1;
-  --color-primary-light: rgba(99, 102, 241, 0.1);
-  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.15);
+  --color-primary: #3b82f6;
+  --color-primary-light: rgba(59, 130, 246, 0.1);
+  --glow-primary: 0 0 20px rgba(59, 130, 246, 0.15);
 
   /* --- 背景色 (Background Colors) --- */
-  --color-bg-page: #f8fafc;           /* 页面背景 slate-50 */
-  --color-bg-container: #ffffff;      /* 容器背景 white */
-  --color-bg-elevated: #ffffff;       /* 浮层背景 white */
-  --color-bg-subtle: #f1f5f9;         /* 次要背景 slate-100 */
-  --color-bg-muted: #e2e8f0;          /* 更淡背景 slate-200 */
-  --color-bg-hover: rgba(0, 0, 0, 0.04);  /* 悬停背景 */
+  --color-bg-page: #f8fafc; /* 页面背景 slate-50 */
+  --color-bg-container: #ffffff; /* 容器背景 white */
+  --color-bg-elevated: #ffffff; /* 浮层背景 white */
+  --color-bg-subtle: #f1f5f9; /* 次要背景 slate-100 */
+  --color-bg-muted: #e2e8f0; /* 更淡背景 slate-200 */
+  --color-bg-hover: rgba(0, 0, 0, 0.04); /* 悬停背景 */
   --color-bg-active: rgba(0, 0, 0, 0.06); /* 激活背景 */
 
   /* --- 文字色 (Text Colors) --- */
-  --color-text-primary: #0f172a;      /* 主要文字 slate-900 */
-  --color-text-secondary: #475569;    /* 次要文字 slate-600 */
-  --color-text-tertiary: #64748b;     /* 辅助文字 slate-500 */
-  --color-text-muted: #94a3b8;        /* 弱化文字 slate-400 */
-  --color-text-placeholder: #cbd5e1;  /* 占位符 slate-300 */
+  --color-text-primary: #0f172a; /* 主要文字 slate-900 */
+  --color-text-secondary: #475569; /* 次要文字 slate-600 */
+  --color-text-tertiary: #64748b; /* 辅助文字 slate-500 */
+  --color-text-muted: #94a3b8; /* 弱化文字 slate-400 */
+  --color-text-placeholder: #cbd5e1; /* 占位符 slate-300 */
 
   /* --- 边框色 (Border Colors) --- */
-  --color-border-primary: #e2e8f0;    /* 主要边框 slate-200 */
-  --color-border-secondary: #f1f5f9;  /* 次要边框 slate-100 */
+  --color-border-primary: #e2e8f0; /* 主要边框 slate-200 */
+  --color-border-secondary: #f1f5f9; /* 次要边框 slate-100 */
   --color-border-muted: rgba(0, 0, 0, 0.06); /* 弱化边框 */
 
   /* --- 交互色 (Interactive Colors) --- */
-  --color-interactive-hover: rgba(255, 255, 255, 0.6);  /* 按钮悬停 */
+  --color-interactive-hover: rgba(255, 255, 255, 0.6); /* 按钮悬停 */
   --color-interactive-active: rgba(255, 255, 255, 0.8); /* 按钮激活 */
 }
 
@@ -59,33 +59,33 @@ body,
   --glass-bg: rgba(15, 23, 42, 0.75);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --color-primary: #818cf8;
-  --color-primary-light: rgba(129, 140, 248, 0.15);
-  --glow-primary: 0 0 20px rgba(129, 140, 248, 0.2);
+  --color-primary: #60a5fa;
+  --color-primary-light: rgba(96, 165, 250, 0.15);
+  --glow-primary: 0 0 20px rgba(96, 165, 250, 0.2);
 
   /* --- 背景色 (Background Colors) --- */
-  --color-bg-page: #0f172a;           /* 页面背景 slate-900 */
-  --color-bg-container: #1e293b;      /* 容器背景 slate-800 */
-  --color-bg-elevated: #334155;       /* 浮层背景 slate-700 */
-  --color-bg-subtle: #334155;         /* 次要背景 slate-700 */
-  --color-bg-muted: #475569;          /* 更淡背景 slate-600 */
-  --color-bg-hover: rgba(255, 255, 255, 0.06);  /* 悬停背景 */
-  --color-bg-active: rgba(255, 255, 255, 0.1);  /* 激活背景 */
+  --color-bg-page: #0f172a; /* 页面背景 slate-900 */
+  --color-bg-container: #1e293b; /* 容器背景 slate-800 */
+  --color-bg-elevated: #334155; /* 浮层背景 slate-700 */
+  --color-bg-subtle: #334155; /* 次要背景 slate-700 */
+  --color-bg-muted: #475569; /* 更淡背景 slate-600 */
+  --color-bg-hover: rgba(255, 255, 255, 0.06); /* 悬停背景 */
+  --color-bg-active: rgba(255, 255, 255, 0.1); /* 激活背景 */
 
   /* --- 文字色 (Text Colors) --- */
-  --color-text-primary: #f1f5f9;      /* 主要文字 slate-100 */
-  --color-text-secondary: #cbd5e1;    /* 次要文字 slate-300 */
-  --color-text-tertiary: #94a3b8;     /* 辅助文字 slate-400 */
-  --color-text-muted: #64748b;        /* 弱化文字 slate-500 */
-  --color-text-placeholder: #475569;  /* 占位符 slate-600 */
+  --color-text-primary: #f1f5f9; /* 主要文字 slate-100 */
+  --color-text-secondary: #cbd5e1; /* 次要文字 slate-300 */
+  --color-text-tertiary: #94a3b8; /* 辅助文字 slate-400 */
+  --color-text-muted: #64748b; /* 弱化文字 slate-500 */
+  --color-text-placeholder: #475569; /* 占位符 slate-600 */
 
   /* --- 边框色 (Border Colors) --- */
-  --color-border-primary: #334155;    /* 主要边框 slate-700 */
-  --color-border-secondary: #1e293b;  /* 次要边框 slate-800 */
+  --color-border-primary: #334155; /* 主要边框 slate-700 */
+  --color-border-secondary: #1e293b; /* 次要边框 slate-800 */
   --color-border-muted: rgba(255, 255, 255, 0.1); /* 弱化边框 */
 
   /* --- 交互色 (Interactive Colors) --- */
-  --color-interactive-hover: rgba(255, 255, 255, 0.1);  /* 按钮悬停 */
+  --color-interactive-hover: rgba(255, 255, 255, 0.1); /* 按钮悬停 */
   --color-interactive-active: rgba(255, 255, 255, 0.15); /* 按钮激活 */
 }
 
@@ -120,40 +120,86 @@ body,
 
 /* ===========================================
    语义化工具类 (Semantic Utility Classes)
-   
+
    使用 CSS 变量，自动适配所有主题
    =========================================== */
 
 /* --- 背景色工具类 --- */
-.bg-page { background-color: var(--color-bg-page); }
-.bg-container { background-color: var(--color-bg-container); }
-.bg-elevated { background-color: var(--color-bg-elevated); }
-.bg-subtle { background-color: var(--color-bg-subtle); }
-.bg-muted { background-color: var(--color-bg-muted); }
-.bg-hover { background-color: var(--color-bg-hover); }
-.bg-active { background-color: var(--color-bg-active); }
-.hover\:bg-hover:hover { background-color: var(--color-bg-hover); }
-.hover\:bg-active:hover { background-color: var(--color-bg-active); }
+.bg-page {
+  background-color: var(--color-bg-page);
+}
+.bg-container {
+  background-color: var(--color-bg-container);
+}
+.bg-elevated {
+  background-color: var(--color-bg-elevated);
+}
+.bg-subtle {
+  background-color: var(--color-bg-subtle);
+}
+.bg-muted {
+  background-color: var(--color-bg-muted);
+}
+.bg-hover {
+  background-color: var(--color-bg-hover);
+}
+.bg-active {
+  background-color: var(--color-bg-active);
+}
+.hover\:bg-hover:hover {
+  background-color: var(--color-bg-hover);
+}
+.hover\:bg-active:hover {
+  background-color: var(--color-bg-active);
+}
 
 /* --- 文字色工具类 --- */
-.text-default { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-.text-tertiary { color: var(--color-text-tertiary); }
-.text-muted { color: var(--color-text-muted); }
-.text-placeholder { color: var(--color-text-placeholder); }
-.hover\:text-default:hover { color: var(--color-text-primary); }
-.hover\:text-secondary:hover { color: var(--color-text-secondary); }
+.text-default {
+  color: var(--color-text-primary);
+}
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+.text-muted {
+  color: var(--color-text-muted);
+}
+.text-placeholder {
+  color: var(--color-text-placeholder);
+}
+.hover\:text-default:hover {
+  color: var(--color-text-primary);
+}
+.hover\:text-secondary:hover {
+  color: var(--color-text-secondary);
+}
 
 /* --- 边框色工具类 --- */
-.border-default { border-color: var(--color-border-primary); }
-.border-subtle { border-color: var(--color-border-secondary); }
-.border-muted { border-color: var(--color-border-muted); }
-.border-container { border-color: var(--color-bg-container); }
-.bg-border-muted { background-color: var(--color-border-muted); }
+.border-default {
+  border-color: var(--color-border-primary);
+}
+.border-subtle {
+  border-color: var(--color-border-secondary);
+}
+.border-muted {
+  border-color: var(--color-border-muted);
+}
+.border-container {
+  border-color: var(--color-bg-container);
+}
+.bg-border-muted {
+  background-color: var(--color-border-muted);
+}
 
 /* --- 交互色工具类 --- */
-.hover\:bg-interactive:hover { background-color: var(--color-interactive-hover); }
-.active\:bg-interactive:active { background-color: var(--color-interactive-active); }
+.hover\:bg-interactive:hover {
+  background-color: var(--color-interactive-hover);
+}
+.active\:bg-interactive:active {
+  background-color: var(--color-interactive-active);
+}
 
 /* =========
    Semantic color utility classes (CSS variable backed)
@@ -238,7 +284,7 @@ body,
 
 /* ===========================================
    菜单组件样式 (Menu Component Styles)
-   
+
    使用语义化变量，自动适配所有主题
    =========================================== */
 
@@ -282,9 +328,34 @@ body,
   background-color: var(--color-bg-hover);
 }
 
+/* 隐藏侧边栏横向滚动条 */
+.sidebar-nav {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-muted) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-muted);
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-muted);
+}
+
 /* ===========================================
    Antd 组件暗色模式覆盖 (Antd Dark Mode Overrides)
-   
+
    覆盖 Antd Popover 等组件的弹出层样式
    =========================================== */
 
@@ -325,12 +396,18 @@ body,
 
 .collapsed-menu-popover .ant-popover-inner {
   background-color: var(--popover-bg) !important;
-  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+  box-shadow:
+    0 6px 16px 0 rgba(0, 0, 0, 0.08),
+    0 3px 6px -4px rgba(0, 0, 0, 0.12),
+    0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* 暗色模式下增强阴影 */
 html.dark .collapsed-menu-popover .ant-popover-inner {
-  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.4), 0 3px 6px -4px rgba(0, 0, 0, 0.3), 0 9px 28px 8px rgba(0, 0, 0, 0.2) !important;
+  box-shadow:
+    0 6px 16px 0 rgba(0, 0, 0, 0.4),
+    0 3px 6px -4px rgba(0, 0, 0, 0.3),
+    0 9px 28px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* 折叠菜单 Popover 标题区域 */
@@ -359,6 +436,7 @@ html.dark .collapsed-menu-popover .ant-popover-inner {
   background-color: var(--color-bg-container) !important;
   border: none !important;
   background: var(--color-bg-container) !important;
+  overflow: hidden !important; /* 裁剪子元素，确保圆角生效 */
 }
 
 .ant-card-body {

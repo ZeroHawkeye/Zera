@@ -185,7 +185,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         {/* 菜单区域 - 使用新的菜单渲染器 */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
+        <nav className="flex-1 sidebar-nav py-4 px-3">
           <MenuRenderer items={menuItems} collapsed={!isMobile && collapsed} />
         </nav>
 
@@ -257,7 +257,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   <Avatar
                     size={isMobile ? 32 : 36}
                     src={user?.avatar}
-                    className={`${ADMIN_ACCENT_BG} shadow-md shadow-indigo-500/20`}
+                    className={`${ADMIN_ACCENT_BG} shadow-md shadow-blue-500/20`}
                   >
                     {user?.nickname?.charAt(0) ||
                       user?.username?.charAt(0) ||

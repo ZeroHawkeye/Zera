@@ -3,7 +3,13 @@
  * 支持最多5层嵌套，递归渲染菜单项
  */
 
-import { useCallback, useMemo, useState, type ReactNode, isValidElement } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type ReactNode,
+  isValidElement,
+} from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { ChevronDown, ExternalLink, ChevronRight } from "lucide-react";
 import { Badge, Tooltip, Popover } from "antd";
@@ -21,13 +27,10 @@ import {
 import { useMenuStore, useAuthStore } from "@/stores";
 
 /**
- * Theme-driven menu “active” styling
+ * Theme-driven menu "active" styling
  * - Uses CSS variables defined in `index.css` / `theme/styles/themes.css`
  * - Avoids hardcoded Tailwind blue palette so themes can override primary color
  */
-const MENU_ACTIVE_TEXT_STYLE: React.CSSProperties = {
-  color: "var(--color-primary)",
-};
 const MENU_ACTIVE_BAR_STYLE: React.CSSProperties = {
   backgroundColor: "var(--color-primary)",
 };
@@ -100,9 +103,9 @@ export function MenuRenderer({
     [location.pathname],
   );
 
-  // 检查分组是否包含激活项
-  const hasActiveChild = useCallback(
-    (item: MenuItem): boolean => {
+  // 检查分组是否包含激活项（使用函数声明避免声明前访问问题）
+  const hasActiveChild: (item: MenuItem) => boolean = useCallback(
+    function hasActiveChildImpl(item: MenuItem): boolean {
       if (!hasChildren(item)) return false;
 
       const children = isMenuGroup(item) ? item.children : item.children;
@@ -110,7 +113,7 @@ export function MenuRenderer({
 
       return children.some((child) => {
         if (isActive(child)) return true;
-        if (hasChildren(child)) return hasActiveChild(child);
+        if (hasChildren(child)) return hasActiveChildImpl(child);
         return false;
       });
     },
@@ -201,11 +204,10 @@ function renderIcon(
     // 检查是否是 React 组件（ForwardRef 或其他）
     // ForwardRef 有 $$typeof = Symbol(react.forward_ref)
     const iconAsAny = icon as { $$typeof?: symbol; render?: unknown };
-    if (
-      iconAsAny.$$typeof ||
-      typeof iconAsAny.render === "function"
-    ) {
-      const IconComponent = icon as unknown as React.ComponentType<{ className?: string }>;
+    if (iconAsAny.$$typeof || typeof iconAsAny.render === "function") {
+      const IconComponent = icon as unknown as React.ComponentType<{
+        className?: string;
+      }>;
       return <IconComponent className={className} />;
     }
   }
@@ -259,9 +261,9 @@ function MenuGroupItem({
   // 文字颜色样式 - 使用 CSS 变量确保暗色模式正确
   const getTextStyle = (active: boolean): React.CSSProperties => {
     if (active) {
-      return { color: 'var(--color-primary)' };
+      return { color: "var(--color-primary)" };
     }
-    return { color: 'var(--color-text-tertiary)' };
+    return { color: "var(--color-text-tertiary)" };
   };
 
   // 折叠模式下的按钮（用于触发 Popover）
@@ -293,12 +295,27 @@ function MenuGroupItem({
 
   // 折叠模式下的弹出菜单内容
   const popoverContent = (
-    <div className="min-w-[160px] py-1" style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)' }}>
-      <div className="px-3 py-2 text-sm font-medium border-b mb-1" style={{ color: 'var(--color-text-primary)', borderColor: 'var(--color-border-secondary)' }}>
+    <div
+      className="min-w-[160px] py-1"
+      style={{
+        backgroundColor: "var(--color-bg-elevated)",
+        color: "var(--color-text-primary)",
+      }}
+    >
+      <div
+        className="px-3 py-2 text-sm font-medium border-b mb-1"
+        style={{
+          color: "var(--color-text-primary)",
+          borderColor: "var(--color-border-secondary)",
+        }}
+      >
         {label}
       </div>
       {children && (
-        <CollapsedSubMenuRenderer items={children} onClose={() => setPopoverOpen(false)} />
+        <CollapsedSubMenuRenderer
+          items={children}
+          onClose={() => setPopoverOpen(false)}
+        />
       )}
     </div>
   );
@@ -314,7 +331,7 @@ function MenuGroupItem({
         onOpenChange={setPopoverOpen}
         arrow={false}
         overlayClassName="collapsed-menu-popover"
-        overlayInnerStyle={{ padding: 0, borderRadius: '12px' }}
+        overlayInnerStyle={{ padding: 0, borderRadius: "12px" }}
       >
         {collapsedButton}
       </Popover>
@@ -337,12 +354,12 @@ function MenuGroupItem({
         }}
         onMouseEnter={(e) => {
           if (!hasActiveChild) {
-            e.currentTarget.style.color = 'var(--color-text-primary)';
+            e.currentTarget.style.color = "var(--color-text-primary)";
           }
         }}
         onMouseLeave={(e) => {
           if (!hasActiveChild) {
-            e.currentTarget.style.color = 'var(--color-text-tertiary)';
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
           }
         }}
       >
@@ -407,22 +424,24 @@ function MenuGroupItem({
  * 折叠模式下的子菜单渲染器
  * 用于在 Popover 中渲染子菜单项
  */
-function CollapsedSubMenuRenderer({ 
-  items, 
-  onClose 
-}: { 
-  items: MenuItem[]; 
+function CollapsedSubMenuRenderer({
+  items,
+  onClose,
+}: {
+  items: MenuItem[];
   onClose: () => void;
 }) {
   const location = useLocation();
-  
+
   // 检查菜单项是否激活
   const isActive = useCallback(
     (item: MenuItem): boolean => {
       if (!isMenuNavItem(item) || !item.path) return false;
       if (location.pathname === item.path) return true;
       if (item.path === "/admin") {
-        return location.pathname === "/admin" || location.pathname === "/admin/";
+        return (
+          location.pathname === "/admin" || location.pathname === "/admin/"
+        );
       }
       return location.pathname.startsWith(item.path + "/");
     },
@@ -433,15 +452,17 @@ function CollapsedSubMenuRenderer({
     <div className="space-y-0.5">
       {items.map((subItem) => {
         if (isMenuDivider(subItem)) {
-          return <div key={subItem.key} className="my-1 border-t border-subtle" />;
+          return (
+            <div key={subItem.key} className="my-1 border-t border-subtle" />
+          );
         }
 
         if (hasChildren(subItem)) {
           // 嵌套子菜单 - 使用嵌套 Popover
           return (
-            <CollapsedNestedSubMenu 
-              key={subItem.key} 
-              item={subItem} 
+            <CollapsedNestedSubMenu
+              key={subItem.key}
+              item={subItem}
               isActive={isActive}
               onClose={onClose}
             />
@@ -458,24 +479,30 @@ function CollapsedSubMenuRenderer({
               className={`
                 flex items-center gap-2 px-3 py-2 mx-1 rounded-lg text-sm transition-colors
                 hover:bg-hover
-                ${active ? 'font-medium' : ''}
+                ${active ? "font-medium" : ""}
               `}
-              style={active
-                ? { color: 'var(--color-primary)', backgroundColor: 'var(--color-primary-light)' }
-                : { color: 'var(--color-text-secondary)' }
+              style={
+                active
+                  ? {
+                      color: "var(--color-primary)",
+                      backgroundColor: "var(--color-primary-light)",
+                    }
+                  : { color: "var(--color-text-secondary)" }
               }
               onMouseEnter={(e) => {
                 if (!active) {
-                  e.currentTarget.style.color = 'var(--color-text-primary)';
+                  e.currentTarget.style.color = "var(--color-text-primary)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!active) {
-                  e.currentTarget.style.color = 'var(--color-text-secondary)';
+                  e.currentTarget.style.color = "var(--color-text-secondary)";
                 }
               }}
             >
-              <span className="flex-shrink-0">{renderIcon(subItem.icon, "w-4 h-4")}</span>
+              <span className="flex-shrink-0">
+                {renderIcon(subItem.icon, "w-4 h-4")}
+              </span>
               <span>{subItem.label}</span>
             </Link>
           );
@@ -490,34 +517,45 @@ function CollapsedSubMenuRenderer({
 /**
  * 折叠模式下的嵌套子菜单（三级及以上）
  */
-function CollapsedNestedSubMenu({ 
-  item, 
+function CollapsedNestedSubMenu({
+  item,
   isActive,
-  onClose 
-}: { 
+  onClose,
+}: {
   item: MenuItem;
   isActive: (item: MenuItem) => boolean;
   onClose: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const label = isMenuGroup(item) ? item.label : (item as { label: string }).label;
+  const label = isMenuGroup(item)
+    ? item.label
+    : (item as { label: string }).label;
   const icon = "icon" in item ? item.icon : undefined;
   const children = isMenuGroup(item)
     ? item.children
     : (item as { children?: MenuItem[] }).children;
 
   // 检查是否有激活的子项
-  const hasActiveChild = children?.some(child => {
-    if (isActive(child)) return true;
-    if (hasChildren(child)) {
-      const subChildren = isMenuGroup(child) ? child.children : (child as { children?: MenuItem[] }).children;
-      return subChildren?.some(c => isActive(c));
-    }
-    return false;
-  }) ?? false;
+  const hasActiveChild =
+    children?.some((child) => {
+      if (isActive(child)) return true;
+      if (hasChildren(child)) {
+        const subChildren = isMenuGroup(child)
+          ? child.children
+          : (child as { children?: MenuItem[] }).children;
+        return subChildren?.some((c) => isActive(c));
+      }
+      return false;
+    }) ?? false;
 
   const nestedContent = (
-    <div className="min-w-[140px] py-1" style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-primary)' }}>
+    <div
+      className="min-w-[140px] py-1"
+      style={{
+        backgroundColor: "var(--color-bg-elevated)",
+        color: "var(--color-text-primary)",
+      }}
+    >
       {children && (
         <CollapsedSubMenuRenderer items={children} onClose={onClose} />
       )}
@@ -533,26 +571,27 @@ function CollapsedNestedSubMenu({
       onOpenChange={setOpen}
       arrow={false}
       overlayClassName="collapsed-menu-popover"
-      overlayInnerStyle={{ padding: 0, borderRadius: '8px' }}
+      overlayInnerStyle={{ padding: 0, borderRadius: "8px" }}
     >
       <div
         className={`
           flex items-center justify-between gap-2 px-3 py-2 mx-1 rounded-lg text-sm cursor-pointer transition-colors
           hover:bg-hover
-          ${hasActiveChild ? 'font-medium' : ''}
+          ${hasActiveChild ? "font-medium" : ""}
         `}
-        style={hasActiveChild
-          ? { color: 'var(--color-primary)' }
-          : { color: 'var(--color-text-secondary)' }
+        style={
+          hasActiveChild
+            ? { color: "var(--color-primary)" }
+            : { color: "var(--color-text-secondary)" }
         }
         onMouseEnter={(e) => {
           if (!hasActiveChild) {
-            e.currentTarget.style.color = 'var(--color-text-primary)';
+            e.currentTarget.style.color = "var(--color-text-primary)";
           }
         }}
         onMouseLeave={(e) => {
           if (!hasActiveChild) {
-            e.currentTarget.style.color = 'var(--color-text-secondary)';
+            e.currentTarget.style.color = "var(--color-text-secondary)";
           }
         }}
       >
@@ -560,7 +599,10 @@ function CollapsedNestedSubMenu({
           <span className="flex-shrink-0">{renderIcon(icon, "w-4 h-4")}</span>
           <span>{label}</span>
         </div>
-        <ChevronRight className="w-3 h-3" style={{ color: 'var(--color-text-muted)' }} />
+        <ChevronRight
+          className="w-3 h-3"
+          style={{ color: "var(--color-text-muted)" }}
+        />
       </div>
     </Popover>
   );
@@ -602,9 +644,9 @@ function MenuNavItemComponent({
   // 文字颜色样式 - 使用 CSS 变量确保暗色模式正确
   const getTextStyle = (active: boolean): React.CSSProperties => {
     if (active) {
-      return { color: 'var(--color-primary)' };
+      return { color: "var(--color-primary)" };
     }
-    return { color: 'var(--color-text-tertiary)' };
+    return { color: "var(--color-text-tertiary)" };
   };
 
   // 外部链接
@@ -620,13 +662,13 @@ function MenuNavItemComponent({
         `}
         style={{
           paddingLeft: `${12 + level * 12}px`,
-          color: 'var(--color-text-tertiary)',
+          color: "var(--color-text-tertiary)",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'var(--color-text-primary)';
+          e.currentTarget.style.color = "var(--color-text-primary)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'var(--color-text-tertiary)';
+          e.currentTarget.style.color = "var(--color-text-tertiary)";
         }}
       >
         <span className="flex-shrink-0">{renderIcon(icon)}</span>
@@ -637,7 +679,12 @@ function MenuNavItemComponent({
         >
           {label}
         </span>
-        {!collapsed && <ExternalLink className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />}
+        {!collapsed && (
+          <ExternalLink
+            className="w-3.5 h-3.5"
+            style={{ color: "var(--color-text-muted)" }}
+          />
+        )}
       </a>
     );
 
@@ -667,12 +714,12 @@ function MenuNavItemComponent({
       }}
       onMouseEnter={(e) => {
         if (!isActive) {
-          e.currentTarget.style.color = 'var(--color-text-primary)';
+          e.currentTarget.style.color = "var(--color-text-primary)";
         }
       }}
       onMouseLeave={(e) => {
         if (!isActive) {
-          e.currentTarget.style.color = 'var(--color-text-tertiary)';
+          e.currentTarget.style.color = "var(--color-text-tertiary)";
         }
       }}
     >

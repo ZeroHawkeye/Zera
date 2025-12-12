@@ -20,7 +20,7 @@ function Dashboard() {
         <h1 className="text-2xl md:text-3xl font-bold mb-2">
           欢迎回来，{user?.nickname || user?.username}！
         </h1>
-        <p className="text-indigo-100">
+        <p className="text-blue-100">
           这是您的管理仪表盘，可以查看系统概况和快速访问各项功能。
         </p>
       </div>
@@ -32,8 +32,8 @@ function Dashboard() {
             <Statistic
               title={<span className="text-tertiary">总用户数</span>}
               value={1234}
-              prefix={<Users className="w-5 h-5 text-indigo-500" />}
-              valueStyle={{ color: '#6366f1' }}
+              prefix={<Users className="w-5 h-5 text-blue-500" />}
+              valueStyle={{ color: '#3b82f6' }}
             />
           </Card>
         </Col>

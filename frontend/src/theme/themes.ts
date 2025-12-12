@@ -10,7 +10,7 @@
  from `ThemeDefinition` (see `ThemeTokens`)
  */
 
-export type ThemeId = "default" | "ocean" | "grape";
+export type ThemeId = "default" | "ocean";
 
 export interface ThemeTokens {
   /**
@@ -93,18 +93,18 @@ export const themes: ReadonlyArray<ThemeDefinition> = [
   {
     id: "default",
     name: "Default",
-    description: "Indigo brand with neutral glass",
+    description: "Blue brand with neutral glass",
     primary: {
-      light: "#6366f1",
-      dark: "#818cf8",
+      light: "#3b82f6",
+      dark: "#60a5fa",
     },
     authGradient: {
-      light: { from: "#2563eb", via: "#7c3aed", to: "#4338ca" },
-      dark: { from: "#1d4ed8", via: "#6d28d9", to: "#3730a3" },
+      light: { from: "#2563eb", via: "#3b82f6", to: "#1d4ed8" },
+      dark: { from: "#1d4ed8", via: "#2563eb", to: "#1e40af" },
     },
     tokens: {
-      antdColorPrimary: "#6366f1",
-      antdColorInfo: "#6366f1",
+      antdColorPrimary: "#3b82f6",
+      antdColorInfo: "#3b82f6",
       antdBorderRadius: 10,
     },
   },
@@ -123,24 +123,6 @@ export const themes: ReadonlyArray<ThemeDefinition> = [
     tokens: {
       antdColorPrimary: "#0ea5e9",
       antdColorInfo: "#0ea5e9",
-      antdBorderRadius: 10,
-    },
-  },
-  {
-    id: "grape",
-    name: "Grape",
-    description: "Purple/pink modern AI vibe",
-    primary: {
-      light: "#a855f7",
-      dark: "#c084fc",
-    },
-    authGradient: {
-      light: { from: "#a855f7", via: "#ec4899", to: "#6366f1" },
-      dark: { from: "#7e22ce", via: "#be185d", to: "#3730a3" },
-    },
-    tokens: {
-      antdColorPrimary: "#a855f7",
-      antdColorInfo: "#a855f7",
       antdBorderRadius: 10,
     },
   },

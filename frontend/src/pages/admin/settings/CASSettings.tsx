@@ -201,10 +201,10 @@ function CASSettings() {
 
   if (error) {
     return (
-      <div className="space-y-4 md:space-y-6 min-w-0">
+      <div className="flex flex-col gap-4 md:gap-6 min-w-0">
         <Alert
           type="error"
-          message="加载设置失败"
+          title="加载设置失败"
           description="无法获取 CAS 配置，请检查网络连接后重试。"
           action={
             <Button size="small" onClick={() => refetch()}>
@@ -217,9 +217,9 @@ function CASSettings() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 min-w-0">
+    <div className="flex flex-col gap-4 md:gap-6 min-w-0">
       <Alert
-        message="CAS 单点登录"
+        title="CAS 单点登录"
         description="配置 CAS (Central Authentication Service) 单点登录，允许用户使用企业统一身份认证系统登录本系统。"
         type="info"
         showIcon
@@ -231,9 +231,13 @@ function CASSettings() {
         layout="vertical"
         onFinish={handleSave}
         onValuesChange={handleValuesChange}
+        className="flex flex-col gap-4 md:gap-6"
       >
         {/* 启用开关 */}
-        <Card title="基本设置" className="overflow-hidden">
+        <Card
+          title="基本设置"
+          className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm"
+        >
           {isLoading ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : (
@@ -264,7 +268,10 @@ function CASSettings() {
         </Card>
 
         {/* CAS 服务器配置 */}
-        <Card title="CAS 服务器配置" className="overflow-hidden">
+        <Card
+          title="CAS 服务器配置"
+          className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm"
+        >
           {isLoading ? (
             <div className="space-y-4">
               <Skeleton.Input active block style={{ height: 32 }} />
@@ -332,7 +339,10 @@ function CASSettings() {
         </Card>
 
         {/* 用户同步配置 */}
-        <Card title="用户同步" className="overflow-hidden">
+        <Card
+          title="用户同步"
+          className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm"
+        >
           {isLoading ? (
             <Skeleton active paragraph={{ rows: 2 }} />
           ) : (
@@ -384,13 +394,16 @@ function CASSettings() {
         </Card>
 
         {/* Casdoor SDK 配置 (用于双向同步) */}
-        <Card title="Casdoor SDK 配置" className="overflow-hidden">
+        <Card
+          title="Casdoor SDK 配置"
+          className="overflow-hidden !rounded-2xl !border-default !bg-container backdrop-blur-sm shadow-sm"
+        >
           {isLoading ? (
             <Skeleton active paragraph={{ rows: 4 }} />
           ) : (
             <>
               <Alert
-                message="双向同步配置"
+                title="双向同步配置"
                 description="配置 Casdoor SDK 凭证以启用将本地创建的用户同步到 Casdoor。这些凭证可在 Casdoor 应用设置中获取。"
                 type="info"
                 showIcon
@@ -471,7 +484,7 @@ function CASSettings() {
         {testResult && (
           <Alert
             type={testResult.success ? "success" : "error"}
-            message={testResult.success ? "连接测试成功" : "连接测试失败"}
+            title={testResult.success ? "连接测试成功" : "连接测试失败"}
             description={testResult.message}
             icon={
               testResult.success ? (
