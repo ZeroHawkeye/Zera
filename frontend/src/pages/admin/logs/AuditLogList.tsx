@@ -913,7 +913,7 @@ function AuditLogList() {
           <Table
             columns={columns}
             dataSource={logs}
-            rowKey={(record, index) => record.id || String(index)}
+            rowKey={(record) => record.id}
             scroll={{ x: 1200 }}
             pagination={{
               current: pagination.page,

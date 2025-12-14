@@ -234,7 +234,7 @@ export function RoleFormModal({ open, role, onClose, onSuccess }: RoleFormModalP
       okText={isEdit ? '保存' : '创建'}
       cancelText="取消"
       width={isMobile ? '100%' : 680}
-      destroyOnClose
+      destroyOnHidden
       className="role-form-modal"
       styles={{
         body: { paddingTop: 16, maxHeight: '70vh', overflowY: 'auto' },

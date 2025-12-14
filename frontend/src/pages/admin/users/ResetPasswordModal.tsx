@@ -76,7 +76,7 @@ export function ResetPasswordModal({
       okText="确认重置"
       cancelText="取消"
       width={isMobile ? '100%' : 420}
-      destroyOnClose
+      destroyOnHidden
     >
       {userName && (
         <p className="mb-4 text-gray-600">

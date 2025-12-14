@@ -135,7 +135,7 @@ export function UserFormModal({ open, user, onClose, onSuccess }: UserFormModalP
       okText={isEdit ? '保存' : '创建'}
       cancelText="取消"
       width={isMobile ? '100%' : 520}
-      destroyOnClose
+      destroyOnHidden
       className="user-form-modal"
       styles={{
         body: { paddingTop: 16 },
