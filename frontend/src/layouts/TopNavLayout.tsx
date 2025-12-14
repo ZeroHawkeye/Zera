@@ -9,9 +9,7 @@ import React, { useEffect, useMemo, useCallback, type ReactNode } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  User,
   LogOut,
-  Settings,
   ChevronDown,
   Menu,
   X,
@@ -177,19 +175,6 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
   };
 
   const userMenuItems: MenuProps["items"] = [
-    {
-      key: "profile",
-      icon: <User className="w-4 h-4" />,
-      label: "个人中心",
-    },
-    {
-      key: "settings",
-      icon: <Settings className="w-4 h-4" />,
-      label: "账号设置",
-    },
-    {
-      type: "divider",
-    },
     {
       key: "logout",
       icon: <LogOut className="w-4 h-4" />,
