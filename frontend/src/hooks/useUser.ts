@@ -255,10 +255,17 @@ export function useUserActions() {
     setLoading(true)
     try {
       const response = await userApi.batchDeleteUsers(ids)
-      if (response.failedIds.length > 0) {
-        message.warning(`成功删除 ${response.deletedCount} 个用户，${response.failedIds.length} 个失败`)
+      if (response.failedCount > 0) {
+        // 显示失败详情
+        const failedResults = response.results.filter((r) => !r.success)
+        const failedMessages = failedResults
+          .slice(0, 3) // 只显示前3个错误
+          .map((r) => `ID ${r.id}: ${r.errorMessage}`)
+          .join('; ')
+        const moreCount = failedResults.length > 3 ? ` 等${failedResults.length}个` : ''
+        message.warning(`成功删除 ${response.successCount} 个用户，${response.failedCount} 个失败${moreCount ? moreCount : ''}: ${failedMessages}`)
       } else {
-        message.success(`成功删除 ${response.deletedCount} 个用户`)
+        message.success(`成功删除 ${response.successCount} 个用户`)
       }
       return response
     } catch (err) {
@@ -277,10 +284,17 @@ export function useUserActions() {
     setLoading(true)
     try {
       const response = await userApi.batchUpdateUserStatus(ids, status)
-      if (response.failedIds.length > 0) {
-        message.warning(`成功更新 ${response.updatedCount} 个用户，${response.failedIds.length} 个失败`)
+      if (response.failedCount > 0) {
+        // 显示失败详情
+        const failedResults = response.results.filter((r) => !r.success)
+        const failedMessages = failedResults
+          .slice(0, 3) // 只显示前3个错误
+          .map((r) => `ID ${r.id}: ${r.errorMessage}`)
+          .join('; ')
+        const moreCount = failedResults.length > 3 ? ` 等${failedResults.length}个` : ''
+        message.warning(`成功更新 ${response.successCount} 个用户，${response.failedCount} 个失败${moreCount ? moreCount : ''}: ${failedMessages}`)
       } else {
-        message.success(`成功更新 ${response.updatedCount} 个用户状态`)
+        message.success(`成功更新 ${response.successCount} 个用户状态`)
       }
       return response
     } catch (err) {

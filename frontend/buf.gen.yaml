@@ -2,7 +2,7 @@
 version: v2
 clean: true
 plugins:
-  - remote: buf.build/bufbuild/es
+  - local: ./node_modules/.bin/protoc-gen-es
     out: src/gen
     opt: target=ts
     include_imports: true

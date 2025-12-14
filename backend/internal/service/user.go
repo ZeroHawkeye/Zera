@@ -19,6 +19,23 @@ var (
 	ErrUserExists = errors.New("user already exists")
 )
 
+// 批量操作错误码
+const (
+	ErrCodeNotFound      = "NOT_FOUND"
+	ErrCodeInvalidID     = "INVALID_ID"
+	ErrCodeDeleteFailed  = "DELETE_FAILED"
+	ErrCodeUpdateFailed  = "UPDATE_FAILED"
+	ErrCodeInvalidStatus = "INVALID_STATUS"
+)
+
+// BatchOperationResult 批量操作单个结果
+type BatchOperationResult struct {
+	ID           string
+	Success      bool
+	ErrorCode    string
+	ErrorMessage string
+}
+
 // UserService 用户管理服务
 type UserService struct {
 	client        *ent.Client
@@ -626,42 +643,213 @@ func (s *UserService) syncPasswordToCasdoor(ctx context.Context, u *ent.User, ne
 }
 
 // BatchDeleteUsers 批量删除用户
-func (s *UserService) BatchDeleteUsers(ctx context.Context, ids []int) (int, []string) {
-	var deletedCount int
-	var failedIds []string
+// 优化: 使用批量查询获取用户信息，支持 Casdoor 同步，返回详细错误信息
+func (s *UserService) BatchDeleteUsers(ctx context.Context, ids []int) ([]BatchOperationResult, int, int) {
+	results := make([]BatchOperationResult, 0, len(ids))
+	var successCount, failedCount int
 
-	for _, id := range ids {
-		err := s.client.User.DeleteOneID(id).Exec(ctx)
+	if len(ids) == 0 {
+		return results, 0, 0
+	}
+
+	// 批量查询所有用户信息（用于 Casdoor 同步）
+	users, err := s.client.User.Query().
+		Where(user.IDIn(ids...)).
+		All(ctx)
+	if err != nil {
+		// 查询失败，所有 ID 都标记为失败
+		for _, id := range ids {
+			results = append(results, BatchOperationResult{
+				ID:           strconv.Itoa(id),
+				Success:      false,
+				ErrorCode:    ErrCodeDeleteFailed,
+				ErrorMessage: "查询用户信息失败",
+			})
+			failedCount++
+		}
+		return results, successCount, failedCount
+	}
+
+	// 建立 ID -> User 映射
+	userMap := make(map[int]*ent.User, len(users))
+	for _, u := range users {
+		userMap[u.ID] = u
+	}
+
+	// 收集存在的用户 ID 用于批量删除
+	existingIDs := make([]int, 0, len(users))
+	for _, u := range users {
+		existingIDs = append(existingIDs, u.ID)
+	}
+
+	// 批量删除存在的用户
+	var deletedIDs map[int]bool
+	if len(existingIDs) > 0 {
+		_, err = s.client.User.Delete().
+			Where(user.IDIn(existingIDs...)).
+			Exec(ctx)
 		if err != nil {
-			failedIds = append(failedIds, strconv.Itoa(id))
+			// 批量删除失败，标记所有存在的用户为失败
+			deletedIDs = make(map[int]bool)
 		} else {
-			deletedCount++
+			// 批量删除成功
+			deletedIDs = make(map[int]bool, len(existingIDs))
+			for _, id := range existingIDs {
+				deletedIDs[id] = true
+			}
+		}
+	} else {
+		deletedIDs = make(map[int]bool)
+	}
+
+	// 处理每个请求的 ID，生成详细结果
+	for _, id := range ids {
+		idStr := strconv.Itoa(id)
+		u, exists := userMap[id]
+
+		if !exists {
+			// 用户不存在
+			results = append(results, BatchOperationResult{
+				ID:           idStr,
+				Success:      false,
+				ErrorCode:    ErrCodeNotFound,
+				ErrorMessage: "用户不存在",
+			})
+			failedCount++
+			continue
+		}
+
+		if deletedIDs[id] {
+			// 删除成功
+			results = append(results, BatchOperationResult{
+				ID:      idStr,
+				Success: true,
+			})
+			successCount++
+
+			// 异步同步删除到 Casdoor（使用独立 context 避免请求取消后同步失败）
+			go s.syncUserDeleteToCasdoor(context.Background(), u)
+		} else {
+			// 删除失败
+			results = append(results, BatchOperationResult{
+				ID:           idStr,
+				Success:      false,
+				ErrorCode:    ErrCodeDeleteFailed,
+				ErrorMessage: "删除用户失败",
+			})
+			failedCount++
 		}
 	}
 
-	return deletedCount, failedIds
+	return results, successCount, failedCount
 }
 
 // BatchUpdateStatus 批量更新用户状态
-func (s *UserService) BatchUpdateStatus(ctx context.Context, ids []int, status base.UserStatus) (int, []string) {
-	var updatedCount int
-	var failedIds []string
+// 优化: 使用批量更新，返回详细错误信息
+func (s *UserService) BatchUpdateStatus(ctx context.Context, ids []int, status base.UserStatus) ([]BatchOperationResult, int, int) {
+	results := make([]BatchOperationResult, 0, len(ids))
+	var successCount, failedCount int
+
+	if len(ids) == 0 {
+		return results, 0, 0
+	}
 
 	entStatus := protoStatusToEnt(status)
 	if entStatus == "" {
-		return 0, nil
+		// 无效状态，所有 ID 都标记为失败
+		for _, id := range ids {
+			results = append(results, BatchOperationResult{
+				ID:           strconv.Itoa(id),
+				Success:      false,
+				ErrorCode:    ErrCodeInvalidStatus,
+				ErrorMessage: "无效的用户状态",
+			})
+			failedCount++
+		}
+		return results, successCount, failedCount
 	}
 
-	for _, id := range ids {
-		err := s.client.User.UpdateOneID(id).SetStatus(entStatus).Exec(ctx)
+	// 批量查询存在的用户
+	existingUsers, err := s.client.User.Query().
+		Where(user.IDIn(ids...)).
+		Select(user.FieldID).
+		All(ctx)
+	if err != nil {
+		// 查询失败，所有 ID 都标记为失败
+		for _, id := range ids {
+			results = append(results, BatchOperationResult{
+				ID:           strconv.Itoa(id),
+				Success:      false,
+				ErrorCode:    ErrCodeUpdateFailed,
+				ErrorMessage: "查询用户信息失败",
+			})
+			failedCount++
+		}
+		return results, successCount, failedCount
+	}
+
+	// 建立存在的用户 ID 集合
+	existingIDSet := make(map[int]bool, len(existingUsers))
+	existingIDs := make([]int, 0, len(existingUsers))
+	for _, u := range existingUsers {
+		existingIDSet[u.ID] = true
+		existingIDs = append(existingIDs, u.ID)
+	}
+
+	// 批量更新存在的用户状态
+	var updatedIDs map[int]bool
+	if len(existingIDs) > 0 {
+		_, err = s.client.User.Update().
+			Where(user.IDIn(existingIDs...)).
+			SetStatus(entStatus).
+			Save(ctx)
 		if err != nil {
-			failedIds = append(failedIds, strconv.Itoa(id))
+			// 批量更新失败
+			updatedIDs = make(map[int]bool)
 		} else {
-			updatedCount++
+			// 批量更新成功
+			updatedIDs = existingIDSet
+		}
+	} else {
+		updatedIDs = make(map[int]bool)
+	}
+
+	// 处理每个请求的 ID，生成详细结果
+	for _, id := range ids {
+		idStr := strconv.Itoa(id)
+
+		if !existingIDSet[id] {
+			// 用户不存在
+			results = append(results, BatchOperationResult{
+				ID:           idStr,
+				Success:      false,
+				ErrorCode:    ErrCodeNotFound,
+				ErrorMessage: "用户不存在",
+			})
+			failedCount++
+			continue
+		}
+
+		if updatedIDs[id] {
+			// 更新成功
+			results = append(results, BatchOperationResult{
+				ID:      idStr,
+				Success: true,
+			})
+			successCount++
+		} else {
+			// 更新失败
+			results = append(results, BatchOperationResult{
+				ID:           idStr,
+				Success:      false,
+				ErrorCode:    ErrCodeUpdateFailed,
+				ErrorMessage: "更新用户状态失败",
+			})
+			failedCount++
 		}
 	}
 
-	return updatedCount, failedIds
+	return results, successCount, failedCount
 }
 
 // toUserDetail 将 ent.User 转换为 base.UserDetail

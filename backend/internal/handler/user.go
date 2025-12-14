@@ -187,20 +187,44 @@ func (h *UserHandler) BatchDeleteUsers(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
+	// 转换 ID 并记录无效的 ID
 	ids := make([]int, 0, len(req.Msg.Ids))
+	invalidResults := make([]*base.BatchOperationResult, 0)
+
 	for _, idStr := range req.Msg.Ids {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
+			invalidResults = append(invalidResults, &base.BatchOperationResult{
+				Id:           idStr,
+				Success:      false,
+				ErrorCode:    service.ErrCodeInvalidID,
+				ErrorMessage: "无效的用户ID格式",
+			})
 			continue
 		}
 		ids = append(ids, id)
 	}
 
-	deletedCount, failedIds := h.userService.BatchDeleteUsers(ctx, ids)
+	// 调用 service 层批量删除
+	serviceResults, successCount, failedCount := h.userService.BatchDeleteUsers(ctx, ids)
+
+	// 转换 service 结果为 proto 结果
+	protoResults := make([]*base.BatchOperationResult, 0, len(serviceResults)+len(invalidResults))
+	protoResults = append(protoResults, invalidResults...)
+
+	for _, r := range serviceResults {
+		protoResults = append(protoResults, &base.BatchOperationResult{
+			Id:           r.ID,
+			Success:      r.Success,
+			ErrorCode:    r.ErrorCode,
+			ErrorMessage: r.ErrorMessage,
+		})
+	}
 
 	return connect.NewResponse(&base.BatchDeleteUsersResponse{
-		DeletedCount: int32(deletedCount),
-		FailedIds:    failedIds,
+		Results:      protoResults,
+		SuccessCount: int32(successCount),
+		FailedCount:  int32(failedCount + len(invalidResults)),
 	}), nil
 }
 
@@ -214,19 +238,43 @@ func (h *UserHandler) BatchUpdateUserStatus(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
+	// 转换 ID 并记录无效的 ID
 	ids := make([]int, 0, len(req.Msg.Ids))
+	invalidResults := make([]*base.BatchOperationResult, 0)
+
 	for _, idStr := range req.Msg.Ids {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
+			invalidResults = append(invalidResults, &base.BatchOperationResult{
+				Id:           idStr,
+				Success:      false,
+				ErrorCode:    service.ErrCodeInvalidID,
+				ErrorMessage: "无效的用户ID格式",
+			})
 			continue
 		}
 		ids = append(ids, id)
 	}
 
-	updatedCount, failedIds := h.userService.BatchUpdateStatus(ctx, ids, req.Msg.Status)
+	// 调用 service 层批量更新状态
+	serviceResults, successCount, failedCount := h.userService.BatchUpdateStatus(ctx, ids, req.Msg.Status)
+
+	// 转换 service 结果为 proto 结果
+	protoResults := make([]*base.BatchOperationResult, 0, len(serviceResults)+len(invalidResults))
+	protoResults = append(protoResults, invalidResults...)
+
+	for _, r := range serviceResults {
+		protoResults = append(protoResults, &base.BatchOperationResult{
+			Id:           r.ID,
+			Success:      r.Success,
+			ErrorCode:    r.ErrorCode,
+			ErrorMessage: r.ErrorMessage,
+		})
+	}
 
 	return connect.NewResponse(&base.BatchUpdateUserStatusResponse{
-		UpdatedCount: int32(updatedCount),
-		FailedIds:    failedIds,
+		Results:      protoResults,
+		SuccessCount: int32(successCount),
+		FailedCount:  int32(failedCount + len(invalidResults)),
 	}), nil
 }
