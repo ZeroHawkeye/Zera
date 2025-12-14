@@ -277,9 +277,6 @@ func (l *EntLogger) toEntry(log *ent.AuditLog) *Entry {
 		CreatedAt: log.CreatedAt,
 	}
 
-	// 设置 ID（使用字符串格式）
-	entry.Details = strconv.Itoa(log.ID) + "|" + entry.Details
-
 	// 可选字段
 	if log.Resource != "" {
 		entry.Resource = log.Resource
@@ -305,9 +302,12 @@ func (l *EntLogger) toEntry(log *ent.AuditLog) *Entry {
 	if log.ResponseBody != "" {
 		entry.ResponseBody = log.ResponseBody
 	}
+	// Details 优先使用数据库中存储的 details 字段
+	// 如果没有则使用 request_body 作为详细信息（便于前端查看请求内容）
 	if log.Details != "" {
-		// 如果已经有 ID 前缀，去掉它
 		entry.Details = log.Details
+	} else if log.RequestBody != "" {
+		entry.Details = log.RequestBody
 	}
 
 	return entry

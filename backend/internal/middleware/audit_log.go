@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -146,9 +147,11 @@ func (i *AuditLogInterceptor) buildEntry(
 		entry.Username = username
 	}
 
-	// 处理请求体（脱敏）
+	// 处理请求体（脱敏）并提取资源 ID
 	if requestBody != nil {
 		entry.RequestBody = sanitizeRequestBody(requestBody)
+		// 从请求体中提取资源 ID
+		entry.ResourceID = extractResourceID(requestBody)
 	}
 
 	// 处理错误
@@ -193,7 +196,72 @@ func extractClientIP(header http.Header) string {
 		parts := strings.Split(ip, ",")
 		return strings.TrimSpace(parts[0])
 	}
+	// 从 Connect-RPC 头中获取（由 Gin 中间件设置）
+	if ip := header.Get("X-Client-IP"); ip != "" {
+		return ip
+	}
 	return ""
+}
+
+// extractResourceID 从请求体中提取资源 ID
+// 支持常见的 ID 字段名称：id, user_id, role_id, userId, roleId 等
+func extractResourceID(body interface{}) string {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return ""
+	}
+
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(data, &jsonMap); err != nil {
+		return ""
+	}
+
+	// 按优先级检查各种 ID 字段
+	idFields := []string{"id", "Id", "ID", "user_id", "userId", "role_id", "roleId", "log_id", "logId"}
+	for _, field := range idFields {
+		if val, ok := jsonMap[field]; ok {
+			return formatResourceID(val)
+		}
+	}
+
+	// 检查 ids 数组字段（批量操作）
+	idsFields := []string{"ids", "Ids", "IDS", "user_ids", "userIds", "role_ids", "roleIds"}
+	for _, field := range idsFields {
+		if val, ok := jsonMap[field]; ok {
+			if ids, ok := val.([]interface{}); ok && len(ids) > 0 {
+				// 对于批量操作，返回第一个 ID 加上数量提示
+				first := formatResourceID(ids[0])
+				if len(ids) > 1 {
+					return first + " (+" + formatResourceID(len(ids)-1) + " more)"
+				}
+				return first
+			}
+		}
+	}
+
+	return ""
+}
+
+// formatResourceID 将各种类型的 ID 格式化为字符串
+func formatResourceID(val interface{}) string {
+	switch v := val.(type) {
+	case string:
+		return v
+	case float64:
+		// JSON 数字默认解析为 float64
+		if v == float64(int64(v)) {
+			return strconv.FormatInt(int64(v), 10)
+		}
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	default:
+		return ""
+	}
 }
 
 // sanitizeRequestBody 脱敏请求体

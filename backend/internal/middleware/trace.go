@@ -163,6 +163,9 @@ func parseTraceparent(traceparent string) (traceID, spanID string) {
 	return parts[1], parts[2]
 }
 
+// ClientIPHeader 客户端 IP 头，供 Connect-RPC 拦截器使用
+const ClientIPHeader = "X-Client-IP"
+
 // TraceMiddleware Gin 框架的追踪中间件
 func TraceMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -204,6 +207,13 @@ func TraceMiddleware() gin.HandlerFunc {
 		// 设置响应头
 		c.Header(TraceIDHeader, traceID)
 		c.Header(SpanIDHeader, spanID)
+
+		// 将客户端 IP 注入到请求头，供 Connect-RPC 拦截器使用
+		// Gin 的 ClientIP() 会自动处理代理头（X-Real-IP, X-Forwarded-For）和直连场景
+		clientIP := c.ClientIP()
+		if clientIP != "" {
+			c.Request.Header.Set(ClientIPHeader, clientIP)
+		}
 
 		// 继续处理请求
 		c.Next()
