@@ -1,6 +1,7 @@
 import { createRootRoute, createRoute, redirect } from '@tanstack/react-router'
 import { authGuard, guestGuard, waitForAuthInit } from './guards'
 import { RootComponent, AdminRouteComponent } from './components'
+import { useAuthStore } from '@/stores'
 
 // ============================================
 // 根路由
@@ -13,11 +14,21 @@ export const rootRoute = createRootRoute({
 // 公共路由
 // ============================================
 
-// 首页路由
+// 首页路由 - 根据认证状态重定向
 export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-}).lazy(() => import('@/pages/home').then((m) => m.Route))
+  beforeLoad: async () => {
+    await waitForAuthInit()
+    // 获取认证状态，已登录跳转后台，未登录跳转登录页
+    const isAuthenticated = useAuthStore.getState().isAuthenticated()
+    if (isAuthenticated) {
+      throw redirect({ to: '/admin' })
+    } else {
+      throw redirect({ to: '/login' })
+    }
+  },
+})
 
 // 登录路由
 export const loginRoute = createRoute({
