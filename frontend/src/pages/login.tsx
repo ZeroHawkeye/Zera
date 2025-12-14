@@ -2,9 +2,8 @@ import { createLazyRoute, useNavigate, Link, useSearch } from '@tanstack/react-r
 import { useState, useEffect } from 'react'
 import { User, Lock, ArrowRight, AlertCircle, Building2 } from 'lucide-react'
 import { ConnectError } from '@connectrpc/connect'
-import { authApi } from '@/api/auth'
 import { casAuthApi } from '@/api/cas_auth'
-import { useSiteStore } from '@/stores'
+import { useAuthStore, useSiteStore } from '@/stores'
 
 export const Route = createLazyRoute('/login')({
   component: LoginPage,
@@ -26,6 +25,9 @@ function LoginPage() {
   // 从全局 store 获取站点设置
   const siteName = useSiteStore((state) => state.siteName)
   const registrationEnabled = useSiteStore((state) => state.enableRegistration)
+
+  // 从认证 store 获取登录方法
+  const login = useAuthStore((state) => state.login)
 
   // 获取 CAS 公开设置
   useEffect(() => {
@@ -52,13 +54,10 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     setLoading(true)
     try {
-      await authApi.login({
-        username: username.trim(),
-        password: password,
-        rememberMe,
-      })
-      // 登录成功后跳转到重定向地址或首页
-      const redirectTo = search.redirect || '/'
+      // 使用 store 的 login 方法，会同时更新 store 状态和 localStorage
+      await login(username.trim(), password, rememberMe)
+      // 登录成功后跳转到重定向地址或管理后台
+      const redirectTo = search.redirect || '/admin'
       navigate({ to: redirectTo })
     } catch (err) {
       const connectErr = ConnectError.from(err)

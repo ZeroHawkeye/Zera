@@ -313,20 +313,47 @@ components:
     base.BatchDeleteUsersResponse:
       type: object
       properties:
-        deletedCount:
-          type: integer
-          title: deleted_count
-          format: int32
-          description: 成功删除的数量
-        failedIds:
+        results:
           type: array
           items:
-            type: string
-          title: failed_ids
-          description: 失败的用户ID列表
+            $ref: '#/components/schemas/base.BatchOperationResult'
+          title: results
+          description: 每个操作的详细结果
+        successCount:
+          type: integer
+          title: success_count
+          format: int32
+          description: 成功删除的数量
+        failedCount:
+          type: integer
+          title: failed_count
+          format: int32
+          description: 失败的数量
       title: BatchDeleteUsersResponse
       additionalProperties: false
       description: 批量删除用户响应
+    base.BatchOperationResult:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          description: 操作的资源ID
+        success:
+          type: boolean
+          title: success
+          description: 是否成功
+        errorCode:
+          type: string
+          title: error_code
+          description: 错误码（仅失败时有值）
+        errorMessage:
+          type: string
+          title: error_message
+          description: 错误消息（仅失败时有值）
+      title: BatchOperationResult
+      additionalProperties: false
+      description: 批量操作单个结果
     base.BatchUpdateUserStatusRequest:
       type: object
       properties:
@@ -348,17 +375,22 @@ components:
     base.BatchUpdateUserStatusResponse:
       type: object
       properties:
-        updatedCount:
-          type: integer
-          title: updated_count
-          format: int32
-          description: 成功更新的数量
-        failedIds:
+        results:
           type: array
           items:
-            type: string
-          title: failed_ids
-          description: 失败的用户ID列表
+            $ref: '#/components/schemas/base.BatchOperationResult'
+          title: results
+          description: 每个操作的详细结果
+        successCount:
+          type: integer
+          title: success_count
+          format: int32
+          description: 成功更新的数量
+        failedCount:
+          type: integer
+          title: failed_count
+          format: int32
+          description: 失败的数量
       title: BatchUpdateUserStatusResponse
       additionalProperties: false
       description: 批量更新用户状态响应
